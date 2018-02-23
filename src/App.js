@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import './App.css';
+import './index.scss';
 
 class App extends Component {
   render() {
     return (
-      <div>
+      <div className="test">
             测试
       </div>
     );
