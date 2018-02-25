@@ -1,0 +1,52 @@
+html,body{
+  height:100%;
+  width:100%;
+}
+#root{
+  height:100%;
+  width:100%;
+}
+.bg-img{
+  width:100%;
+  height:100%;
+  background: url('./../../assets/img/bg/bg.jpg') no-repeat;
+  background-size:cover;
+  //防止外边距合并
+  overflow: hidden;
+  .bg-cover{
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.6);
+    overflow: hidden;
+    .system-title{
+      color:#fff;
+      margin-top: 7%;
+      font-size:35px;
+      text-align: center;
+      .system-title-blue{
+        color: #72bbff;
+        font-weight: bold;
+      }
+    }
+    .login-wrapper{
+      margin: 100px auto 0 auto;
+      width:400px;
+      height:400px;
+      background-color:rgba(255,255,255,0.3);
+      border-radius:10px;
+      $titleHeight:50px;
+      .login-title{
+        height:$titleHeight;
+        border-bottom: 1px solid #fff;
+        text-align:center;
+        font-size:18px;
+        color:#fff;
+        line-height:$titleHeight;
+      }
+      .login-box{
+        width:80%;
+        margin: 50px auto 0 auto;
+      }
+    }
+  }
+}

@@ -1,24 +1,21 @@
 import React, { Component } from 'react';
-import './index.scss';
-import {Button,Icon,Row,Col,Layout} from 'antd'
-const { Header, Footer, Sider, Content } = Layout;
+import {BrowserRouter as Router,Route,Switch,Link,Redirect} from 'react-router-dom'
+import Login from './pages/login/login'
+import Layout from './pages/Layouts/layouts'
+import AuthorizedRoute from './routes/AuthorizedRoute'
 class App extends Component {
   render() {
-    const ButtonGroup = Button.Group;
     return (
-      <div className="test">
-        <Button.Group>
-          <Button href="http://www.baidu.com" target="_blank" type="primary">按钮</Button>
-          <Button type="danger">按钮</Button>
-        </Button.Group>
-        {/*icon通过style设置颜色大小*/}
-        <Icon type="step-forward" style={{color:'#111',fontSize:30}} spin="true"/>
-        <Row >
-          <Col span={12}>col-12</Col>
-          <Col span={12}>col-12</Col>
-        </Row>
-
-      </div>
+      <Router>
+        <Switch>
+          {/*登录组件*/}
+          <Route  path="/login" component={Login}/>
+          {/*需要身份认证的路由(里面是主要内容),Layout是里面的子路由，外层由layout组件包裹(导航条),这里app属性注意*/}
+          <AuthorizedRoute path="/app" component={Layout}/>
+          {/*当访问/时也被定向到登录页面*/}
+          <Redirect to="/login" />
+        </Switch>
+      </Router>
     );
   }
 }

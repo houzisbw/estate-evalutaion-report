@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
 import App from './App';
+import './assets/reset.css'
 import 'babel-polyfill'
 import registerServiceWorker from './registerServiceWorker';
 
