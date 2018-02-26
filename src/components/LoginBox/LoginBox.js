@@ -6,6 +6,8 @@ import axios from 'axios'
 import {Form,Icon,Input,Button,Checkbox,message} from 'antd'
 import {withRouter} from 'react-router-dom'
 import './index.scss'
+import store from './../../store/store'
+import {updateUserAuth} from './../../store/actions/users'
 const FormItem = Form.Item;
 //配置消息框距离顶部距离(px)
 message.config({
@@ -40,8 +42,11 @@ class NormalLoginForm extends React.Component {
 				};
 				axios.post('/users/login',param).then((resp)=>{
 					let status = resp.data.status;
+					let userAuth = resp.data.auth;
+					//登录成功
 					if(status === 1){
-						//登录成功，跳转页面
+						//将用户权限存在state中
+						store.dispatch(updateUserAuth(userAuth));
 						//首先提示登录成功,1秒后执行回调函数进行页面跳转
 						message.success('登录成功!',1,()=>{
 							//页面跳转
