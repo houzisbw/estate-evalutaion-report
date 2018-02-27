@@ -8,17 +8,31 @@ import store from './../../store/store'
 import {connect} from 'react-redux'
 import LayoutComponent from './../../components/Layout/layout'
 import {checkAuthentication} from './../../util/utils'
+import {Switch, Route, Redirect} from 'react-router-dom'
+import PreAssesment from './../PreAssesment/PreAssesment'
+import NormalAssesment from './../NormalAssesment/NormalAssesment'
 //actions
 import {userLogout} from './../../store/actions/users'
 class Layout extends React.Component{
 	componentWillMount(){
 		checkAuthentication();
 	}
+	componentDidMount(){
+		//this.props.history.push('/pre_assesment_report')
+	}
 	render(){
 		//不要通过store.getState获取状态，因为数据更新后收到不通知
 		return (
+			//LayoutComponent包含2个header
 			<LayoutComponent>
-
+				<Switch>
+					{/*预评估页面*/}
+					<Route path="/app/pre_assesment_report" component={PreAssesment}/>
+					<Route path="/app/normal_assesment_report" component={NormalAssesment}/>
+					{/*进入页面直接选中预评估子页面,/app被重定向到/app/pre_assesment_report*/}
+					{/*redirect的from参数是当前所在的路径(需要跳转)*/}
+					<Redirect from="/app" to="/app/pre_assesment_report"/>
+				</Switch>
 			</LayoutComponent>
 		)
 	}

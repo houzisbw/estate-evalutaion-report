@@ -182,6 +182,8 @@ module.exports = {
                       options: {
                         importLoaders: 1,
                         minimize: true,
+                        //开启css模块化
+
                         sourceMap: shouldUseSourceMap,
                       },
                     },

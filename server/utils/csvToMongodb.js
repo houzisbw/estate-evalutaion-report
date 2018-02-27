@@ -24,6 +24,7 @@ mongoose.connection.on("error",function(){
 
 var csvFilePath = './estate.csv';
 //trim去掉内容的左右空格，ignoreEmpty忽略空的单元格(important)
+//默认csv第一行是表头，不算做数据
 var options = {
 	trim:true,
 	ignoreEmpty:true

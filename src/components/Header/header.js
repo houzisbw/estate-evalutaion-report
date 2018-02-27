@@ -15,6 +15,7 @@ class Header extends React.Component{
 	//登出
 	logout(){
 		axios.get('/users/logout').then((resp)=>{
+			console.log(resp.data.status)
 			store.dispatch(userLogout());
 			this.props.history.push('/login');
 		})
@@ -41,8 +42,8 @@ class Header extends React.Component{
 		return (
 			<div className="header-bar">
 				<div className="header-wrapper">
-					<img src={headerLogoSrc} className="header-logo"/>
-					<img src={headerTitleSrc} className="header-title"/>
+					<img src={headerLogoSrc} className="header-logo" alt="logo"/>
+					<img src={headerTitleSrc} className="header-title" alt="title"/>
 					<div className="header-info">
 						<span className="user-info">您好, {userInfo}</span>
 						<span className="header-logout" onClick={()=>{this.handleLogout()}}>退出</span>

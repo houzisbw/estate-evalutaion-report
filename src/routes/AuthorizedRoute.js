@@ -15,7 +15,7 @@ class AuthorizedRoute extends React.Component {
 	render() {
 		const { component: Component, logged,pending,...rest } = this.props;
 		//pending是加载中状态,此时logged还是false
-		console.log('pending:'+pending,'logged:'+logged)
+		//console.log('pending:'+pending,'logged:'+logged)
 		return (
 			<Route {...rest} render={props => {
 				if(pending) return null;
