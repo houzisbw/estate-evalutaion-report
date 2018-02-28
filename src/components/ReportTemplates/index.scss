@@ -1,0 +1,126 @@
+.template-content-wrapper{
+  height:100px;
+}
+.baidu-map-container{
+  float:left;
+  width:65%;
+  box-shadow: 0 1px 2px  rgba(0,0,0,0.2);
+}
+.baidu-map-search-container{
+  float:left;
+  width:35%;
+  height:450px;
+  background-color: #fff;
+  box-shadow: 0 1px 2px  rgba(0,0,0,0.2);
+  .sub-tab-content-container{
+    width:100%;
+  }
+}
+
+//antd的tab重新定义宽度，此时需要一个class来设定范围，只设定该class下的tab宽度
+.sub-tab-resize{
+  .ant-tabs-bar .ant-tabs-tab{
+    margin-right: 10px;
+    padding-left:5px;
+    padding-right:5px;
+    padding-bottom:10px;
+  }
+  .sub-tab-content-container{
+    overflow: auto;
+    max-height:356px;
+  }
+  .ant-tabs-bar{
+    margin-bottom: 0;
+  }
+  .ant-tabs-nav-wrap{
+    padding-left:20px;
+  }
+}
+
+.main-tab-resize{
+  .ant-tabs-tabpane.ant-tabs-tabpane-active{
+    padding-right: 0!important;
+    padding-left: 0!important;
+    padding-bottom:0!important;
+  }
+
+}
+
+
+//infoWindow的样式
+.triangle-down{
+  position: absolute;
+  top:100%;
+  left:50%;
+  width:0;
+  height:0;
+  border-top:7px solid #fff;
+  border-right:7px solid transparent;
+  border-left:7px solid transparent;
+  border-bottom:7px solid transparent;
+}
+.infobox-title-wrapper{
+  height:20px;
+  .font-awesome-grey{
+    color: #575757;
+    margin-right: 5px;
+  }
+  .infobox-title-left{
+    float:left;
+    width:160px;
+    height:20px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .infobox-title-right{
+    float:left;
+    height:20px;
+  }
+  .infobox-title-word{
+    color: #575757;
+    font-weight: bold;
+    font-size:14px;
+  }
+}
+.infobox-content{
+  margin-top: 20px;
+  font-size:14px;
+  width:100%;
+  color: #bfbfbf;
+  word-break:break-all
+}
+
+
+
+//antd的tab样式相关
+.baidu-map-search-container > .ant-tabs-card > .ant-tabs-content {
+  margin-top: -16px;
+}
+
+.baidu-map-search-container > .ant-tabs-card > .ant-tabs-content > .ant-tabs-tabpane {
+  background: #fff;
+  padding: 16px;
+}
+
+.baidu-map-search-container > .ant-tabs-card > .ant-tabs-bar {
+  border-color: #fff;
+  background-color: #f1f1f1;
+
+}
+
+.baidu-map-search-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab {
+  border-color: transparent;
+  background: transparent;
+  border-radius:0;
+  border-left:none;
+  border-right:none;
+}
+
+.baidu-map-search-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab-active {
+
+  background: #fff;
+  border-top:2px #72bbff solid;
+  border-left:none;
+  border-right:none;
+}

@@ -1,0 +1,45 @@
+.search-result-wrap{
+  width:100%;
+  box-sizing: border-box;
+  border-bottom: 1px solid #fff;
+  transition: all .5s;
+  padding:10px 0;
+  &:hover{
+    background-color: #efefef;
+    cursor:pointer;
+  }
+  .search-result-wrap-inner{
+    padding-left:20px;
+  }
+  .search-result-inner-up{
+    height:30px;
+    .search-result-inner-up-left{
+      float:left;
+      width:180px;
+      height:30px;
+      font-weight: bold;
+      margin-right: 10px;
+      //溢出省略号
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      i{
+        margin-right: 15px;
+      }
+    }
+    .search-result-inner-up-right{
+      float:left;
+      font-weight: bold;
+      height:30px;
+      i{
+        margin-right: 15px;
+      }
+    }
+  }
+  .search-result-inner-down{
+    padding-left:27px;
+    word-break: break-all;
+    color: #b6b6b6;
+  }
+
+}

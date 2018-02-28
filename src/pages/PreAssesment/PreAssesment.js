@@ -7,9 +7,7 @@ import './index.scss'
 //引入tab组件
 import TabComponent from './../../components/Tab/tab'
 //引入预评估报告模板
-import BStemplate from './../../components/ReportTemplates/BaoShangTemplate/template'
-import NHtemplate from './../../components/ReportTemplates/NongHangTemplate/template'
-import NHHBtemplate from './../../components/ReportTemplates/NongHangHuaBoTemplate/template'
+import ReportTemplate from './../../components/ReportTemplates/reportTemplate'
 
 import {Select} from 'antd'
 const Option = Select.Option;
@@ -53,9 +51,9 @@ class PreAssesment extends React.Component{
 				{/*模板内容区域*/}
 				<div className="template-content">
 					<TabComponent currentIndex={this.state.currentTemplateIndex}>
-						<BStemplate />
-						<NHtemplate />
-						<NHHBtemplate />
+						<ReportTemplate templateName="包商"/>
+						<ReportTemplate templateName="农行"/>
+						<ReportTemplate templateName="农行划拨"/>
 					</TabComponent>
 				</div>
 			</div>
