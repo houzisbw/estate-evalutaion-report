@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {BrowserRouter as Router,Route,Switch,Link,Redirect} from 'react-router-dom'
+import {BrowserRouter as Router,Route,Switch,Redirect} from 'react-router-dom'
 import Login from './pages/login/login'
 import Layout from './pages/Layouts/layouts'
 import AuthorizedRoute from './routes/AuthorizedRoute'

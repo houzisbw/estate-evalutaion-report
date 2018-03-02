@@ -1,8 +1,13 @@
+.search-result-wrap-active{
+  color: #218cff !important;
+}
+.search-result-wrap-border-active{
+  border-left:3px solid #2a86ef!important;
+}
 .search-result-wrap{
   width:100%;
   box-sizing: border-box;
   border-bottom: 1px solid #fff;
-  transition: all .5s;
   padding:10px 0;
   &:hover{
     background-color: #efefef;
@@ -10,6 +15,29 @@
   }
   .search-result-wrap-inner{
     padding-left:20px;
+    box-sizing: border-box;
+    border-left:3px solid transparent;
+    position: relative;
+    //代表被选中的项
+    .green-tick{
+      position: absolute;
+      right:0;
+      bottom:-14px;
+      width:64px;
+      height:64px;
+      z-index:99;
+      background: right url('./../../assets/img/icon/green-triangle.png') no-repeat;
+      i{
+        color:#fff;
+        font-size:20px;
+        position: absolute;
+        bottom:10px;
+        right:6px;
+      }
+    }
+    .green-tick-none{
+      display: none;
+    }
   }
   .search-result-inner-up{
     height:30px;
@@ -40,6 +68,7 @@
     padding-left:27px;
     word-break: break-all;
     color: #b6b6b6;
+    width:90%;
   }
 
 }

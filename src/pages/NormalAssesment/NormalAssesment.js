@@ -7,9 +7,6 @@
 import React from 'react'
 import './index.scss'
 class NormalAssesment extends React.Component{
-	constructor(props){
-		super(props);
-	}
 	render(){
 		return (
 			<div className="my-page-wrapper">

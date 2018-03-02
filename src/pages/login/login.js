@@ -4,7 +4,7 @@
 import React from 'react'
 import './index.scss'
 import {connect} from 'react-redux'
-import store from './../../store/store'
+//import store from './../../store/store'
 import axios from 'axios'
 //登录组件
 import WrappedLoginForm from './../../components/LoginBox/LoginBox'

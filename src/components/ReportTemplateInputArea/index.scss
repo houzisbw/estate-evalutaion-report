@@ -1,0 +1,29 @@
+
+.col-input-wrapper{
+  .label-div{
+    width:35%;
+    float:left;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    span{
+      margin-top: 7px;
+      font-size:15px;
+      display: inline-block;
+    }
+  }
+  .input-div{
+    width:65%;
+    float:left;
+  }
+  //自定义类名来控制该类下的按钮自定义颜色，小技巧之一
+  .search-input-special-green{
+    .ant-input-search-button{
+      padding:0 25px;
+      background-color: #39ac6a;
+      border-color:#39ac6a;
+    }
+  }
+
+}

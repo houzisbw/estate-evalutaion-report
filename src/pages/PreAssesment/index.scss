@@ -1,7 +1,6 @@
 .my-page-wrapper{
   width:1000px;
   margin: 150px auto 0 auto;
-  height:1000px;
   background-color: #fff;
   box-shadow: 0 0 5px rgba(0,0,0,0.2);
   .page-title{
@@ -24,4 +23,10 @@
   .template-content{
     //padding:20px;
   }
+
+}
+.bottom-padding{
+  height:150px;
+  width:100%;
+  margin-top: 20px;
 }

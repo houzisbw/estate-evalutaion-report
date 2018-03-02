@@ -31,30 +31,35 @@ class PreAssesment extends React.Component{
 			'包商','农行','农行划拨'
 		];
 		return (
-			<div className="my-page-wrapper">
-				<div className="page-title">
-					<div className="template-desc">
-						<span>选择报告模板</span>
+			<div>
+				<div className="my-page-wrapper">
+					<div className="page-title">
+						<div className="template-desc">
+							<span>选择报告模板</span>
+						</div>
+						<div className="select-wrapper">
+							<Select defaultValue="包商" style={{ width: 150 }} onChange={(v)=>{this.handleSelectChange(v)}}>
+								{
+									templatesDataList.map((value,index)=>{
+										return (
+											<Option value={index} key={index}>{value}</Option>
+										)
+									})
+								}
+							</Select>
+						</div>
 					</div>
-					<div className="select-wrapper">
-						<Select defaultValue="包商" style={{ width: 150 }} onChange={(v)=>{this.handleSelectChange(v)}}>
-							{
-								templatesDataList.map((value,index)=>{
-									return (
-										<Option value={index} key={index}>{value}</Option>
-									)
-								})
-							}
-						</Select>
+					{/*模板内容区域*/}
+					<div className="template-content">
+						<TabComponent currentIndex={this.state.currentTemplateIndex}>
+							<ReportTemplate templateName="包商"/>
+							<ReportTemplate templateName="农行"/>
+							<ReportTemplate templateName="农行划拨"/>
+						</TabComponent>
 					</div>
 				</div>
-				{/*模板内容区域*/}
-				<div className="template-content">
-					<TabComponent currentIndex={this.state.currentTemplateIndex}>
-						<ReportTemplate templateName="包商"/>
-						<ReportTemplate templateName="农行"/>
-						<ReportTemplate templateName="农行划拨"/>
-					</TabComponent>
+				{/*补丁区域*/}
+				<div className="bottom-padding">
 				</div>
 			</div>
 		)

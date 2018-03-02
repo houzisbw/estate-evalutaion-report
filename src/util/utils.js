@@ -3,6 +3,7 @@
  */
 import axios from 'axios'
 import store from './../store/store'
+import {notification} from 'antd'
 //action
 import {getLoggedUser,updateUserAuth} from './../store/actions/users'
 //身份验证,1代表成功，-1代表失败
@@ -20,5 +21,17 @@ export const checkAuthentication = ()=>{
 			store.dispatch(getLoggedUser(false))
 			store.dispatch(updateUserAuth(-1))
 		}
+	})
+}
+
+//全局消息提示框
+export const notificationPopup = (title,content,timeToClose,type)=>{
+	//错误处理机制
+	let typeArray = ['success','info','warning','error'];
+	let tempType = typeArray.indexOf(type) !== -1 ?type:'success';
+	notification[tempType]({
+		message:title,
+		description:content,
+		duration:timeToClose?timeToClose:3
 	})
 }
