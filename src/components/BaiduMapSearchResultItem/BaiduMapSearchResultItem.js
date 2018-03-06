@@ -11,7 +11,11 @@ class BaiduMapSearchResultItem extends React.Component{
 	render(){
 		return (
 			//获取props里面的data自定义属性需要加括号获取
-			<div className={"search-result-wrap "+this.props.activeClass} data-index={this.props['data-index']} onClick={this.props.onClick}>
+			<div className={"search-result-wrap "+this.props.activeClass}
+				 onMouseOver={this.props.onMouseOver}
+				 onMouseOut={this.props.onMouseOut}
+				 data-index={this.props['data-index']}
+				 onClick={this.props.onClick}>
 				<div className={"search-result-wrap-inner "+this.props.activeBorderClass}>
 					<div className={this.props.itemSelected ?"green-tick":"green-tick-none"}>
 						<i className="fa fa-check"></i>

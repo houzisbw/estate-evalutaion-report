@@ -4,6 +4,7 @@ import BaiduMapSearchResultItem from './../BaiduMapSearchResultItem/BaiduMapSear
 import { Tabs,Modal,Form,Input} from 'antd';
 import {notificationPopup} from './../../util/utils'
 import ReportTemplateInputArea from './../ReportTemplateInputArea/reportTemplateInputArea'
+import axios from 'axios'
 //import {findDOMNode} from 'react-dom'
 import './index.scss'
 const TabPane = Tabs.TabPane;
@@ -14,6 +15,9 @@ class ReportTemplate extends React.Component{
 		super(props);
 		let BMap = window.BMap;
 		this.state = {
+			//该组件传递给reportTemplateArea的属性值,用于改变该reportTemplateArea子组件内某些input的value
+			reportTemplateAreaProps:{},
+
 			//主tab激活项的index
 			mainTabActiveKey:'1',
 			//子tab激活项的index，目的是为了每次切换主tab时重置子tab为第一项激活
@@ -85,9 +89,9 @@ class ReportTemplate extends React.Component{
 			},
 			tabData:[
 				{
-					mainTabName:'交通',
+					mainTabName:'周边',
 					subTab:{
-						subTabNamesList:['地铁站','公交站']
+						subTabNamesList:['小区','道路']
 					}
 				},
 				{
@@ -109,15 +113,15 @@ class ReportTemplate extends React.Component{
 					}
 				},
 				{
-					mainTabName:'生活',
+					mainTabName:'银行',
 					subTab:{
-						subTabNamesList:['银行','餐厅']
+						subTabNamesList:['银行']
 					}
 				},
 				{
-					mainTabName:'娱乐',
+					mainTabName:'交通',
 					subTab:{
-						subTabNamesList:['公园','电影院','健身房','体育馆']
+						subTabNamesList:['地铁站','公交站']
 					}
 				},
 				{
@@ -281,22 +285,24 @@ class ReportTemplate extends React.Component{
 					partName:'区位状况',
 					data:[
 						{
+							itemName:'小区名字',
+							type:'search',
+							placeholder:'请输入小区名字查找临路状况和区域状况~',
+							size:'3'
+						},
+						{
 							itemName:'临路状况',
 							type:'input',
+							placeholder:"如果未查找到相关小区，请查看下面地图手动输入~",
 							size:'3'
 						},
 						{
 							itemName:'区域概况',
 							type:'textarea',
-							placeholder:'在下方输入小区名字，点击搜索按钮进行小区周边设施搜索，点击地图右侧搜索结果即可自动生成区域概况文字~',
-							size:'3'
-						},
-						{
-							itemName:'小区名字',
-							type:'search',
-							placeholder:'请输入小区名字~',
+							placeholder:'如果未查找到相关小区，请查看下面地图手动输入~',
 							size:'3'
 						}
+
 
 					]
 				}
@@ -308,11 +314,13 @@ class ReportTemplate extends React.Component{
 		//加载百度地图
 		let BMap = window.BMap;
 		this.setState({
-			map:new BMap.Map('baiduMap')
-
+			map:new BMap.Map('baiduMap'),
+			keyword:this.state.tabData[0].subTab.subTabNamesList[0]
 		},()=>{
+			this.state.map.setMaxZoom(21);
+			
 			//成都市中心坐标
-			this.state.map.centerAndZoom(new BMap.Point(104.070611,30.665017), 12);
+			this.state.map.centerAndZoom(new BMap.Point(104.070611,30.665017), 15);
 			//添加缩放控件
 			var opts = {type: window.BMAP_NAVIGATION_CONTROL_LARGE}
 			this.state.map.addControl(new BMap.NavigationControl(opts));
@@ -324,7 +332,7 @@ class ReportTemplate extends React.Component{
 				});
 				//如果已选择的marker存在则置为null
 				if(this.state.selectedMarker){
-					this.state.selectedMarker.setIcon(iconInactive);
+					//this.state.selectedMarker.setIcon(iconInactive);
 					this.setState({
 						selectedMarker:null
 					});
@@ -346,13 +354,13 @@ class ReportTemplate extends React.Component{
 			selectedMarker:marker
 		},()=>{
 			//消除之前的marker激活标记,遍历之前全部marker
-			this.state.markerList.forEach((item)=>{
-				if(item !== marker){
-					item.setIcon(iconInactive)
-				}
-			})
+			// this.state.markerList.forEach((item)=>{
+			// 	if(item !== marker){
+			// 		item.setIcon(iconInactive)
+			// 	}
+			// })
 		});
-		marker.setIcon(iconActive);
+		//marker.setIcon(iconActive);
 		//只能同时存在一个infoBox
 		if(this.state.estateInfoBox){
 			this.state.estateInfoBox.close();
@@ -438,20 +446,25 @@ class ReportTemplate extends React.Component{
 			})
 		});
 		//mouseover
-		marker.addEventListener('mouseover',(e)=>{
-			marker.setIcon(iconActive);
-		});
-		//mouseout
-		marker.addEventListener('mouseout',(e)=>{
-			//如果当前的marker不是已经选中的marker，则恢复图标为inactive
-			if(marker !== this.state.selectedMarker){
-				marker.setIcon(iconInactive);
-			}
-		});
+		// marker.addEventListener('mouseover',(e)=>{
+		// 	marker.setIcon(iconActive);
+		// });
+		// //mouseout
+		// marker.addEventListener('mouseout',(e)=>{
+		// 	//如果当前的marker不是已经选中的marker，则恢复图标为inactive
+		// 	if(marker !== this.state.selectedMarker){
+		// 		marker.setIcon(iconInactive);
+		// 	}
+		// });
 		//设置title
 		marker.setTitle(name);
-
 		this.state.markerList.push(marker);
+		//这里要判断该marker是否存在于已选择列表中，若存在需要设置icon为激活状态
+		this.state.selectedFacilityList.forEach((item)=>{
+			if(item.name === name){
+				marker.setIcon(iconActive)
+			}
+		});
 		this.state.map.addOverlay(marker);
 
 	}
@@ -492,13 +505,14 @@ class ReportTemplate extends React.Component{
 			});
 
 		//第一个参数是关键字(此处为数组，多关键字搜索)，第二个是搜索中心，第三个是半径
-		local.searchNearby(this.state.keyword,point,1000);
+		//搜索半径1.5km
+		local.searchNearby(this.state.keyword,point,1500);
 	}
 	//检查是否选中了搜索结果项,参数是item的名字，即设施名字
 	checkItemSelected(itemName){
 		//forEach无法return，必须执行完全部数据
 		for(var i=0;i<this.state.selectedFacilityList.length;i++){
-			if(this.state.selectedFacilityList[i] === itemName){
+			if(this.state.selectedFacilityList[i].name === itemName){
 				return true;
 			}
 		}
@@ -617,7 +631,7 @@ class ReportTemplate extends React.Component{
 		})
 	}
 	//点击搜索结果
-	handleResultItemClick(e,index,title,address,distance){
+	handleResultItemClick(e,index,title,address,distance,subTabName){
 		//注意这里必须用currentTarget,简单的说，e.curretnTarget是指注册了事件监听器的对象，e.target是指对象里的子对象，实际触发这个事件的对象
 		//let itemIndex = e.currentTarget.getAttribute('data-index');
 		//let currentTarget = e.currentTarget;
@@ -625,11 +639,30 @@ class ReportTemplate extends React.Component{
 		let isSelected = this.checkItemSelected(title);
 		if(isSelected){
 			//找到该项在已选择列表中的位置
-			let index = this.state.selectedFacilityList.indexOf(title);
+			let index = -1;
+			for(var i=0;i<this.state.selectedFacilityList.length;i++){
+				let t = this.state.selectedFacilityList[i];
+				if(t.name === title){
+					index = i;
+					break;
+				}
+			}
 			let tempList = this.state.selectedFacilityList;
 			if(index !== -1){
 				//删除位于index处的元素
 				tempList.splice(index,1)
+				//改变icon为非激活状态
+				let BMap = window.BMap;
+				var iconInactive = new BMap.Icon(this.state.facilityMarkerPath, new BMap.Size(32, 32), {
+					anchor: new BMap.Size(10, 25)
+				});
+				//找到对应的marker
+				this.state.markerList.forEach((item)=>{
+					if(item.getTitle() === title){
+
+						item.setIcon(iconInactive)
+					}
+				})
 			}
 			this.setState({
 				selectedFacilityList:tempList
@@ -637,13 +670,36 @@ class ReportTemplate extends React.Component{
 
 		}else{
 			let tempList = this.state.selectedFacilityList;
-			tempList.push(title);
+			//subTabName是该结果所属的tab名称，用于后面区分selectedFacilityList的内容
+			//注意是对象，不能用indexOf
+			tempList.push({
+				type:subTabName,
+				name:title,
+				address:address,
+				distance:distance
+			});
 			this.setState({
 				selectedFacilityList:tempList
 			})
+			let BMap = window.BMap;
+			var iconActive = new BMap.Icon(this.state.facilityMarkerActivePath, new BMap.Size(32, 32), {
+				anchor: new BMap.Size(10, 25)
+			});
+			//找到对应的marker
+			this.state.markerList.forEach((item)=>{
+				if(item.getTitle() === title){
+					item.setIcon(iconActive)
+				}
+			})
 		}
 
-
+		//触发子组件方法
+		let dataObj = {
+			type:"AREA_FACILITY",
+			data:this.state.selectedFacilityList
+		};
+		//console.log(this.state.selectedFacilityList)
+		this['区位状况'].handleInputChange(dataObj);
 		this.setState({
 			activeResultIndex:index
 		},()=>{
@@ -690,7 +746,80 @@ class ReportTemplate extends React.Component{
 		},()=>{
 			//测试搜索
 			this.searchEstate();
+			//查询数据库，查看该小区是否已经填写过相关信息
+			let param = {
+				estateName:this.state._reportEstateName
+			};
+			axios.post('/estate/checkEstateExisted',param).then((resp)=>{
+				let status = resp.data.status;
+				//清空区位和临路输入框
+				let inputsToClear = [
+					'临路状况',
+					'区域概况'
+				];
+				this['区位状况'].handleClearInputs(inputsToClear);
+				//找到相关小区
+				if(status !== -1){
+					//通知消息提示框
+					notificationPopup('恭喜~',this.state._reportEstateName+'已经填写过相关信息!',4,'success');
+					//这里得把这些值传递给对应的input的textarea
+					//父组件调用子组件方法
+					//通过ref拿到子组件的方法在antd(form.create包装过后)中行不通,得用wrappedComponentRef
+					//坑点:handleInputChange等方法并不会在wrappedComponentRef中显示出来，但却可以正常使用
+					let dataObj = {
+						type:"ROAD_AND_AREA",
+						data:{
+							road:resp.data.road,
+							facility:resp.data.facility
+						}
+					};
+					//触发子组件的方法,this.refName获取子组件实例
+					this['区位状况'].handleInputChange(dataObj);
+				}else{
+					notificationPopup('注意~',this.state._reportEstateName+'未填写过相关信息,请手动输入!',4,'warning');
+
+				}
+			})
 		})
+	}
+
+	//搜索结果鼠标悬浮则显示对应的marker为激活图标
+	handleResultItemMouseOver(itemTitle){
+		let BMap = window.BMap;
+		let iconActive = new BMap.Icon(this.state.facilityMarkerActivePath, new BMap.Size(32, 32), {
+			anchor: new BMap.Size(10, 25)
+		});
+		//非激活状态的图标
+		var iconInactive = new BMap.Icon(this.state.facilityMarkerPath, new BMap.Size(32, 32), {
+			anchor: new BMap.Size(10, 25)
+		});
+		//找到对应的marker,修改为激活状态
+		this.state.markerList.forEach((item)=>{
+			if(item.getTitle() === itemTitle){
+				item.setIcon(iconActive)
+			}
+		})
+	}
+	//鼠标移出则修改marker为非激活状态
+	handleResultItemMouseOut(itemTitle){
+		let BMap = window.BMap;
+		var iconInactive = new BMap.Icon(this.state.facilityMarkerPath, new BMap.Size(32, 32), {
+			anchor: new BMap.Size(10, 25)
+		});
+		//如果该条目对应的marker不在已选择列表中则修改为非激活状态
+		let isExist = false;
+		this.state.selectedFacilityList.forEach((item)=>{
+			if(item.name === itemTitle){
+				isExist = true;
+			}
+		});
+		if(!isExist){
+			this.state.markerList.forEach((item)=>{
+				if(item.getTitle() === itemTitle){
+					item.setIcon(iconInactive);
+				}
+			})
+		}
 	}
 
 	render(){
@@ -716,7 +845,11 @@ class ReportTemplate extends React.Component{
 											</div>
 										</div>
 										{/*输入框展示组件,传递的方法onInputSearch是搜索小区周边设施的方法*/}
-										<ReportTemplateInputArea dataList={item.data} onInputSearch={(v)=>{this.searchEstateFacility(v)}}/>
+										<ReportTemplateInputArea
+											wrappedComponentRef={(inst) => this[item.partName] = inst}
+											dataList={item.data}
+											onInputSearch={(v)=>{this.searchEstateFacility(v)}}
+										/>
 									</div>
 								)
 							})
@@ -754,11 +887,13 @@ class ReportTemplate extends React.Component{
 																										  activeClass={index === this.state.activeResultIndex ? 'search-result-wrap-active':''}
 																										  activeBorderClass={index === this.state.activeResultIndex ? 'search-result-wrap-border-active':''}
 																										  itemSelected={this.checkItemSelected(item.title)}
+																										  onMouseOver={()=>{self.handleResultItemMouseOver(item.title)}}
+																										  onMouseOut={()=>{self.handleResultItemMouseOut(item.title)}}
 																										  data-index={index}
 																										  iconType={this.state.currentIconType}
 																										  estateName={item.title}
 																										  distance={distance}
-																										  onClick={(e)=>{self.handleResultItemClick(e,index,item.title,item.address, distance)}}
+																										  onClick={(e)=>{self.handleResultItemClick(e,index,item.title,item.address, distance, subItem)}}
 																										  address={item.address}
 																				/>
 																			)
