@@ -61,3 +61,8 @@ a{
 .clearfix{
     zoom:1;
 }
+
+/*antd的提示tip必须减少z-index，默认为1060，否则会遮挡header*/
+.ant-tooltip{
+
+}

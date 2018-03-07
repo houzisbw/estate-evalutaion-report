@@ -4,7 +4,7 @@
 //模板表单输入组件
 import React from 'react';
 import './index.scss';
-import {Row,Col,Form,Input,Tooltip,Select} from 'antd';
+import {Row,Col,Form,Input,Tooltip,Select,Modal} from 'antd';
 const FormItem = Form.Item;
 const Option = Select.Option;
 const Search = Input.Search;
@@ -12,7 +12,105 @@ const TextArea = Input.TextArea;
 class ReportTemplateInputArea extends React.Component{
 	constructor(props){
 		super(props);
+		this.state = {
+			//成新率的表,从数据库读出
+			buildingNewRate:[
+				[1995,54,62],
+				[1996,56,63],
+				[1997,58,65],
+				[1998,60,67],
+				[1999,62,68],
+
+				[2000,64,70],
+				[2001,66,72],
+				[2002,68,73],
+				[2003,70,75],
+				[2004,72,77],
+
+				[2005,74,78],
+				[2006,76,80],
+				[2007,78,82],
+				[2008,80,83],
+				[2009,82,85],
+
+				[2010,84,87],
+				[2011,86,88],
+				[2012,88,90],
+				[2013,90,92],
+				[2014,92,93],
+
+				[2015,94,95],
+				[2016,96,97],
+				[2017,98,98],
+				[2018,100,100]
+
+			],
+			buildingNewRateDescription:[
+				[60,'一般损坏房'],
+				[80,'基本完好房'],
+				[101,'完好房']
+			],
+			buildingStructure:{
+				'混合':1,
+				'砖混':1,
+				'钢混':1,
+				'框架':2,
+				'框剪':2,
+				'剪力墙':2
+			}
+		}
 	}
+
+	//提交表单
+	handleSubmit(){
+		this.props.form.validateFields((err, values) => {
+			if (!err) {
+				console.log('Received values of form: ', values);
+			}else{
+				Modal.warning({
+					title: '客官请注意',
+					content: '信息填写有误，请检查~',
+				});
+				return;
+			}
+		});
+	}
+
+	//获取成新率
+	getBuildingNewRate(buildingYear, buildingStructure){
+		let rate='',rateStr='';
+		for(let j=0;j<this.state.buildingNewRate.length;j++){
+			let item  = this.state.buildingNewRate[j];
+			if(item[0] === parseInt(buildingYear,10)){
+				rate = item[this.state.buildingStructure[buildingStructure]];
+				if(rate){
+					for(let i=0;i<this.state.buildingNewRateDescription.length;i++){
+						if(rate < this.state.buildingNewRateDescription[i][0]){
+							rateStr = this.state.buildingNewRateDescription[i][1];
+							break;
+						}
+					}
+					break;
+				}
+			}
+		}
+		return !rate?'':rate+'%，属于'+rateStr+"。"
+	}
+	//处理select的onChange,v是选中的option的value
+	handleSelectOnChange(v,itemName){
+		//如果是建筑结构下拉
+		if(itemName === '建筑结构'){
+			//判断建筑年代是否有值,首先通过getFieldValue获取input的值
+			let buildingDateValue = this.props.form.getFieldValue('建成年代');
+			if(buildingDateValue){
+				let newRateStr = this.getBuildingNewRate(buildingDateValue, v);
+				this.props.form.setFieldsValue({
+					'成新率':newRateStr
+				})
+			}
+		}
+	}
+
 	//清空输入框
 	handleClearInputs(inputsNameList){
 		let obj = {};
@@ -96,10 +194,11 @@ class ReportTemplateInputArea extends React.Component{
 			//处理地铁字符串,如果没有不写这一句
 			if(metroConditionList.length>0){
 				let tempAddress = metroConditionList[0][0].split(';')[0];
-				let tempDist = (parseInt(metroConditionList[0][1],10)/1000).toFixed(1);
-				let formatDistance = tempDist < 0.1 ? '0.1':tempDist;
-				resultString+='距'+tempAddress+"“"+metroConditionList[0][2]+"”站沿路距离约"+formatDistance+'公里，公共交通便捷度和道路通达度较好，区域内居家生活较便利。'
+				let dist = parseInt(metroConditionList[0][1],10);
+				let formatDistance = dist < 500 ? Math.ceil(dist/100)*100+'米，' : (dist/1000).toFixed(1)+'公里，';
+				resultString+='距'+tempAddress+"“"+metroConditionList[0][2]+"”站沿路距离约"+formatDistance;
 			}
+			resultString+='公共交通便捷度和道路通达度较好，区域内居家生活较便利。';
 			this.props.form.setFieldsValue({
 				'区域概况':resultString
 			})
@@ -113,11 +212,13 @@ class ReportTemplateInputArea extends React.Component{
 		const children = [];
 		//根据输入框类型的不同显示不同的输入框
 		const getInput = (t)=>{
-			if(t.type === 'input') return <Input  placeholder={t.itemName} />;
+			if(t.type === 'input') return (
+				<Input   />
+			);
 			else if(t.type === 'dropdown') {
 					return (
 					//combobox属性的下拉框含有输入属性，可以自定义输入,很棒
-					<Select mode="combobox">
+					<Select mode="combobox" onChange={(v)=>{this.handleSelectOnChange(v,t.itemName)}} placeholder={t.itemName+',下拉框'}>
 						{
 							t.dropdownData.map((item,index)=>{
 								return(
@@ -154,14 +255,43 @@ class ReportTemplateInputArea extends React.Component{
 				<Col span={spanNumber} key={t.itemName}>
 					<div className="col-input-wrapper clearfix">
 						<div className="label-div tool-tip-color" style={labelDivStyle}>
-							<Tooltip title={t.itemName} >
-								<span>{t.itemName}:</span>
-							</Tooltip>
+							{/*注意这里可能是下拉框,也可能是label,需要判断*/}
+							{
+								t.isDropdown ? (
+									<FormItem>
+										{/*注意如果组件被getFieldDecorator包裹，则不能用defaultValue,改用initialValue*/}
+										{/*这里如果输入框的label也是下拉框，则要单独算一个值,单独命名dropdownItemName*/}
+										{getFieldDecorator(t.dropdownItemName,{
+											initialValue:t.dropdownOption[0]
+										})(
+											<Select className="select-input-margin-offset">
+												{
+													t.dropdownOption.map((item,index)=>{
+														return(
+															<Option value={item} key={index}>
+																<Tooltip title={item} placement="topLeft">
+																	{item}
+																</Tooltip>
+															</Option>
+														)
+													})
+												}
+											</Select>
+										)}
+									</FormItem>
+								) :
+												(<Tooltip title={t.itemName} >
+														<span className="label-span-only">{t.itemName}:</span>
+												 </Tooltip>)
+							}
+
 						</div>
 						<div className="input-div" style={inputDivStyle}>
 							{
 								<FormItem >
-								{getFieldDecorator(t.itemName)(
+								{getFieldDecorator(t.itemName,{
+									initialValue:t.initialValue?t.initialValue:''
+								})(
 									getInput(t)
 								)}
 								</FormItem>

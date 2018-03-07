@@ -1,5 +1,18 @@
 .template-content-wrapper{
-
+  .generate-prereport-button{
+    height:60px;
+    background-color: #39ac6a;
+    margin-top: 20px;
+    color:#fff;
+    text-align: center;
+    line-height:60px;
+    font-size:20px;
+    cursor: pointer;
+    transition: all .5s;
+    &:hover{
+      background-color: #40cb81;
+    }
+  }
   .template-title{
     margin:0 auto;
     padding:10px;

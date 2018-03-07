@@ -7,10 +7,25 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    span{
-      margin-top: 7px;
+    .label-span-only{
+      margin-top: 9px;
       font-size:15px;
       display: inline-block;
+    }
+    .select-input-margin-offset{
+      margin-top:4px;
+      .ant-select-selection{
+        border:none;
+        //去除阴影，这里得去antd源代码里找对应的css属性
+        -webkit-box-shadow: none!important;
+        box-shadow: none!important;
+        .ant-select-selection__rendered{
+          margin-left:0;
+          .ant-select-selection-selected-value{
+            padding-right:10px;
+          }
+        }
+      }
     }
   }
   .input-div{

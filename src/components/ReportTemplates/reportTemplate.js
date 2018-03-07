@@ -132,125 +132,182 @@ class ReportTemplate extends React.Component{
 				}
 			]
 			,
-			//测试数据
+			//测试数据,index字段很关键，决定了该内容最终在报告中显示的位置，从1开始
+			//该数据也是从数据库读取，不同模板内容不同
+			//该测试数据是包商的
 			inputTypeDataList:[
 				{
 					partName:'实物状况',
 					data:[
 						{
-							itemName:'委托人',
+							itemName:'所有权人',
 							type:'input',
-							size:'1'
-						},
-						{
-							itemName:'房屋所有权人',
-							type:'input',
-							size:'1'
+							isDropdown: true,
+							dropdownItemName:'所有权人选择',
+							dropdownOption: ['房屋所有权人', '权利人'],
+							size:'1',
+							index:4,
+							dropdownLabelIndex:5
 						},
 						{
 							type:'input',
 							itemName:'建成年代',
-							size:'1'
+							size:'1',
+							index:6
 						},
 						{
-							type:'input',
+							type:'dropdown',
+							dropdownData:[
+								'混合','砖混','钢混','框架','框剪','剪力墙'
+							],
 							itemName:'建筑结构',
-							size:'1'
+							size:'1',
+							index:7
 						},
 						{
 							type:'input',
 							itemName:'总楼层',
-							size:'1'
+							size:'1',
+							index:8
 						},
 						{
 							type:'input',
 							itemName:'所在楼层',
-							size:'1'
+							size:'1',
+							index:9
 						},
 						{
-							type:'input',
-							itemName:'几梯几户',
-							size:'1'
+							type: 'input',
+							itemName: '几梯几户',
+							size: '1',
+							isDropdown: true,
+							dropdownItemName:'几梯几户选择',
+							dropdownOption: ['几梯几户', '1层几户'],
+							dropdownLabelIndex:10,
+							index:11
 						},
 						{
 							type:'input',
 							itemName:'建筑面积',
-							size:'1'
+							size:'1',
+							index:12
 						},
 						{
 							type:'input',
 							itemName:'室内层高',
-							size:'1'
+							size:'1',
+							initialValue:"2.8米",
+							index:13
 						},
 						{
 							type:'input',
 							itemName:'朝向',
-							size:'1'
+							size:'1',
+							index:14
 						},
 						{
 							type:'input',
 							itemName:'登记用途',
-							size:'1'
+							size:'1',
+							index:15
 						},
 						{
 							type:'input',
 							itemName:'实际用途',
-							size:'1'
+							size:'1',
+							index:16
 						},
 						{
 							type:'input',
 							itemName:'利用现状',
-							size:'1'
+							size:'1',
+							index:17
 						},
 						{
-							type:'input',
+							type:'dropdown',
+							dropdownData:['墙砖','涂料','清水墙','毛石饰才'],
 							itemName:'外墙',
-							size:'1'
+							size:'1',
+							index:18
 						},
 						{
 							type:'input',
 							itemName:'噪音源',
-							size:'1'
+							size:'1',
+							index:19
 						},
 						{
 							type:'input',
-							itemName:'维修保养',
-							size:'1'
+							itemName:'入住率',
+							size:'1',
+							index:20
 						}
 						,
 						{
 							type:'input',
 							itemName:'户型结构',
-							size:'1'
+							size:'1',
+							index:21
 						},
 						{
 							type:'input',
 							itemName:'空间布局',
-							size:'1'
+							size:'1',
+							index:22
 						},
 						{
 							type:'input',
 							itemName:'设施设备',
-							size:'1'
+							size:'1',
+							index:23
 						},
 						{
 							type:'input',
 							itemName:'成新率',
-							size:'1'
+							size:'1',
+							index:26
 						},
 
 						//////中
 						{
 							type:'input',
-							itemName:'《房屋所有权证》证号',
+							itemName:'产权证号',
+							isDropdown: true,
+							dropdownItemName:'产权证号选择',
+							dropdownOption: [ '《房屋所有权证》证号','《不动产权证书》证号'],
 							size:'2'
 						},
 						{
 							type:'input',
 							itemName:'业务件号',
+							isDropdown: true,
+							dropdownItemName:'业务件号选择',
+							dropdownOption: ['业务件号','业务号','档案保管号','丘（地）号'],
 							size:'2'
 						},
+						{
+							itemName:'房屋产权坐落',
+							type:'input',
+							size:'2',
+							index:2
+						},
+						{
+							itemName:'实地勘察地址',
+							type:'input',
+							size:'2',
+							index:3
+
+						},
 						/////下拉选择框,大
+						{
+							itemName:'委托信息',
+							type:'dropdown',
+							dropdownData:[
+								'受【请填写委托人】的委托，我公司对位于【请填写地址】的住宅用房地产进行了实地查勘及价值预估，为估价委托人在贵行办理房地产抵押贷款额度提供参考依据。估价对象状况及预估报告结果如下：'
+							],
+							size:'3',
+							index:1
+						},
 						{
 							itemName:'室内装修',
 							type:'dropdown',
@@ -258,7 +315,8 @@ class ReportTemplate extends React.Component{
 								'天棚石膏板造型，刷乳胶漆；卧室：地面贴地砖，内墙、天棚刷乳胶漆；厨房、卫生间：地面铺防滑地砖，内墙贴瓷砖到顶，天棚为铝扣板吊顶。',
 								'入户防盗门，室内套装木门，塑钢玻璃窗，普通灯具照明，水电设施暗敷设；客厅、卧室：地面铺木地板，内墙、天棚刷乳胶漆；厨房、卫生间：地面铺防滑地砖，内墙贴瓷砖到顶，天棚为铝扣板吊顶。'
 							],
-							size:'2'
+							size:'3',
+							index:24
 						},
 						{
 							itemName:'所在小区概况',
@@ -267,18 +325,10 @@ class ReportTemplate extends React.Component{
 								'小区内部绿化环境较好，专业物业物管，设地下停车位。',
 								'小区内部绿化环境整洁，小区门卫，设地面停车位。'
 							],
-							size:'2'
+							size:'3',
+							index:25
 						},
-						{
-							itemName:'房屋产权坐落',
-							type:'input',
-							size:'2'
-						},
-						{
-							itemName:'实地勘察地址',
-							type:'input',
-							size:'2'
-						},
+
 					]
 				},
 				{
@@ -292,18 +342,44 @@ class ReportTemplate extends React.Component{
 						},
 						{
 							itemName:'临路状况',
-							type:'input',
+							type:'dropdown',
+							dropdownData:[
+								'估价对象所在小区西北临；西南临；东南临；东北临',
+								'估价对象所在小区北临；西临；南临；东临'
+							],
 							placeholder:"如果未查找到相关小区，请查看下面地图手动输入~",
-							size:'3'
+							size:'3',
+							index:27
 						},
 						{
 							itemName:'区域概况',
 							type:'textarea',
 							placeholder:'如果未查找到相关小区，请查看下面地图手动输入~',
-							size:'3'
+							size:'3',
+							index:28
 						}
 
 
+					]
+				},
+				{
+					partName:'估价结果',
+					data:[
+						{
+							itemName:'价值时点',
+							type:'input',
+							placeholder:'',
+							size:'1',
+							initialValue:'二〇一八年x月x日',
+							index:29
+						},
+						{
+							itemName:'评估单价',
+							type:'input',
+							placeholder:'',
+							size:'1',
+							initialValue:''
+						}
 					]
 				}
 			]
@@ -554,7 +630,7 @@ class ReportTemplate extends React.Component{
 		myGeo.getPoint(this.state._reportEstateName, (point)=>{
 				if (point) {
 					//通知消息提示框
-					notificationPopup('恭喜~','找到'+this.state._reportEstateName+'相关信息!',4,'success');
+					notificationPopup('恭喜~','找到'+this.state._reportEstateName+'相关信息!',6,'success');
 					//保存坐标点
 					this.setState({
 						estatePosition:point
@@ -761,7 +837,7 @@ class ReportTemplate extends React.Component{
 				//找到相关小区
 				if(status !== -1){
 					//通知消息提示框
-					notificationPopup('恭喜~',this.state._reportEstateName+'已经填写过相关信息!',4,'success');
+					notificationPopup('恭喜~',this.state._reportEstateName+'已经填写过相关信息!',6,'success');
 					//这里得把这些值传递给对应的input的textarea
 					//父组件调用子组件方法
 					//通过ref拿到子组件的方法在antd(form.create包装过后)中行不通,得用wrappedComponentRef
@@ -776,7 +852,7 @@ class ReportTemplate extends React.Component{
 					//触发子组件的方法,this.refName获取子组件实例
 					this['区位状况'].handleInputChange(dataObj);
 				}else{
-					notificationPopup('注意~',this.state._reportEstateName+'未填写过相关信息,请手动输入!',4,'warning');
+					notificationPopup('注意~',this.state._reportEstateName+'未填写过相关信息,请手动输入!',6,'warning');
 
 				}
 			})
@@ -821,10 +897,20 @@ class ReportTemplate extends React.Component{
 			})
 		}
 	}
+	//生成预评估报告
+	generatePrereport(){
+		//依次调用inputTypeDataList里面的子组件方法,提交每块表单
+		this.state.inputTypeDataList.forEach((item)=>{
+			let partName = item.partName;
+			//调用子组件的提交表单方法
+			this[partName].handleSubmit();
+		})
+	}
 
 	render(){
 		let self = this;
-
+		//最后一部分：估价结果
+		let inputTypeLast = this.state.inputTypeDataList[this.state.inputTypeDataList.length-1];
 		return (
 			<div>
 				<div className="template-content-wrapper">
@@ -836,25 +922,28 @@ class ReportTemplate extends React.Component{
 					<div className="template-input-area">
 						{
 							this.state.inputTypeDataList.map((item,index)=>{
-								return (
-									<div key={index}>
-										{/*标题*/}
-										<div className="template-input-type-title-wrapper">
-											<div className="template-input-type-title">
-												{item.partName}
+								//估价结果放在百度地图下面,估价结果是最后一个内容
+								if(index !== this.state.inputTypeDataList.length-1){
+									return (
+										<div key={index}>
+											{/*标题*/}
+											<div className="template-input-type-title-wrapper">
+												<div className="template-input-type-title">
+													{item.partName}
+												</div>
 											</div>
+											{/*输入框展示组件,传递的方法onInputSearch是搜索小区周边设施的方法*/}
+											<ReportTemplateInputArea
+												wrappedComponentRef={(inst) => this[item.partName] = inst}
+												dataList={item.data}
+												onInputSearch={(v)=>{this.searchEstateFacility(v)}}
+											/>
 										</div>
-										{/*输入框展示组件,传递的方法onInputSearch是搜索小区周边设施的方法*/}
-										<ReportTemplateInputArea
-											wrappedComponentRef={(inst) => this[item.partName] = inst}
-											dataList={item.data}
-											onInputSearch={(v)=>{this.searchEstateFacility(v)}}
-										/>
-									</div>
-								)
+									)
+								}
+
 							})
 						}
-
 					</div>
 				</div>
 				<div className="baidu-map-wrapper clearfix">
@@ -918,6 +1007,31 @@ class ReportTemplate extends React.Component{
 							}
 
 						</Tabs>
+					</div>
+				</div>
+				{/*估价结果显示*/}
+				<div className="template-content-wrapper">
+					<div className="template-input-area">
+						<div>
+							{/*标题*/}
+							<div className="template-input-type-title-wrapper">
+								<div className="template-input-type-title">
+									{inputTypeLast.partName}
+								</div>
+							</div>
+							{/*输入框展示组件,传递的方法onInputSearch是搜索小区周边设施的方法*/}
+							<ReportTemplateInputArea
+								wrappedComponentRef={(inst) => this[inputTypeLast.partName] = inst}
+								dataList={inputTypeLast.data}
+								onInputSearch={(v)=>{this.searchEstateFacility(v)}}
+							/>
+						</div>
+					</div>
+				</div>
+				{/*点击生成预评估报告按钮*/}
+				<div className="template-content-wrapper">
+					<div className="generate-prereport-button" onClick={()=>this.generatePrereport()}>
+						生成预评估报告
 					</div>
 				</div>
 			</div>
