@@ -5,6 +5,7 @@ import { Tabs,Modal,Form,Input} from 'antd';
 import {notificationPopup} from './../../util/utils'
 import ReportTemplateInputArea from './../ReportTemplateInputArea/reportTemplateInputArea'
 import axios from 'axios'
+import {moneyToChinese,dateToChinese} from './../../util/utils'
 //import {findDOMNode} from 'react-dom'
 import './index.scss'
 const TabPane = Tabs.TabPane;
@@ -15,6 +16,8 @@ class ReportTemplate extends React.Component{
 		super(props);
 		let BMap = window.BMap;
 		this.state = {
+			// 表单提交时存储各个input值的list
+			reportInputDataList:[],
 			//该组件传递给reportTemplateArea的属性值,用于改变该reportTemplateArea子组件内某些input的value
 			reportTemplateAreaProps:{},
 
@@ -267,6 +270,13 @@ class ReportTemplate extends React.Component{
 							size:'1',
 							index:26
 						},
+						{
+							type:'input',
+							itemName:'估价方法',
+							size:'1',
+							index:38,
+							initialValue:'比较法'
+						},
 
 						//////中
 						{
@@ -275,16 +285,18 @@ class ReportTemplate extends React.Component{
 							isDropdown: true,
 							dropdownItemName:'产权证号选择',
 							dropdownOption: [ '《房屋所有权证》证号','《不动产权证书》证号'],
-							size:'2'
+							size:'2',
+							index:33,
+							dropdownLabelIndex:32
 						},
-						{
-							type:'input',
-							itemName:'业务件号',
-							isDropdown: true,
-							dropdownItemName:'业务件号选择',
-							dropdownOption: ['业务件号','业务号','档案保管号','丘（地）号'],
-							size:'2'
-						},
+						// {
+						// 	type:'input',
+						// 	itemName:'业务件号',
+						// 	isDropdown: true,
+						// 	dropdownItemName:'业务件号选择',
+						// 	dropdownOption: ['业务件号','业务号','档案保管号','丘（地）号'],
+						// 	size:'2'
+						// },
 						{
 							itemName:'房屋产权坐落',
 							type:'input',
@@ -338,7 +350,9 @@ class ReportTemplate extends React.Component{
 							itemName:'小区名字',
 							type:'search',
 							placeholder:'请输入小区名字查找临路状况和区域状况~',
-							size:'3'
+							size:'3',
+							//-1表示该项不算作最终表单提交项
+							index:'none'
 						},
 						{
 							itemName:'临路状况',
@@ -378,7 +392,8 @@ class ReportTemplate extends React.Component{
 							type:'input',
 							placeholder:'',
 							size:'1',
-							initialValue:''
+							initialValue:'',
+							index:34
 						}
 					]
 				}
@@ -830,8 +845,8 @@ class ReportTemplate extends React.Component{
 				let status = resp.data.status;
 				//清空区位和临路输入框
 				let inputsToClear = [
-					'临路状况',
-					'区域概况'
+					'数据27',
+					'数据28'
 				];
 				this['区位状况'].handleClearInputs(inputsToClear);
 				//找到相关小区
@@ -904,8 +919,71 @@ class ReportTemplate extends React.Component{
 			let partName = item.partName;
 			//调用子组件的提交表单方法
 			this[partName].handleSubmit();
+		});
+		//删除含有none的属性
+		let temp = this.state.reportInputDataList;
+		for(var key in temp){
+			if(key.indexOf('none')!==-1){
+				delete temp[key];
+			}
+		}
+		this.setState({
+			reportInputDataList:temp
+		},()=>{
+
+			//计算包商的其他数据(根据已有的数据生成)
+			let otherObj = {};
+			//评估总价
+			let totalPrice = ((parseInt(this.state.reportInputDataList['数据34'],10)*parseFloat(this.state.reportInputDataList['数据12'],10))/10000).toFixed(2);
+			otherObj['数据35'] = totalPrice
+			//税费
+			let tax = (totalPrice*0.05).toFixed(2)
+			otherObj['数据36'] = tax
+			//抵押净值
+			let mortgageValue = totalPrice - tax;
+			otherObj['数据37'] = mortgageValue
+			//估价结果：抵押净值
+			let mortgageValueResult = '抵押净值：'+mortgageValue+'万元（佰元以下四舍五入）';
+			otherObj['数据30'] = mortgageValueResult
+			//估价结果:大写
+			let chineseValue = '大    写：'+moneyToChinese(mortgageValue*10000)+'人民币'
+			otherObj['数据31'] = chineseValue;
+			//当日时间
+			let currentDate = dateToChinese();
+			otherObj['数据39'] = currentDate;
+
+			//合并对象
+			this.setState({
+				reportInputDataList:Object.assign(this.state.reportInputDataList, otherObj)
+			});
+
+			let t = this.state.reportInputDataList;
+			//必须用模板字符串，否则换行无法识别出xdoc
+
+			let XDoc = window.XDoc;
+			XDoc.key = "";
+			//run的第一个path参数必须是url地址，本地不行，不知道为啥，在express目录static文件夹下放置docx即可
+			let dataObj = {};
+			for(let key in t){
+				if(t.hasOwnProperty(key)){
+					dataObj[key]=t[key]
+				}
+			}
+			console.log(dataObj)
+			XDoc.run('http://47.95.120.132:4000/static/baoshang-style-right.docx', "docx", dataObj,"_blank");
+
+
+		})
+
+	}
+	//获取子组件传来的input的值
+	onSubmit(v) {
+		let tempObj = Object.assign(this.state.reportInputDataList, v);
+		this.setState({
+			reportInputDataList:tempObj
 		})
 	}
+
 
 	render(){
 		let self = this;
@@ -936,6 +1014,7 @@ class ReportTemplate extends React.Component{
 											<ReportTemplateInputArea
 												wrappedComponentRef={(inst) => this[item.partName] = inst}
 												dataList={item.data}
+												onSubmit={(v)=>this.onSubmit(v)}
 												onInputSearch={(v)=>{this.searchEstateFacility(v)}}
 											/>
 										</div>
@@ -1023,6 +1102,7 @@ class ReportTemplate extends React.Component{
 							<ReportTemplateInputArea
 								wrappedComponentRef={(inst) => this[inputTypeLast.partName] = inst}
 								dataList={inputTypeLast.data}
+								onSubmit={(v)=>this.onSubmit(v)}
 								onInputSearch={(v)=>{this.searchEstateFacility(v)}}
 							/>
 						</div>

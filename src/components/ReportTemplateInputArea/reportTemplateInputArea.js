@@ -65,7 +65,8 @@ class ReportTemplateInputArea extends React.Component{
 	handleSubmit(){
 		this.props.form.validateFields((err, values) => {
 			if (!err) {
-				console.log('Received values of form: ', values);
+				//调用父组件的方法把values传递出去
+				this.props.onSubmit(values);
 			}else{
 				Modal.warning({
 					title: '客官请注意',
@@ -101,11 +102,11 @@ class ReportTemplateInputArea extends React.Component{
 		//如果是建筑结构下拉
 		if(itemName === '建筑结构'){
 			//判断建筑年代是否有值,首先通过getFieldValue获取input的值
-			let buildingDateValue = this.props.form.getFieldValue('建成年代');
+			let buildingDateValue = this.props.form.getFieldValue('数据6');
 			if(buildingDateValue){
 				let newRateStr = this.getBuildingNewRate(buildingDateValue, v);
 				this.props.form.setFieldsValue({
-					'成新率':newRateStr
+					'数据26':newRateStr
 				})
 			}
 		}
@@ -124,8 +125,8 @@ class ReportTemplateInputArea extends React.Component{
 		//如果是临路状况和区位状况
 		if(dataObj.type === 'ROAD_AND_AREA'){
 			this.props.form.setFieldsValue({
-				'临路状况':dataObj.data.road,
-				'区域概况':dataObj.data.facility
+				'数据27':dataObj.data.road,
+				'数据28':dataObj.data.facility
 			})
 		//点击搜索结果改变区位概况
 		}else if(dataObj.type === 'AREA_FACILITY'){
@@ -200,7 +201,7 @@ class ReportTemplateInputArea extends React.Component{
 			}
 			resultString+='公共交通便捷度和道路通达度较好，区域内居家生活较便利。';
 			this.props.form.setFieldsValue({
-				'区域概况':resultString
+				'数据28':resultString
 			})
 
 		}
@@ -250,6 +251,8 @@ class ReportTemplateInputArea extends React.Component{
 			//独占一行的input必须重新设定宽度，为了美观
 			let labelDivStyle = t.size === '3' ? {width:'17%'}:{};
 			let inputDivStyle = t.size === '3' ? {width:'83%'}:{};
+			//每个控件唯一标志,注意还有dropdownlabelindex需要特殊处理
+			let inputIndex = '数据'+t.index;
 			//注意必须设置key
 			children.push(
 				<Col span={spanNumber} key={t.itemName}>
@@ -261,7 +264,7 @@ class ReportTemplateInputArea extends React.Component{
 									<FormItem>
 										{/*注意如果组件被getFieldDecorator包裹，则不能用defaultValue,改用initialValue*/}
 										{/*这里如果输入框的label也是下拉框，则要单独算一个值,单独命名dropdownItemName*/}
-										{getFieldDecorator(t.dropdownItemName,{
+										{getFieldDecorator('数据'+t.dropdownLabelIndex,{
 											initialValue:t.dropdownOption[0]
 										})(
 											<Select className="select-input-margin-offset">
@@ -289,7 +292,7 @@ class ReportTemplateInputArea extends React.Component{
 						<div className="input-div" style={inputDivStyle}>
 							{
 								<FormItem >
-								{getFieldDecorator(t.itemName,{
+								{getFieldDecorator(inputIndex,{
 									initialValue:t.initialValue?t.initialValue:''
 								})(
 									getInput(t)

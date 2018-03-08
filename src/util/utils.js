@@ -52,3 +52,39 @@ export const moneyToChinese = (n)=>{
 	return str.replace(/零(千|百|拾|角)/g, "零").replace(/(零)+/g, "零").replace(/零(万|亿|元)/g, "$1").replace(/(亿)万|壹(拾)/g, "$1$2").replace(/^元零?|零分/g, "").replace(/元$/g, "元整");
 
 }
+
+//yyyy-m-d转化为中文时间
+export const dateToChinese =(date)=>{
+	let d = new Date();
+	let year = d.getFullYear().toString(),
+		month = (d.getMonth()+1).toString(),
+		day = d.getDate().toString();
+	let convert = ['〇','一','二','三','四','五','六','七','八','九','十'];
+	let yearStr = '',monthStr='',dayStr='';
+	for(var i=0;i<year.length;i++){
+		yearStr+=convert[parseInt(year[i],10)];
+	}
+	//月
+	if(month.length>1){
+		if(month[0] === '1'){
+			monthStr = '十'+convert[parseInt(month[1],10)];
+		}else{
+			monthStr = convert[parseInt(month[0],10)]+'十'+convert[parseInt(month[1],10)];
+		}
+	}else{
+		monthStr = convert[parseInt(month,10)]
+	}
+	//日
+	if(day.length>1){
+		if(day[0] === '1'){
+			dayStr = '十'+convert[parseInt(day[1],10)];
+		}else{
+			dayStr = convert[parseInt(day[0],10)]+'十'+convert[parseInt(day[1],10)];
+		}
+	}else{
+		dayStr = convert[parseInt(day,10)]
+	}
+	return yearStr+'年'+monthStr+'月'+dayStr+'日';
+
+
+}
