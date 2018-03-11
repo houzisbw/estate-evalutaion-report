@@ -78,10 +78,18 @@
   float:left;
   width:35%;
   height:450px;
-  background-color: #fff;
+  position: relative;
   box-shadow: 0 1px 2px  rgba(0,0,0,0.2);
   .sub-tab-content-container{
     width:100%;
+  }
+  .clear-baidu-map-search-results{
+    position: absolute;
+    right:10px;
+    bottom:10px;
+    width:40px;
+    height:40px;
+    z-index:99;
   }
 }
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import BaiduMap from './../BaiduMap/baiduMap'
 import BaiduMapSearchResultItem from './../BaiduMapSearchResultItem/BaiduMapSearchResultItem'
-import { Tabs,Modal,Form,Input} from 'antd';
+import { Tabs,Modal,Form,Input,Button,Icon} from 'antd';
 import {notificationPopup} from './../../util/utils'
 import ReportTemplateInputArea from './../ReportTemplateInputArea/reportTemplateInputArea'
 import axios from 'axios'
@@ -16,11 +16,12 @@ class ReportTemplate extends React.Component{
 		super(props);
 		let BMap = window.BMap;
 		this.state = {
+			//docx,存放银行模板对应的docx的名字
+			docx:{},
 			// 表单提交时存储各个input值的list
 			reportInputDataList:[],
 			//该组件传递给reportTemplateArea的属性值,用于改变该reportTemplateArea子组件内某些input的value
 			reportTemplateAreaProps:{},
-
 			//主tab激活项的index
 			mainTabActiveKey:'1',
 			//子tab激活项的index，目的是为了每次切换主tab时重置子tab为第一项激活
@@ -64,12 +65,9 @@ class ReportTemplate extends React.Component{
 			//预评估城市
 			assesmentCity:'成都市',
 			//预评估报告字段
-			_reportEstateName:'翰林南城',
-
-
-
+			_reportEstateName:'',
 			//百度地图搜索关键字,选择子tab确定关键字,默认是第一个tab的第一个子tab
-			keyword:'地铁站',
+			keyword:'',
 			//百度地图搜索结果列表
 			mapSearchResultList:[],
 			iconTypeClassName:{
@@ -90,326 +88,37 @@ class ReportTemplate extends React.Component{
 				'健身房':'fa-soccer-ball-o',
 				'体育馆':'fa-cubes'
 			},
-			tabData:[
-				{
-					mainTabName:'周边',
-					subTab:{
-						subTabNamesList:['小区','道路']
-					}
-				},
-				{
-					mainTabName:'教育',
-					subTab:{
-						subTabNamesList:['幼儿园','小学','中学','大学']
-					}
-				},
-				{
-					mainTabName:'医疗',
-					subTab:{
-						subTabNamesList:['医院']
-					}
-				},
-				{
-					mainTabName:'购物',
-					subTab:{
-						subTabNamesList:['商场','超市','市场']
-					}
-				},
-				{
-					mainTabName:'银行',
-					subTab:{
-						subTabNamesList:['银行']
-					}
-				},
-				{
-					mainTabName:'交通',
-					subTab:{
-						subTabNamesList:['地铁站','公交站']
-					}
-				},
-				{
-					mainTabName:'补丁',
-					subTab:{
-						subTabNamesList:[]
-					}
-				}
-			]
-			,
-			//测试数据,index字段很关键，决定了该内容最终在报告中显示的位置，从1开始
-			//该数据也是从数据库读取，不同模板内容不同
-			//该测试数据是包商的
-			inputTypeDataList:[
-				{
-					partName:'实物状况',
-					data:[
-						{
-							itemName:'所有权人',
-							type:'input',
-							isDropdown: true,
-							dropdownItemName:'所有权人选择',
-							dropdownOption: ['房屋所有权人', '权利人'],
-							size:'1',
-							index:4,
-							dropdownLabelIndex:5
-						},
-						{
-							type:'input',
-							itemName:'建成年代',
-							size:'1',
-							index:6
-						},
-						{
-							type:'dropdown',
-							dropdownData:[
-								'混合','砖混','钢混','框架','框剪','剪力墙'
-							],
-							itemName:'建筑结构',
-							size:'1',
-							index:7
-						},
-						{
-							type:'input',
-							itemName:'总楼层',
-							size:'1',
-							index:8
-						},
-						{
-							type:'input',
-							itemName:'所在楼层',
-							size:'1',
-							index:9
-						},
-						{
-							type: 'input',
-							itemName: '几梯几户',
-							size: '1',
-							isDropdown: true,
-							dropdownItemName:'几梯几户选择',
-							dropdownOption: ['几梯几户', '1层几户'],
-							dropdownLabelIndex:10,
-							index:11
-						},
-						{
-							type:'input',
-							itemName:'建筑面积',
-							size:'1',
-							index:12
-						},
-						{
-							type:'input',
-							itemName:'室内层高',
-							size:'1',
-							initialValue:"2.8米",
-							index:13
-						},
-						{
-							type:'input',
-							itemName:'朝向',
-							size:'1',
-							index:14
-						},
-						{
-							type:'input',
-							itemName:'登记用途',
-							size:'1',
-							index:15
-						},
-						{
-							type:'input',
-							itemName:'实际用途',
-							size:'1',
-							index:16
-						},
-						{
-							type:'input',
-							itemName:'利用现状',
-							size:'1',
-							index:17
-						},
-						{
-							type:'dropdown',
-							dropdownData:['墙砖','涂料','清水墙','毛石饰才'],
-							itemName:'外墙',
-							size:'1',
-							index:18
-						},
-						{
-							type:'input',
-							itemName:'噪音源',
-							size:'1',
-							index:19
-						},
-						{
-							type:'input',
-							itemName:'入住率',
-							size:'1',
-							index:20
-						}
-						,
-						{
-							type:'input',
-							itemName:'户型结构',
-							size:'1',
-							index:21
-						},
-						{
-							type:'input',
-							itemName:'空间布局',
-							size:'1',
-							index:22
-						},
-						{
-							type:'input',
-							itemName:'设施设备',
-							size:'1',
-							index:23
-						},
-						{
-							type:'input',
-							itemName:'成新率',
-							size:'1',
-							index:26
-						},
-						{
-							type:'input',
-							itemName:'估价方法',
-							size:'1',
-							index:38,
-							initialValue:'比较法'
-						},
-
-						//////中
-						{
-							type:'input',
-							itemName:'产权证号',
-							isDropdown: true,
-							dropdownItemName:'产权证号选择',
-							dropdownOption: [ '《房屋所有权证》证号','《不动产权证书》证号'],
-							size:'2',
-							index:33,
-							dropdownLabelIndex:32
-						},
-						// {
-						// 	type:'input',
-						// 	itemName:'业务件号',
-						// 	isDropdown: true,
-						// 	dropdownItemName:'业务件号选择',
-						// 	dropdownOption: ['业务件号','业务号','档案保管号','丘（地）号'],
-						// 	size:'2'
-						// },
-						{
-							itemName:'房屋产权坐落',
-							type:'input',
-							size:'2',
-							index:2
-						},
-						{
-							itemName:'实地勘察地址',
-							type:'input',
-							size:'2',
-							index:3
-
-						},
-						/////下拉选择框,大
-						{
-							itemName:'委托信息',
-							type:'dropdown',
-							dropdownData:[
-								'受【请填写委托人】的委托，我公司对位于【请填写地址】的住宅用房地产进行了实地查勘及价值预估，为估价委托人在贵行办理房地产抵押贷款额度提供参考依据。估价对象状况及预估报告结果如下：'
-							],
-							size:'3',
-							index:1
-						},
-						{
-							itemName:'室内装修',
-							type:'dropdown',
-							dropdownData:[
-								'天棚石膏板造型，刷乳胶漆；卧室：地面贴地砖，内墙、天棚刷乳胶漆；厨房、卫生间：地面铺防滑地砖，内墙贴瓷砖到顶，天棚为铝扣板吊顶。',
-								'入户防盗门，室内套装木门，塑钢玻璃窗，普通灯具照明，水电设施暗敷设；客厅、卧室：地面铺木地板，内墙、天棚刷乳胶漆；厨房、卫生间：地面铺防滑地砖，内墙贴瓷砖到顶，天棚为铝扣板吊顶。'
-							],
-							size:'3',
-							index:24
-						},
-						{
-							itemName:'所在小区概况',
-							type:'dropdown',
-							dropdownData:[
-								'小区内部绿化环境较好，专业物业物管，设地下停车位。',
-								'小区内部绿化环境整洁，小区门卫，设地面停车位。'
-							],
-							size:'3',
-							index:25
-						},
-
-					]
-				},
-				{
-					partName:'区位状况',
-					data:[
-						{
-							itemName:'小区名字',
-							type:'search',
-							placeholder:'请输入小区名字查找临路状况和区域状况~',
-							size:'3',
-							//-1表示该项不算作最终表单提交项
-							index:'none'
-						},
-						{
-							itemName:'临路状况',
-							type:'dropdown',
-							dropdownData:[
-								'估价对象所在小区西北临；西南临；东南临；东北临',
-								'估价对象所在小区北临；西临；南临；东临'
-							],
-							placeholder:"如果未查找到相关小区，请查看下面地图手动输入~",
-							size:'3',
-							index:27
-						},
-						{
-							itemName:'区域概况',
-							type:'textarea',
-							placeholder:'如果未查找到相关小区，请查看下面地图手动输入~',
-							size:'3',
-							index:28
-						}
-
-
-					]
-				},
-				{
-					partName:'估价结果',
-					data:[
-						{
-							itemName:'价值时点',
-							type:'input',
-							placeholder:'',
-							size:'1',
-							initialValue:'二〇一八年x月x日',
-							index:29
-						},
-						{
-							itemName:'评估单价',
-							type:'input',
-							placeholder:'',
-							size:'1',
-							initialValue:'',
-							index:34
-						}
-					]
-				}
-			]
+			tabData:[],
+			//输入框数据,该数据也是从数据库读取，不同模板内容不同
+			inputTypeDataList:[]
 		}
 	}
 
 	componentDidMount(){
 		//加载百度地图
 		let BMap = window.BMap;
+		//请求百度地图tab数据
+		axios.get('/estate/baidumapTabData').then((resp)=>{
+			if(resp.data.status === 1){
+				this.setState({
+					tabData:resp.data.tabData
+				},()=>{
+					this.setState({
+						keyword:this.state.tabData[0].subTab.subTabNamesList[0]
+					})
+				})
+			}else{
+				Modal.warning({
+					title: '客官请注意',
+					content: '组件获取数据出错，请重试~',
+				})
+			}
+		});
+
+		//初始化百度地图
 		this.setState({
-			map:new BMap.Map('baiduMap'),
-			keyword:this.state.tabData[0].subTab.subTabNamesList[0]
+			map:new BMap.Map('baiduMap')
 		},()=>{
-			this.state.map.setMaxZoom(21);
-			
 			//成都市中心坐标
 			this.state.map.centerAndZoom(new BMap.Point(104.070611,30.665017), 15);
 			//添加缩放控件
@@ -434,6 +143,37 @@ class ReportTemplate extends React.Component{
 			});
 
 		})
+
+		//请求对应银行的输入框数据
+		let bank = this.props.templateName;
+		axios.post('/estate/getBankInputsData',{bank:bank}).then((resp)=>{
+			if(resp.data.status === 1){
+				this.setState({
+					inputTypeDataList:resp.data.inputData
+				})
+			}else{
+				Modal.warning({
+					title:'客官请注意',
+					content:'查询数据库失败!'
+				})
+			}
+		})
+
+		//获取银行预评估模板对应的docx名字
+		axios.get('/estate/getBankDocx').then((resp)=>{
+			if(resp.data.status === 1){
+				this.setState({
+					docx:resp.data.docx
+				})
+			}else{
+				Modal.warning({
+					title: '客官请注意',
+					content: '数据库查询失败~',
+				});
+			}
+		})
+
+
 	}
 	//计算距离
 	getDistance(estatePoint,markerPoint){
@@ -566,7 +306,7 @@ class ReportTemplate extends React.Component{
 		let local = new BMap.LocalSearch(this.state.map,
 			{
 				//每页容量,在地图上一次展示的数量
-				pageCapacity:10,
+				pageCapacity:20,
 				//搜索结束，展示结果(多关键字检索:results是数组,每个元素是LocalResult)
 				onSearchComplete:(results)=>{
 					//检索成功
@@ -577,12 +317,23 @@ class ReportTemplate extends React.Component{
 								title:results.getPoi(j).title,
 								position:results.getPoi(j).point,
 								url:results.getPoi(j).url,
-								address:results.getPoi(j).address
+								address:results.getPoi(j).address,
+								distance:this.getDistance(this.state.estatePosition,results.getPoi(j).point)
 							});
+						}
+						//按距离从近到远排序
+						tempResultList.sort((a,b)=>{
+							return parseInt(a.distance,10) - parseInt(b.distance,10)
+						});
+						//取前10个
+						let topTenResultList = [];
+						for(var i=0;i<tempResultList.length;i++){
+							topTenResultList.push(tempResultList[i]);
+							if(i>=10)break;
 						}
 
 						this.setState({
-							mapSearchResultList:tempResultList
+							mapSearchResultList:topTenResultList
 						},()=>{
 							//添加marker
 							this.state.mapSearchResultList.forEach((item)=>{
@@ -790,7 +541,9 @@ class ReportTemplate extends React.Component{
 			data:this.state.selectedFacilityList
 		};
 		//console.log(this.state.selectedFacilityList)
-		this['区位状况'].handleInputChange(dataObj);
+		if(this['区位状况']){
+			this['区位状况'].handleInputChange(dataObj);
+		}
 		this.setState({
 			activeResultIndex:index
 		},()=>{
@@ -848,7 +601,9 @@ class ReportTemplate extends React.Component{
 					'数据27',
 					'数据28'
 				];
-				this['区位状况'].handleClearInputs(inputsToClear);
+				if(this['区位状况']){
+					this['区位状况'].handleClearInputs(inputsToClear);
+				}
 				//找到相关小区
 				if(status !== -1){
 					//通知消息提示框
@@ -920,10 +675,10 @@ class ReportTemplate extends React.Component{
 			//调用子组件的提交表单方法
 			this[partName].handleSubmit();
 		});
-		//删除含有none的属性
+		//删除含有99999的属性
 		let temp = this.state.reportInputDataList;
 		for(var key in temp){
-			if(key.indexOf('none')!==-1){
+			if(key.indexOf('99999')!==-1){
 				delete temp[key];
 			}
 		}
@@ -931,26 +686,39 @@ class ReportTemplate extends React.Component{
 			reportInputDataList:temp
 		},()=>{
 
-			//计算包商的其他数据(根据已有的数据生成)
+			//计算各个银行的其他数据(根据已有的数据生成)
 			let otherObj = {};
-			//评估总价
-			let totalPrice = ((parseInt(this.state.reportInputDataList['数据34'],10)*parseFloat(this.state.reportInputDataList['数据12'],10))/10000).toFixed(2);
-			otherObj['数据35'] = totalPrice
-			//税费
-			let tax = (totalPrice*0.05).toFixed(2)
-			otherObj['数据36'] = tax
-			//抵押净值
-			let mortgageValue = totalPrice - tax;
-			otherObj['数据37'] = mortgageValue
-			//估价结果：抵押净值
-			let mortgageValueResult = '抵押净值：'+mortgageValue+'万元（佰元以下四舍五入）';
-			otherObj['数据30'] = mortgageValueResult
-			//估价结果:大写
-			let chineseValue = '大    写：'+moneyToChinese(mortgageValue*10000)+'人民币'
-			otherObj['数据31'] = chineseValue;
-			//当日时间
-			let currentDate = dateToChinese();
-			otherObj['数据39'] = currentDate;
+			if(this.props.templateName === '包商'){
+				//评估总价
+				let totalPrice = ((parseInt(this.state.reportInputDataList['数据34'],10)*parseFloat(this.state.reportInputDataList['数据12'],10))/10000).toFixed(2);
+				otherObj['数据35'] = totalPrice
+				//税费
+				let tax = (totalPrice*0.05).toFixed(2)
+				otherObj['数据36'] = tax
+				//抵押净值
+				let mortgageValue = totalPrice - tax;
+				otherObj['数据37'] = mortgageValue
+				//估价结果：抵押净值
+				let mortgageValueResult = '抵押净值：'+mortgageValue+'万元（佰元以下四舍五入）';
+				otherObj['数据30'] = mortgageValueResult
+				//估价结果:大写
+				let chineseValue = '大    写：'+moneyToChinese(mortgageValue*10000)+'人民币'
+				otherObj['数据31'] = chineseValue;
+				//当日时间
+				let currentDate = dateToChinese();
+				otherObj['数据39'] = currentDate;
+
+			}else if(this.props.templateName === '农行'){
+				//评估总价
+				let totalPrice = ((parseInt(this.state.reportInputDataList['数据34'],10)*parseFloat(this.state.reportInputDataList['数据12'],10))/10000).toFixed(2);
+				otherObj['数据32'] = totalPrice;
+				//估价结果:大写
+				let chineseValue = moneyToChinese(totalPrice*10000)+'人民币'
+				otherObj['数据33'] = chineseValue;
+				//当日时间
+				let currentDate = dateToChinese();
+				otherObj['数据39'] = currentDate;
+			}
 
 			//合并对象
 			this.setState({
@@ -958,21 +726,21 @@ class ReportTemplate extends React.Component{
 			});
 
 			let t = this.state.reportInputDataList;
-			//必须用模板字符串，否则换行无法识别出xdoc
-
+			//获取XDoc对象
 			let XDoc = window.XDoc;
 			XDoc.key = "";
-			//run的第一个path参数必须是url地址，本地不行，不知道为啥，在express目录static文件夹下放置docx即可
+			//构建参数对象
 			let dataObj = {};
 			for(let key in t){
 				if(t.hasOwnProperty(key)){
 					dataObj[key]=t[key]
 				}
 			}
-			console.log(dataObj)
-			XDoc.run('http://47.95.120.132:4000/static/baoshang-style-right.docx', "docx", dataObj,"_blank");
-
-
+			//根据银行名字获取银行对应的docx名字
+			let currentDocx = this.state.docx[this.props.templateName];
+			//替换并下载预评估报告
+			//run的第一个path参数必须是url地址，本地不行，不知道为啥，在express目录static文件夹下放置docx即可
+			XDoc.run('http://47.95.120.132:4000/static/estate_evaluation_docx/'+currentDocx, "docx", dataObj,"_blank");
 		})
 
 	}
@@ -983,22 +751,43 @@ class ReportTemplate extends React.Component{
 			reportInputDataList:tempObj
 		})
 	}
-
+	//点击清除按钮
+	handleButtonClearReults(){
+		this.clearSearchResults();
+		this.setState({
+			selectedFacilityList:[],
+			mainTabActiveKey:'1',
+			subTabActiveKey:'1',
+			activeResultIndex:''
+		});
+		//清空区域概况的输入框
+		let inputsToClear = [
+			'数据28'
+		];
+		//调用子组件方法
+		if(this['区位状况']){
+			this['区位状况'].handleClearInputs(inputsToClear);
+		}
+		this.searchPointNearby(this.state.estatePosition);
+	}
 
 	render(){
 		let self = this;
+		//评估标题
+		let title = this.props.templateName+'预评估';
 		//最后一部分：估价结果
-		let inputTypeLast = this.state.inputTypeDataList[this.state.inputTypeDataList.length-1];
+		let inputTypeLast = this.state.inputTypeDataList.length>0 ? this.state.inputTypeDataList[this.state.inputTypeDataList.length-1]:'';
 		return (
 			<div>
 				<div className="template-content-wrapper">
 					{/*模板标题*/}
 					<div className="template-title">
-						包商预评估
+						{title}
 					</div>
 					{/*表单输入框区域*/}
 					<div className="template-input-area">
 						{
+							this.state.inputTypeDataList.length>0?
 							this.state.inputTypeDataList.map((item,index)=>{
 								//估价结果放在百度地图下面,估价结果是最后一个内容
 								if(index !== this.state.inputTypeDataList.length-1){
@@ -1012,6 +801,7 @@ class ReportTemplate extends React.Component{
 											</div>
 											{/*输入框展示组件,传递的方法onInputSearch是搜索小区周边设施的方法*/}
 											<ReportTemplateInputArea
+												templateBankName={this.props.templateName}
 												wrappedComponentRef={(inst) => this[item.partName] = inst}
 												dataList={item.data}
 												onSubmit={(v)=>this.onSubmit(v)}
@@ -1021,7 +811,7 @@ class ReportTemplate extends React.Component{
 									)
 								}
 
-							})
+							}):null
 						}
 					</div>
 				</div>
@@ -1032,6 +822,14 @@ class ReportTemplate extends React.Component{
 					</div>
 					{/*百度地图查询结果显示*/}
 					<div className="baidu-map-search-container">
+						{/*清空搜索结果*/}
+						<div className="clear-baidu-map-search-results">
+							<Button shape="circle"
+									icon="reload"
+									onClick={()=>{this.handleButtonClearReults()}}
+									type="primary">
+							</Button>
+						</div>
 						<Tabs defaultActiveKey="1"  className="main-tab-resize" type="card" onChange={(activeIndex)=>{this.mainTabOnChange(activeIndex)}}>
 							{
 								this.state.tabData.map((item,index)=>{
@@ -1099,12 +897,15 @@ class ReportTemplate extends React.Component{
 								</div>
 							</div>
 							{/*输入框展示组件,传递的方法onInputSearch是搜索小区周边设施的方法*/}
-							<ReportTemplateInputArea
-								wrappedComponentRef={(inst) => this[inputTypeLast.partName] = inst}
-								dataList={inputTypeLast.data}
-								onSubmit={(v)=>this.onSubmit(v)}
-								onInputSearch={(v)=>{this.searchEstateFacility(v)}}
-							/>
+							{
+								this.state.inputTypeDataList.length>0 ? (<ReportTemplateInputArea
+									templateBankName={this.props.templateName}
+									wrappedComponentRef={(inst) => this[inputTypeLast.partName] = inst}
+									dataList={inputTypeLast.data}
+									onSubmit={(v)=>this.onSubmit(v)}
+									onInputSearch={(v)=>{this.searchEstateFacility(v)}}
+								/>):null
+							}
 						</div>
 					</div>
 				</div>

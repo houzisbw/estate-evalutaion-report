@@ -5,6 +5,7 @@
 import React from 'react';
 import './index.scss';
 import {Row,Col,Form,Input,Tooltip,Select,Modal} from 'antd';
+import axios from 'axios'
 const FormItem = Form.Item;
 const Option = Select.Option;
 const Search = Input.Search;
@@ -14,51 +15,30 @@ class ReportTemplateInputArea extends React.Component{
 		super(props);
 		this.state = {
 			//成新率的表,从数据库读出
-			buildingNewRate:[
-				[1995,54,62],
-				[1996,56,63],
-				[1997,58,65],
-				[1998,60,67],
-				[1999,62,68],
-
-				[2000,64,70],
-				[2001,66,72],
-				[2002,68,73],
-				[2003,70,75],
-				[2004,72,77],
-
-				[2005,74,78],
-				[2006,76,80],
-				[2007,78,82],
-				[2008,80,83],
-				[2009,82,85],
-
-				[2010,84,87],
-				[2011,86,88],
-				[2012,88,90],
-				[2013,90,92],
-				[2014,92,93],
-
-				[2015,94,95],
-				[2016,96,97],
-				[2017,98,98],
-				[2018,100,100]
-
-			],
-			buildingNewRateDescription:[
-				[60,'一般损坏房'],
-				[80,'基本完好房'],
-				[101,'完好房']
-			],
-			buildingStructure:{
-				'混合':1,
-				'砖混':1,
-				'钢混':1,
-				'框架':2,
-				'框剪':2,
-				'剪力墙':2
-			}
+			buildingNewRate:[],
+			buildingNewRateDescription:[],
+			buildingStructure:{},
+			//docx
+			docx:{}
 		}
+	}
+	componentDidMount(){
+		//获取成新率
+		axios.get('/estate/getBuildingRate').then((resp)=>{
+			if(resp.data.status === 1){
+				this.setState({
+					buildingStructure:resp.data.buildingStructure[0],
+					buildingNewRateDescription:resp.data.buildingNewRateDescription,
+					buildingNewRate:resp.data.buildingNewRate
+				})
+			}else{
+				Modal.warning({
+					title: '客官请注意',
+					content: '数据库查询失败~',
+				});
+			}
+		})
+
 	}
 
 	//提交表单
@@ -110,6 +90,7 @@ class ReportTemplateInputArea extends React.Component{
 				})
 			}
 		}
+
 	}
 
 	//清空输入框
@@ -121,6 +102,7 @@ class ReportTemplateInputArea extends React.Component{
 		this.props.form.setFieldsValue(obj);
 	}
 	//处理父组件传来的值，分类处理
+	//此处代码已经写死，不过没更好的办法了
 	handleInputChange(dataObj){
 		//如果是临路状况和区位状况
 		if(dataObj.type === 'ROAD_AND_AREA'){
@@ -213,10 +195,10 @@ class ReportTemplateInputArea extends React.Component{
 		const children = [];
 		//根据输入框类型的不同显示不同的输入框
 		const getInput = (t)=>{
-			if(t.type === 'input') return (
+			if(t.inputType === 'input') return (
 				<Input   />
 			);
-			else if(t.type === 'dropdown') {
+			else if(t.inputType === 'dropdown') {
 					return (
 					//combobox属性的下拉框含有输入属性，可以自定义输入,很棒
 					<Select mode="combobox" onChange={(v)=>{this.handleSelectOnChange(v,t.itemName)}} placeholder={t.itemName+',下拉框'}>
@@ -234,12 +216,12 @@ class ReportTemplateInputArea extends React.Component{
 					</Select>
 				)
 			}
-			else if(t.type === 'textarea') {
+			else if(t.inputType === 'textarea') {
 				let placeholder = t.placeholder ? t.placeholder: '';
 				return (
 					<TextArea  placeholder={placeholder} autosize={{ minRows: 3, maxRows: 6 }} />
 				)
-			}else if(t.type === 'search'){
+			}else if(t.inputType === 'search'){
 				return (<div className="search-input-special-green">
 							<Search  placeholder="请输入小区名称查找临路状况和区域概况~" onSearch={(value)=>{this.props.onInputSearch(value)}} enterButton/>
 						</div>)
@@ -267,7 +249,7 @@ class ReportTemplateInputArea extends React.Component{
 										{getFieldDecorator('数据'+t.dropdownLabelIndex,{
 											initialValue:t.dropdownOption[0]
 										})(
-											<Select className="select-input-margin-offset">
+											<Select className="select-input-margin-offset" >
 												{
 													t.dropdownOption.map((item,index)=>{
 														return(
