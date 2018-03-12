@@ -30,6 +30,11 @@ $subHeaderMarginTop:60px;
           background-color: #fff;
           color: #767272;
           text-decoration: none;
+          transition: all .5s;
+          &:hover{
+            background-color: #39ac6a!important;
+            color:#fff;
+          }
         }
         //a标签激活状态下
         .active-menu{

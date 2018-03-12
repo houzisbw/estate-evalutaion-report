@@ -8,7 +8,9 @@ var paramSchema = new mongoose.Schema({
 		buildingNewRate:Array,
 		buildingNewRateDescription:Array,
 		buildingStructure:Array,
-		preReportDocx:Object
+		preReportDocx:Object,
+		//土地出让金
+		landTransactionFee:Object
 	}
 })
 

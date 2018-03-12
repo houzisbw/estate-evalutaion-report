@@ -201,7 +201,8 @@ class ReportTemplateInputArea extends React.Component{
 			else if(t.inputType === 'dropdown') {
 					return (
 					//combobox属性的下拉框含有输入属性，可以自定义输入,很棒
-					<Select mode="combobox" onChange={(v)=>{this.handleSelectOnChange(v,t.itemName)}} placeholder={t.itemName+',下拉框'}>
+					//注意mode属性，下拉框分为是否可编辑，combobox为可编辑状态
+					<Select mode={t.canDropdownEditable?'':'combobox'} onChange={(v)=>{this.handleSelectOnChange(v,t.itemName)}} placeholder={t.itemName+',下拉框'}>
 						{
 							t.dropdownData.map((item,index)=>{
 								return(

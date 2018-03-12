@@ -148,10 +148,25 @@ router.get('/getBankDocx',function(req,res,next){
 				status:-1
 			})
 		}else{
-			console.log(doc.param.preReportDocx)
 			res.json({
 				status: 1,
 				docx: doc.param.preReportDocx,
+			})
+		}
+	})
+})
+
+//土地出让金
+router.get('/getLandTransactionFee',function(req,res,next){
+	EstateParam.findOne(function(err,doc){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			res.json({
+				status: 1,
+				landTransactionFee: doc.param.landTransactionFee,
 			})
 		}
 	})

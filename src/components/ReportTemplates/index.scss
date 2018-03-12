@@ -13,22 +13,28 @@
       background-color: #40cb81;
     }
   }
-  .template-title{
-    margin:0 auto;
-    padding:10px;
-    height:30px;
-    background-color: #39ac6a;
-    border-radius:0 0 5px 5px;
-    color:#fff;
-    line-height:30px;
-    font-size:20px;
-    text-align: center;
+  .template-title-wrapper{
     width:200px;
-    box-sizing: content-box;
-    white-space: nowrap;
-    text-overflow:ellipsis;
-    overflow: hidden;
+    margin:0 auto;
+    .template-title{
+      width:100%;
+      padding:10px;
+      height:50px;
+      background-color: #39ac6a;
+      border-radius:0 0 5px 5px;
+      color:#fff;
+      line-height:30px;
+      font-size:20px;
+      text-align: center;
+      box-sizing: border-box;
+      //下面overflow会影响居中效果,当overflow和margin:0 auto作用在同一个div上时
+      //所以加了一层template-title-wrapper分开处理2个属性
+      white-space: nowrap;
+      text-overflow:ellipsis;
+      overflow: hidden;
+    }
   }
+
   .template-input-area{
     margin-top: 20px;
     padding:15px 60px;

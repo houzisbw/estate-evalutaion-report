@@ -27,7 +27,9 @@ var PreReportInputData = new mongoose.Schema({
 			//输入框初始值
 			initialValue:String,
 			//输入框placeholder
-			placeholder:String
+			placeholder:String,
+			//下拉框是否不可编辑,true表示不能编辑
+			canDropdownEditable:Boolean
 
 		}]
 	}]

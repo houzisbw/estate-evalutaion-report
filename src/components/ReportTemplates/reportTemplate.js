@@ -1,7 +1,7 @@
 import React from 'react'
 import BaiduMap from './../BaiduMap/baiduMap'
 import BaiduMapSearchResultItem from './../BaiduMapSearchResultItem/BaiduMapSearchResultItem'
-import { Tabs,Modal,Form,Input,Button,Icon} from 'antd';
+import { Tabs,Modal,Form,Input,Button,Icon,Affix} from 'antd';
 import {notificationPopup} from './../../util/utils'
 import ReportTemplateInputArea from './../ReportTemplateInputArea/reportTemplateInputArea'
 import axios from 'axios'
@@ -16,6 +16,8 @@ class ReportTemplate extends React.Component{
 		super(props);
 		let BMap = window.BMap;
 		this.state = {
+			//土地出让金比率
+			landTransactionFee:{},
 			//docx,存放银行模板对应的docx的名字
 			docx:{},
 			// 表单提交时存储各个input值的list
@@ -173,6 +175,19 @@ class ReportTemplate extends React.Component{
 			}
 		})
 
+		//农行划拨获取土地出让金比率
+		axios.get('/estate/getLandTransactionFee').then((resp)=>{
+			if(resp.data.status === 1){
+				this.setState({
+					landTransactionFee:resp.data.landTransactionFee
+				})
+			}else{
+				Modal.warning({
+					title: '客官请注意',
+					content: '数据库查询失败~',
+				});
+			}
+		})
 
 	}
 	//计算距离
@@ -718,6 +733,26 @@ class ReportTemplate extends React.Component{
 				//当日时间
 				let currentDate = dateToChinese();
 				otherObj['数据39'] = currentDate;
+			}else if(this.props.templateName === '农行划拨'){
+				//评估总价
+				let totalPrice = ((parseInt(this.state.reportInputDataList['数据34'],10)*parseFloat(this.state.reportInputDataList['数据12'],10))/10000).toFixed(2);
+				otherObj['数据32'] = totalPrice;
+				//土地出让金计算
+				let landTransactionFee = (this.state.landTransactionFee[this.state.reportInputDataList['数据40']]*parseFloat(this.state.reportInputDataList['数据12'],10)*0.01/10000).toFixed(2);
+				otherObj['数据40'] = landTransactionFee+'万元';
+				//房屋坐落
+				otherObj['数据44'] = this.state.reportInputDataList['数据40'];
+				//土地出让金比率
+				otherObj['数据45'] = this.state.landTransactionFee[this.state.reportInputDataList['数据40']];
+				//抵押价值
+				let mortgageValueResult = totalPrice - landTransactionFee;
+				otherObj['数据41'] = mortgageValueResult+'万元（佰元以下四舍五入）';
+				//大写
+				let chineseValue = moneyToChinese(mortgageValueResult*10000)+'人民币';
+				otherObj['数据42'] = chineseValue;
+				//当日时间
+				let currentDate = dateToChinese();
+				otherObj['数据39'] = currentDate;
 			}
 
 			//合并对象
@@ -780,10 +815,14 @@ class ReportTemplate extends React.Component{
 		return (
 			<div>
 				<div className="template-content-wrapper">
-					{/*模板标题*/}
-					<div className="template-title">
-						{title}
-					</div>
+					{/*模板标题,距离页面顶部120px时固定住*/}
+					<Affix offsetTop={120}>
+						<div className="template-title-wrapper">
+							<div className="template-title">
+									{title}
+							</div>
+						</div>
+					</Affix>
 					{/*表单输入框区域*/}
 					<div className="template-input-area">
 						{

@@ -4,12 +4,14 @@
 //预评估报告页面
 import React from 'react'
 import './index.scss'
+import {withRouter} from 'react-router-dom'
 //引入tab组件
 import TabComponent from './../../components/Tab/tab'
 //引入预评估报告模板
 import ReportTemplate from './../../components/ReportTemplates/reportTemplate'
 import axios from 'axios'
-import {Select,Modal} from 'antd'
+import {Select,Modal,Tooltip} from 'antd'
+import {connect} from 'react-redux'
 const Option = Select.Option;
 class PreAssesment extends React.Component{
 	constructor(props){
@@ -18,7 +20,7 @@ class PreAssesment extends React.Component{
 			//当前选中模板index
 			currentTemplateIndex:0,
 			//银行信息
-			bankInfo:['包商']
+			bankInfo:[]
 		}
 	}
 	//下拉框值改变触发,切换模板
@@ -26,6 +28,20 @@ class PreAssesment extends React.Component{
 		this.setState({
 			currentTemplateIndex:v
 		})
+	}
+	//修改模板
+	handleModifyTemplate(){
+		//获取当前模板名字
+		let templateName = this.state.bankInfo[this.state.currentTemplateIndex];
+		//跳转到模板修改界面,路径是绝对路径,不是基于当前路径再加
+		//目标页面通过location.state获取参数
+		this.props.history.push({pathname:'/app/pre_assesment_modify',state:{
+			templateName:templateName
+		}})
+	}
+	//添加预评估模板
+	handleAddTemplate(){
+		this.props.history.push({pathname:'/app/pre_assesment_add'})
 	}
 	componentDidMount(){
 		//获取银行信息
@@ -68,7 +84,25 @@ class PreAssesment extends React.Component{
 								</Select>
 								):null
 							}
-
+						</div>
+						{/*修改模板按钮区域，管理员可见*/}
+						<div className="template-modify-wrapper">
+							{
+								//判断权限，管理员(0)才能修改,userAuth是redux中传来的state
+								this.props.userAuth===0?(
+									<Tooltip title="预评估模板修改">
+										<button className="template-modify-button fa fa-pencil" onClick={()=>{this.handleModifyTemplate()}}></button>
+									</Tooltip>
+								) :null
+							}
+							{
+								//判断权限，管理员(0)才能修改,userAuth是redux中传来的state
+								this.props.userAuth===0?(
+									<Tooltip title="添加预评估模板">
+										<button className="template-modify-button fa fa-plus fa-plus-padding" onClick={()=>{this.handleAddTemplate()}}></button>
+									</Tooltip>
+								) :null
+							}
 						</div>
 					</div>
 					{/*模板内容区域,遍历bankInfo生成各个模板*/}
@@ -91,4 +125,11 @@ class PreAssesment extends React.Component{
 		)
 	}
 }
-export default  PreAssesment
+
+//设置权限字段userAuth,作为PreAssesment的props传入,需要权限的地方用该字段判断即可,注意不能用store.getState,因为state不会变化
+const mapStateToProps = (state)=>{
+	return {
+		userAuth:state.updateUserAuthState.userAuth,
+	}
+}
+export default  withRouter(connect(mapStateToProps)(PreAssesment))

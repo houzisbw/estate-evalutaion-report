@@ -17,7 +17,25 @@
     .select-wrapper{
       float:left;
       margin-left: 20px;
-
+    }
+    .template-modify-wrapper{
+      float:right;
+      .fa-plus-padding{
+        padding-top: 4px;
+      }
+      .template-modify-button{
+        height:30px;
+        width:30px;
+        font-size:20px;
+        background-color: #f5f5f5;
+        outline: none;
+        border: none;
+        margin-top: 10px;
+        cursor: pointer;
+        &:hover{
+          color:#39ac6a;
+        }
+      }
     }
   }
   .template-content{
