@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import {BrowserRouter as Router,Route,Switch,Redirect} from 'react-router-dom'
+//注意BrowseRouter需要服务端配合服务端重定向到首页，否则刷新找不到页面,HashRouter没有这个问题
+import {HashRouter as Router,Route,Switch,Redirect} from 'react-router-dom'
 import Login from './pages/login/login'
 import Layout from './pages/Layouts/layouts'
 import AuthorizedRoute from './routes/AuthorizedRoute'

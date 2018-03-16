@@ -15,7 +15,6 @@ class Header extends React.Component{
 	//登出
 	logout(){
 		axios.get('/users/logout').then((resp)=>{
-			console.log(resp.data.status)
 			store.dispatch(userLogout());
 			this.props.history.push('/login');
 		})

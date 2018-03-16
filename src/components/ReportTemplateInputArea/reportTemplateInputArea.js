@@ -23,14 +23,17 @@ class ReportTemplateInputArea extends React.Component{
 		}
 	}
 	componentDidMount(){
+		this.mounted = true;
 		//获取成新率
 		axios.get('/estate/getBuildingRate').then((resp)=>{
 			if(resp.data.status === 1){
-				this.setState({
-					buildingStructure:resp.data.buildingStructure[0],
-					buildingNewRateDescription:resp.data.buildingNewRateDescription,
-					buildingNewRate:resp.data.buildingNewRate
-				})
+				if(this.mounted){
+					this.setState({
+						buildingStructure:resp.data.buildingStructure[0],
+						buildingNewRateDescription:resp.data.buildingNewRateDescription,
+						buildingNewRate:resp.data.buildingNewRate
+					})
+				}
 			}else{
 				Modal.warning({
 					title: '客官请注意',
@@ -39,6 +42,9 @@ class ReportTemplateInputArea extends React.Component{
 			}
 		})
 
+	}
+	componentWillUnmount(){
+		this.mounted = false;
 	}
 
 	//提交表单

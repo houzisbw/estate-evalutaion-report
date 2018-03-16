@@ -19,7 +19,8 @@ app.engine('.html',ejs.__express);
 app.set('view engine', 'html');
 
 //连接mongodb
-mongoose.connect('mongodb://127.0.0.1:27017/estate_report')
+mongoose.connect('mongodb://root:Sbw66620116@127.0.0.1:27017/estate_report?authSource=admin')
+//mongoose.connect('mongodb://127.0.0.1:27017/estate_report')
 //监听:成功
 mongoose.connection.on("connected",function(){
 	console.log('mongodb connection success');
@@ -31,12 +32,13 @@ mongoose.connection.on("error",function(){
 
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+//这里views里面就存放前端的文件，很重要,express通过访问views里面的index.html来访问页面
+app.use(express.static(path.join(__dirname, 'views')));
 
 app.use('/', index);
 app.use('/users', users);

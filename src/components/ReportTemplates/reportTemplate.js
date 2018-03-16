@@ -4,6 +4,7 @@ import BaiduMapSearchResultItem from './../BaiduMapSearchResultItem/BaiduMapSear
 import { Tabs,Modal,Form,Input,Button,Icon,Affix} from 'antd';
 import {notificationPopup} from './../../util/utils'
 import ReportTemplateInputArea from './../ReportTemplateInputArea/reportTemplateInputArea'
+import Loading from './../../components/Loading/Loading'
 import axios from 'axios'
 import {moneyToChinese,dateToChinese} from './../../util/utils'
 //import {findDOMNode} from 'react-dom'
@@ -95,20 +96,28 @@ class ReportTemplate extends React.Component{
 			inputTypeDataList:[]
 		}
 	}
+	componentWillUnmount(){
+		//必须取消未完成的ajax，防止点击过快出现组件已经卸载时，ajax请求完成进行setState
+		//设置mounted变量，ajax请求完成是判断该变量是否为true，为true才能setState
+		this.mounted = false;
+	}
 
 	componentDidMount(){
+		this.mounted = true;
 		//加载百度地图
 		let BMap = window.BMap;
 		//请求百度地图tab数据
 		axios.get('/estate/baidumapTabData').then((resp)=>{
 			if(resp.data.status === 1){
-				this.setState({
-					tabData:resp.data.tabData
-				},()=>{
+				if(this.mounted){
 					this.setState({
-						keyword:this.state.tabData[0].subTab.subTabNamesList[0]
+						tabData:resp.data.tabData
+					},()=>{
+						this.setState({
+							keyword:this.state.tabData[0].subTab.subTabNamesList[0]
+						})
 					})
-				})
+				}
 			}else{
 				Modal.warning({
 					title: '客官请注意',
@@ -150,9 +159,11 @@ class ReportTemplate extends React.Component{
 		let bank = this.props.templateName;
 		axios.post('/estate/getBankInputsData',{bank:bank}).then((resp)=>{
 			if(resp.data.status === 1){
-				this.setState({
-					inputTypeDataList:resp.data.inputData
-				})
+				if(this.mounted){
+					this.setState({
+						inputTypeDataList:resp.data.inputData
+					})
+				}
 			}else{
 				Modal.warning({
 					title:'客官请注意',
@@ -164,9 +175,11 @@ class ReportTemplate extends React.Component{
 		//获取银行预评估模板对应的docx名字
 		axios.get('/estate/getBankDocx').then((resp)=>{
 			if(resp.data.status === 1){
-				this.setState({
-					docx:resp.data.docx
-				})
+				if(this.mounted){
+					this.setState({
+						docx:resp.data.docx
+					})
+				}
 			}else{
 				Modal.warning({
 					title: '客官请注意',
@@ -178,9 +191,11 @@ class ReportTemplate extends React.Component{
 		//农行划拨获取土地出让金比率
 		axios.get('/estate/getLandTransactionFee').then((resp)=>{
 			if(resp.data.status === 1){
-				this.setState({
-					landTransactionFee:resp.data.landTransactionFee
-				})
+				if(this.mounted){
+					this.setState({
+						landTransactionFee:resp.data.landTransactionFee
+					})
+				}
 			}else{
 				Modal.warning({
 					title: '客官请注意',
@@ -516,7 +531,6 @@ class ReportTemplate extends React.Component{
 				//找到对应的marker
 				this.state.markerList.forEach((item)=>{
 					if(item.getTitle() === title){
-
 						item.setIcon(iconInactive)
 					}
 				})
@@ -555,7 +569,6 @@ class ReportTemplate extends React.Component{
 			type:"AREA_FACILITY",
 			data:this.state.selectedFacilityList
 		};
-		//console.log(this.state.selectedFacilityList)
 		if(this['区位状况']){
 			this['区位状况'].handleInputChange(dataObj);
 		}
@@ -823,7 +836,7 @@ class ReportTemplate extends React.Component{
 							</div>
 						</div>
 					</Affix>
-					{/*表单输入框区域*/}
+					{/*表单输入框区域,数据未返回时显示加载中画面*/}
 					<div className="template-input-area">
 						{
 							this.state.inputTypeDataList.length>0?
@@ -850,7 +863,7 @@ class ReportTemplate extends React.Component{
 									)
 								}
 
-							}):null
+							}):(<Loading />)
 						}
 					</div>
 				</div>

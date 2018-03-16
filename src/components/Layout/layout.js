@@ -5,6 +5,7 @@ import React from 'react'
 import './index.scss'
 import Header from './../Header/header'
 import SubHeader from './../SubHeader/SubHeader'
+import BackToTop from './../BackToTop/BackToTop'
 class LayoutComponent extends React.Component{
 	constructor(props){
 		super(props)
@@ -18,6 +19,8 @@ class LayoutComponent extends React.Component{
 				<SubHeader />
 				{/*内容区域*/}
 				{this.props.children}
+				{/*返回顶部按钮*/}
+				<BackToTop />
 			</div>
 		)
 	}
