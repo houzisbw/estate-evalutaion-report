@@ -1,0 +1,35 @@
+.input-type-choose-area{
+  width:80%;
+  margin: 0 auto;
+  .ant-row{
+    margin-bottom: 0;
+  }
+  .pre-report-input-label-div{
+    float:left;
+    width:35%;
+    text-align: right;
+    margin-right: 5%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    .mutable-input-span{
+      color: #4b99ff;
+    }
+  }
+  .pre-report-input-input-div{
+    float:left;
+    width:60%;
+    .dropdownOption-add-button{
+
+    }
+  }
+}
+.input-type-choose-area{
+  width:80%;
+  margin: 15px auto;
+}
+.label-span-only-preview{
+  margin-top: 4px;
+  font-size:15px;
+  display: inline-block;
+}

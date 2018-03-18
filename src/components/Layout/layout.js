@@ -7,9 +7,6 @@ import Header from './../Header/header'
 import SubHeader from './../SubHeader/SubHeader'
 import BackToTop from './../BackToTop/BackToTop'
 class LayoutComponent extends React.Component{
-	constructor(props){
-		super(props)
-	}
 	render(){
 		return (
 			<div>

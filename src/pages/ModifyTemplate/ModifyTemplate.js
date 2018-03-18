@@ -8,9 +8,9 @@
 import React from 'react'
 import './index.scss'
 import axios from 'axios'
-import {Select,Modal,Tooltip} from 'antd'
+//import {Select} from 'antd'
 //import {connect} from 'react-redux'
-const Option = Select.Option;
+//const Option = Select.Option;
 class ModifyTemplate extends React.Component{
 	constructor(props){
 		super(props);

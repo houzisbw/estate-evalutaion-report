@@ -10,7 +10,24 @@
   .template-input-add-button-icon{
     font-size:30px;
   }
+  .template-input-add-button-font{
+    margin-left: 10px;
+    font-size:20px;
+    position: relative;
+    top:-5px;
+  }
 }
+
+.input-margin-bottom{
+  .ant-modal-body{
+    .ant-row{
+      margin-bottom:0;
+    }
+  }
+}
+
+
+
 //modal对话框垂直居中
 .vertical-center-modal {
   text-align: center;

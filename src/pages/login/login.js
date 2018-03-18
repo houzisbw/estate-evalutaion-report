@@ -10,9 +10,6 @@ import axios from 'axios'
 import WrappedLoginForm from './../../components/LoginBox/LoginBox'
 //登录界面
 class Login extends React.Component{
-	constructor(props){
-		super(props)
-	}
 	//重要：如果登录状态下再次访问登录页面，则直接跳转到其他界面
 	componentWillMount(){
 		axios.get('/users/checkAuth').then((resp)=>{
