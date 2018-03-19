@@ -853,6 +853,7 @@ class ReportTemplate extends React.Component{
 											</div>
 											{/*输入框展示组件,传递的方法onInputSearch是搜索小区周边设施的方法*/}
 											<ReportTemplateInputArea
+												showIndex={this.props.showIndex}
 												templateBankName={this.props.templateName}
 												wrappedComponentRef={(inst) => this[item.partName] = inst}
 												dataList={item.data}
@@ -953,6 +954,7 @@ class ReportTemplate extends React.Component{
 								this.state.inputTypeDataList.length>0 ? (<ReportTemplateInputArea
 									templateBankName={this.props.templateName}
 									wrappedComponentRef={(inst) => this[inputTypeLast.partName] = inst}
+									showIndex={this.props.showIndex}
 									dataList={inputTypeLast.data}
 									onSubmit={(v)=>this.onSubmit(v)}
 									onInputSearch={(v)=>{this.searchEstateFacility(v)}}

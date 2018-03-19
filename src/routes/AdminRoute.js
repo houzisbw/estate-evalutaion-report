@@ -11,7 +11,7 @@ class AdminRoute extends React.Component {
 		const { component: Component, userAuth,...rest } = this.props;
 		return (
 			<Route {...rest} render={props => {
-				return userAuth===0 ? <Component {...props} /> : <Redirect to="/app/pre_assesment_report" />
+				return userAuth===0 ? <Component {...props} /> : <Redirect to="/app/pre_assesment/report" />
 			}} />
 		)
 	}

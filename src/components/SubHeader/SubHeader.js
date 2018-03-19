@@ -14,7 +14,7 @@ class SubHeader extends React.Component{
 		//功能列表的数据
 		let liData = [
 			{
-				pathTo:currentPath+'/pre_assesment_report',
+				pathTo:currentPath+'/pre_assesment/report',
 				iconName:'fa fa-file fa-fw',
 				title:'预评估报告'
 			},

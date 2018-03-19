@@ -3,7 +3,7 @@
  */
 //预评估报告添加时模态框输入组件
 import React from 'react'
-import {Form,Row,Col,Input,Select,Tooltip,Button,notification,InputNumber } from 'antd'
+import {Form,Row,Col,Input,Select,Tooltip,Button,notification} from 'antd'
 import './index.scss'
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -37,10 +37,60 @@ class PreReportInputAddModal extends React.Component{
 				isInputDropdown:true
 			})
 		}else{
+			//需要清空下拉相关的数据
 			this.setState({
-				isInputDropdown:false
+				isInputDropdown:false,
+				rightDropdownOptions:[],
+				rightDropdownInputValue:''
 			})
 		}
+	}
+	//父组件调用子组件的方法:校验数据
+	validateInputsAndSendToParent(){
+		let dataObj = {
+			//输入框label文字
+			itemName:'',
+			//输入框种类,注意type是保留字，不能使用
+			inputType:'',
+			//输入框是下拉，下拉的数据
+			dropdownData:this.state.rightDropdownOptions,
+			//输入框label是否是下拉
+			isDropdown:false,
+			//输入框label下拉的数据
+			dropdownOption:this.state.leftDropdownOptions,
+			//输入框尺寸
+			size:'',
+			//输入框index
+			index:this.state.rightIndex,
+			//输入框label下拉的index
+			dropdownLabelIndex:this.state.leftIndex,
+			//输入框初始值
+			initialValue:'',
+			//输入框placeholder
+			placeholder:'',
+			//下拉框是否不可编辑,true表示不能编辑
+			canDropdownEditable:''
+		};
+		//收集填写的数据
+		let tempFormValues = this.props.form.getFieldsValue();
+		//必须删除这2个属性，否则会覆盖Array
+		delete tempFormValues.dropdownData;
+		delete tempFormValues.dropdownOption;
+
+		let values = Object.assign(dataObj,tempFormValues);
+		//格式化一些数据
+		if(values.isDropdown === '是'){
+			values.isDropdown = true
+		}else{
+			values.isDropdown = false
+		}
+		if(values.canDropdownEditable === '是'){
+			values.canDropdownEditable = true
+		}else{
+			values.canDropdownEditable = false
+		}
+
+		return values;
 	}
 	//输入框左侧文字是否下拉
 	handleInputLabelChange(v){
@@ -50,7 +100,9 @@ class PreReportInputAddModal extends React.Component{
 			})
 		}else{
 			this.setState({
-				isInputLabelDropdown:false
+				isInputLabelDropdown:false,
+				leftDropdownOptions:[],
+				leftDropdownInputValue:''
 			})
 		}
 	}
@@ -345,7 +397,7 @@ class PreReportInputAddModal extends React.Component{
 											</div>
 											<div className="pre-report-input-input-div">
 												{getFieldDecorator('canDropdownEditable', {
-													initialValue:'否',
+													initialValue:"是",
 													rules: [{message: 'Please input the captcha you got!' }],
 												})(
 													<Select style={{width:170}}>
@@ -370,7 +422,7 @@ class PreReportInputAddModal extends React.Component{
 									</div>
 									<div className="pre-report-input-input-div">
 										{getFieldDecorator('isDropdown', {
-											initialValue:'否',
+											initialValue:"否",
 											rules: [{message: 'Please input the captcha you got!' }],
 										})(
 											<Select style={{width:170}} onChange={(v)=>this.handleInputLabelChange(v)}>

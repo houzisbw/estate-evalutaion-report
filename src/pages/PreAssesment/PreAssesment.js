@@ -17,6 +17,8 @@ class PreAssesment extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			//是否显示序号
+			showIndex:false,
 			//当前选中模板index
 			currentTemplateIndex:0,
 			//银行信息
@@ -35,13 +37,19 @@ class PreAssesment extends React.Component{
 		let templateName = this.state.bankInfo[this.state.currentTemplateIndex];
 		//跳转到模板修改界面,路径是绝对路径,不是基于当前路径再加
 		//目标页面通过location.state获取参数
-		this.props.history.push({pathname:'/app/pre_assesment_modify',state:{
+		this.props.history.push({pathname:'/app/pre_assesment/modify',state:{
 			templateName:templateName
 		}})
 	}
 	//添加预评估模板
 	handleAddTemplate(){
-		this.props.history.push({pathname:'/app/pre_assesment_add'})
+		this.props.history.push({pathname:'/app/pre_assesment/add'})
+	}
+	//显示/隐藏输入框的序号
+	showIndex(){
+		this.setState({
+			showIndex:!this.state.showIndex
+		})
 	}
 	componentDidMount(){
 		//获取银行信息
@@ -88,6 +96,13 @@ class PreAssesment extends React.Component{
 						{/*修改模板按钮区域，管理员可见*/}
 						<div className="template-modify-wrapper">
 							{
+								this.props.userAuth===0?(
+									<Tooltip title="显示数据序号,同word模板对应">
+										<button className="template-modify-button fa fa-tags" onClick={()=>{this.showIndex()}}></button>
+									</Tooltip>
+								) :null
+							}
+							{
 								//判断权限，管理员(0)才能修改,userAuth是redux中传来的state
 								this.props.userAuth===0?(
 									<Tooltip title="预评估模板修改">
@@ -111,7 +126,11 @@ class PreAssesment extends React.Component{
 							{
 								this.state.bankInfo.map((value,index)=>{
 									return (
-										<ReportTemplate templateName={value} key={index}/>
+										<ReportTemplate
+											templateName={value}
+											key={index}
+											showIndex={this.state.showIndex}
+										/>
 									)
 								})
 							}

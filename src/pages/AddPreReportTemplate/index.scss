@@ -1,3 +1,22 @@
+.template-modify-button{
+  height:30px;
+  width:30px;
+  font-size:20px;
+  background-color: #f5f5f5;
+  outline: none;
+  border: none;
+  margin-top: 10px;
+  cursor: pointer;
+  &:hover{
+    color:#39ac6a;
+  }
+}
+.add-pre-report-top-function-button{
+  float:right;
+  height:100%;
+  font-size: 20px;
+}
+
 .modify-icon-add{
   margin-right: 10px;
 }

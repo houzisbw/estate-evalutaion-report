@@ -276,6 +276,15 @@ class ReportTemplateInputArea extends React.Component{
 														<span className="label-span-only">{t.itemName}:</span>
 												 </Tooltip>)
 							}
+							{/*显示index的div*/}
+							{
+								this.props.showIndex?
+									(t.isDropdown?(
+									<div className="pre-report-show-index">
+										{t.dropdownLabelIndex}
+									</div>
+								):null):null
+							}
 
 						</div>
 						<div className="input-div" style={inputDivStyle}>
@@ -287,6 +296,14 @@ class ReportTemplateInputArea extends React.Component{
 									getInput(t)
 								)}
 								</FormItem>
+							}
+							{/*显示index的div*/}
+							{
+								this.props.showIndex?(
+									<div className="pre-report-right-label-show-index">
+										{t.index}
+									</div>
+								):null
 							}
 
 						</div>

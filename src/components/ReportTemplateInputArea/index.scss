@@ -1,5 +1,6 @@
 
 .col-input-wrapper{
+  position: relative;
   .label-div{
     width:35%;
     float:left;
@@ -7,6 +8,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    .pre-report-show-index{
+      position: absolute;
+      top:-15px;
+      left:0;
+      color: #ffffff;
+      padding:1px 10px;
+      background-color: rgba(0,0,0,0.4);
+      border-radius: 3px;
+    }
     .label-span-only{
       margin-top: 9px;
       font-size:15px;
@@ -31,6 +41,16 @@
   .input-div{
     width:65%;
     float:left;
+    position: relative;
+    .pre-report-right-label-show-index{
+      position: absolute;
+      top:9px;
+      right:5px;
+      color: #ffffff;
+      padding:1px 10px;
+      background-color: rgba(0,0,0,0.4);
+      border-radius: 3px;
+    }
   }
   //自定义类名来控制该类下的按钮自定义颜色，小技巧之一
   .search-input-special-green{

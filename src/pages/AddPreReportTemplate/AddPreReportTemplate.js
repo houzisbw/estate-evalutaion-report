@@ -6,7 +6,9 @@ import React from 'react'
 import './index.scss'
 import axios from 'axios'
 import {withRouter} from 'react-router-dom'
-import {Select,Modal,Tooltip,Affix,Form,Input} from 'antd'
+import {Select,Modal,Tooltip,Affix,Form,Input,notification} from 'antd'
+import Loading from './../../components/Loading/Loading'
+import ReportTemplateInputArea from './../../components/ReportTemplateInputArea/reportTemplateInputArea'
 import PreReportInputAddModal from './../../components/PreReportInputAddModal/PreReportInputAddModal'
 //import {connect} from 'react-redux'
 const Option = Select.Option;
@@ -15,6 +17,10 @@ class AddPreReportTemplate extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			//是否显示输入框序号
+			showIndex:false,
+			//所有输入框index的数组
+			totalIndexList:[],
 			//最终保存数据库的模板名字
 			bankName:'',
 			//模板名字输入框提交按钮是否loading状态，即不可点击状态
@@ -29,7 +35,7 @@ class AddPreReportTemplate extends React.Component{
 			modalVisible:false,
 			//输入预评估模板名字的模态框是否可见
 			preReportNameModalVisible:true,
-			//输入input的数据
+			//输入input的数据,初始化为各个不同模板提取的共同数据
 			inputTypeDataList:[]
 		};
 	}
@@ -73,6 +79,73 @@ class AddPreReportTemplate extends React.Component{
 	handleOk(type){
 		switch (type){
 			case 'PRE_REPORT_INPUT_ADD':{
+				//数据校验,调用子组件的方法
+				let formValues = this['PreReportInputAddModal'].validateInputsAndSendToParent();
+				//检验2个index是否填写合理,首先获取所有输入框index
+				let leftIndex = formValues.dropdownLabelIndex,
+					rightIndex = formValues.index;
+				//先判断右侧index是否合法
+				if(!rightIndex || this.state.totalIndexList.indexOf(rightIndex) !== -1){
+					Modal.error({
+						title: '请注意',
+						content: '输入框序号填写非法(已经存在该序号或者序号为空),请重新填写',
+					});
+					return;
+				}
+				//再判断左侧index是否合法，注意必须是在isDropdown为true的情况下判断
+				if(formValues.isDropdown && (!leftIndex || this.state.totalIndexList.indexOf(leftIndex) !== -1)){
+					Modal.error({
+						title: '请注意',
+						content: '输入框左侧序号填写非法(已经存在该序号或者序号为空),请重新填写',
+					});
+					return;
+				}
+				//如果左右2个index一样也不行
+				if(leftIndex === rightIndex){
+					Modal.error({
+						title: '请注意',
+						content: '输入框左侧序号和输入框序号不能相同,请重新填写',
+					});
+					return;
+				}
+
+				//更新index数组
+				let tempTotalIndexList = this.state.totalIndexList;
+				tempTotalIndexList.push(rightIndex);
+				if(formValues.isDropdown){
+					tempTotalIndexList.push(leftIndex);
+				}
+
+				//校验通过，存入缓存,删除partName属性
+				let partName = formValues.partName;
+				delete formValues.partName;
+				for(let i=0;i<this.state.inputTypeDataList.length;i++){
+					if(this.state.inputTypeDataList[i].partName === partName){
+						//排序,按index升序排列
+						let tempArr = this.state.inputTypeDataList;
+						tempArr[i].data.push(formValues);
+						tempArr[i].data.sort(function(a,b){
+							if(a.size === b.size){
+								return a.index - b.index
+							}
+							return a.size - b.size
+						})
+						this.setState({
+							inputTypeDataList:tempArr,
+							totalIndexList:tempTotalIndexList
+						})
+					}
+				}
+
+				//提示添加数据成功
+				notification['success']({
+					message: '恭喜~',
+					description: '添加数据项成功!',
+				});
+
+
+
+
 				this.setState({
 					modalVisible: false,
 				});
@@ -137,8 +210,76 @@ class AddPreReportTemplate extends React.Component{
 			default:break;
 		}
 	}
+	//重置所有数据
+	resetAllData(){
+		//重置state
+		this.setState({
+			showIndex:false,
+			//所有输入框index的数组
+			totalIndexList:[],
+			//最终保存数据库的模板名字
+			bankName:'',
+			//模板名字输入框提交按钮是否loading状态，即不可点击状态
+			isPreReportInputNameLoading:false,
+			//模板名字
+			preReportName:'',
+			//模板名字输入框校验文字
+			preReportNameHelpString:'',
+			//模板名字输入框校验状态:success,error,warning
+			preReportValidateStatus:'',
+			//模态框是否可见
+			modalVisible:false,
+			//输入预评估模板名字的模态框是否可见
+			preReportNameModalVisible:true,
+			//输入input的数据,初始化为各个不同模板提取的共同数据
+			inputTypeDataList:[]
+		},()=>{
+			this.initInputTypeDataList();
+		})
+
+	}
+	//初始化inputTypeDataList
+	initInputTypeDataList(){
+		axios.get('/estate/getPreReportTemplate').then((resp)=>{
+			if(resp.data.status === 1){
+				let template = resp.data.template;
+				//初始化index数组
+				let tempIndexList = [];
+				template.forEach((item)=>{
+					let data = item.data;
+					data.forEach((subItem)=>{
+						if(subItem.index){
+							tempIndexList.push(subItem.index)
+						}
+						if(subItem.dropdownLabelIndex){
+							tempIndexList.push(subItem.dropdownLabelIndex)
+						}
+					})
+				});
+				tempIndexList.sort(function(a,b){return a-b});
+				this.setState({
+					inputTypeDataList:template,
+					totalIndexList:tempIndexList
+				})
+			}else{
+				Modal.warning({
+					title:'Oops!',
+					content:'数据库查询错误,请稍后重试!'
+				})
+			}
+		})
+	}
+	//显示/隐藏输入框的序号
+	showIndex(){
+		this.setState({
+			showIndex:!this.state.showIndex
+		})
+	}
 
 	componentDidMount(){
+		//初始化
+		this.initInputTypeDataList();
+
 	}
 
 	render(){
@@ -183,7 +324,7 @@ class AddPreReportTemplate extends React.Component{
 				</Modal>
 				{/*模态框,点击显示添加数据页面*/}
 				<Modal
-					title="添加模板数据"
+					title="添加模板数据(页面已有默认模板)"
 					okText="确定"
 					width={600}
 					maskClosable={false}
@@ -194,13 +335,21 @@ class AddPreReportTemplate extends React.Component{
 					onOk={()=>this.handleOk('PRE_REPORT_INPUT_ADD')}
 					onCancel={()=>this.handleCancel('PRE_REPORT_INPUT_ADD')}
 				>
-					<PreReportInputAddModal />
+					<PreReportInputAddModal wrappedComponentRef={(inst) => this['PreReportInputAddModal'] = inst}/>
 				</Modal>
 				{/*这里复用的其他文件的css*/}
 				<div className="my-page-wrapper">
 					<div className="page-title">
 						<div className="template-desc">
 							<i className="fa fa-plus-square-o modify-icon-add"></i><span>添加预评估模板</span>
+						</div>
+						<div className="add-pre-report-top-function-button">
+							<Tooltip title="显示输入框的序号,同word模板对应">
+								<button className="template-modify-button fa fa-tags" onClick={()=>this.showIndex()}></button>
+							</Tooltip>
+							<Tooltip title="重置所有数据">
+								<button className="template-modify-button fa fa-repeat" onClick={()=>this.resetAllData()}></button>
+							</Tooltip>
 						</div>
 					</div>
 					{/*内容区域*/}
@@ -217,12 +366,34 @@ class AddPreReportTemplate extends React.Component{
 									</Tooltip>
 								</div>
 							</Affix>
+							{/*表单输入框区域,数据未返回时显示加载中画面*/}
+							<div className="template-input-area">
+								{
+									this.state.inputTypeDataList.length>0?
+										this.state.inputTypeDataList.map((item,index)=>{
+											return (
+												<div key={index}>
+													{/*标题*/}
+													<div className="template-input-type-title-wrapper">
+														<div className="template-input-type-title">
+															{item.partName}
+														</div>
+													</div>
+													{/*输入框展示组件,传递的方法onInputSearch是搜索小区周边设施的方法*/}
+													<ReportTemplateInputArea
+														showIndex={this.state.showIndex}
+														templateBankName={this.state.bankName}
+														dataList={item.data}
+														onSubmit={(v)=>{}}
+														onInputSearch={(v)=>{}}
+													/>
+												</div>
+											)
+										}):(<Loading />)
+								}
+							</div>
 						</div>
 					</div>
-					{/*svg测试,坐标是针对于父容器,viewBox表示视野，越小的话图像越大，只显示局部*/}
-					{/*<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="400" viewBox="0 0 50 50">*/}
-						{/*<circle cx="50" cy="50" r="40" stroke="red"  fill="#ffffff"/>*/}
-					{/*</svg>*/}
 				</div>
 
 				{/*补丁区域*/}

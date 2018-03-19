@@ -7,6 +7,8 @@ var Tab = require('./../models/estate_search_tab_name');
 var EstateParam = require('./../models/estate_param');
 //预评估报告输入数据
 var PreReportEstateInputData = require('./../models/estate_inputs_data')
+//预评估报告模板
+var PreReportInputTemplate = require('./../models/pre_report_input_data_template')
 var router = express.Router();
 //查看小区是否已经填写过
 router.post('/checkEstateExisted',function(req,res,next){
@@ -167,6 +169,22 @@ router.get('/getLandTransactionFee',function(req,res,next){
 			res.json({
 				status: 1,
 				landTransactionFee: doc.param.landTransactionFee,
+			})
+		}
+	})
+})
+
+//获取预评估报告模板
+router.get('/getPreReportTemplate',function(req,res,next){
+	PreReportInputTemplate.findOne(function(err,doc){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			res.json({
+				status: 1,
+				template: doc.inputData,
 			})
 		}
 	})
