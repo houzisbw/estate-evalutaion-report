@@ -45,6 +45,31 @@ class PreAssesment extends React.Component{
 	handleAddTemplate(){
 		this.props.history.push({pathname:'/app/pre_assesment/add'})
 	}
+	//删除模板
+	handleRemoveTemplate(){
+		let self = this;
+		Modal.confirm({
+			title: '删除',
+			content: '确认删除该预评估报告模板(该操作不可逆)?',
+			okText: '确认',
+			cancelText: '取消',
+			onOk(){
+				let param = {
+					templateNameToDelete:self.state.bankInfo[self.state.currentTemplateIndex]
+				};
+				axios.post('/estate/deletePreReportTemplate',param).then((resp)=>{
+					if(resp.data.status === 1){
+						self.props.history.push('/app/pre_assesment');
+					}else{
+						Modal.warning({
+							title:'很不巧',
+							content:'删除操作出现未知错误，请重试~'
+						})
+					}
+				})
+			}
+		})
+	}
 	//显示/隐藏输入框的序号
 	showIndex(){
 		this.setState({
@@ -115,6 +140,14 @@ class PreAssesment extends React.Component{
 								this.props.userAuth===0?(
 									<Tooltip title="添加预评估模板">
 										<button className="template-modify-button fa fa-plus fa-plus-padding" onClick={()=>{this.handleAddTemplate()}}></button>
+									</Tooltip>
+								) :null
+							}
+							{
+								//删除该模板
+								this.props.userAuth===0?(
+									<Tooltip title="删除该预评估模板">
+										<button className="template-modify-button fa fa-bitbucket fa-plus-padding" onClick={()=>{this.handleRemoveTemplate()}}></button>
 									</Tooltip>
 								) :null
 							}

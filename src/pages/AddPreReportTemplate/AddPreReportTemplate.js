@@ -281,6 +281,83 @@ class AddPreReportTemplate extends React.Component{
 		this.initInputTypeDataList();
 
 	}
+	//保存预评估报告
+	savePreReport(){
+		let self = this;
+		Modal.confirm({
+			title: '保存报告',
+			content: '确认保存该报告?',
+			okText: '确认',
+			cancelText: '取消',
+			onOk(){
+				//保存报告
+				let param = {
+					reportData:{
+						bankName:self.state.bankName,
+						inputData:self.state.inputTypeDataList
+					}
+				};
+				axios.post('/estate/savePreReportTemplate',param).then((resp)=>{
+					if(resp.data.status === 1){
+						Modal.success({
+							title:'恭喜',
+							content:'预评估报告保存成功',
+							onOk(){
+								self.props.history.push('/app/pre_assesment/report')
+							}
+						})
+
+					}else{
+						Modal.success({
+							title:'Oops~',
+							content:'预评估报告保存失败，请重试'
+						})
+					}
+				})
+			}
+		})
+	}
+	//处理子组件删除input的操作
+	onRemoveInput(indexToRemove){
+		let t = this.state.inputTypeDataList;
+		let dropdownLabelIndex = null;
+		t.forEach((item)=>{
+			let data = item.data;
+			let index=-1;
+			for(var i=0;i<data.length;i++){
+				if(data[i].index === indexToRemove){
+					index = i;
+					//如果左侧是下拉，则保存该下拉的index
+					if(data[i].dropdownLabelIndex){
+						dropdownLabelIndex = data[i].dropdownLabelIndex;
+					}
+				}
+			}
+			if(index !== -1){
+				data.splice(index,1)
+			}
+			this.setState({
+				inputTypeDataList:t
+			})
+		});
+		//同时更新state中index数组,这里要注意：如果左侧是下拉的话，记得删除下拉的index
+		let tempTotalIndexList = this.state.totalIndexList;
+		let totalIndexListIndex = tempTotalIndexList.indexOf(indexToRemove);
+		if(totalIndexListIndex!==-1){
+			tempTotalIndexList.splice(totalIndexListIndex,1)
+		}
+		//删除左侧下拉的index，如果存在的话
+		if(dropdownLabelIndex){
+			totalIndexListIndex = tempTotalIndexList.indexOf(dropdownLabelIndex);
+			if(totalIndexListIndex!==-1){
+				tempTotalIndexList.splice(totalIndexListIndex,1)
+			}
+		}
+		//更新
+		this.setState({
+			totalIndexList:tempTotalIndexList
+		})
+	}
 
 	render(){
 		const formItemLayout = {
@@ -344,7 +421,7 @@ class AddPreReportTemplate extends React.Component{
 							<i className="fa fa-plus-square-o modify-icon-add"></i><span>添加预评估模板</span>
 						</div>
 						<div className="add-pre-report-top-function-button">
-							<Tooltip title="显示输入框的序号,同word模板对应">
+							<Tooltip title="显示输入框的序号,同word模板对应(绿色为不可删除数据)">
 								<button className="template-modify-button fa fa-tags" onClick={()=>this.showIndex()}></button>
 							</Tooltip>
 							<Tooltip title="重置所有数据">
@@ -381,6 +458,8 @@ class AddPreReportTemplate extends React.Component{
 													</div>
 													{/*输入框展示组件,传递的方法onInputSearch是搜索小区周边设施的方法*/}
 													<ReportTemplateInputArea
+														onRemoveInput={(index)=>this.onRemoveInput(index)}
+														isInModifyMode={true}
 														showIndex={this.state.showIndex}
 														templateBankName={this.state.bankName}
 														dataList={item.data}
@@ -391,6 +470,12 @@ class AddPreReportTemplate extends React.Component{
 											)
 										}):(<Loading />)
 								}
+							</div>
+						</div>
+						{/*点击生成预评估报告按钮*/}
+						<div className="template-content-wrapper">
+							<div className="generate-prereport-button" onClick={()=>this.savePreReport()}>
+								保存预评估报告
 							</div>
 						</div>
 					</div>

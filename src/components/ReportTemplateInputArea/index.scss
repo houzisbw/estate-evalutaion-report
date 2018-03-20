@@ -42,14 +42,26 @@
     width:65%;
     float:left;
     position: relative;
+    .input-div-remove-button{
+      position: absolute;
+      width:20px;
+      height:20px;
+      background: url('./../../assets/img/icon/deleteInput.png') center center / 20px 20px no-repeat;
+      right:5px;
+      top:9px;
+      cursor: pointer;
+    }
     .pre-report-right-label-show-index{
       position: absolute;
       top:9px;
-      right:5px;
+      left:5px;
       color: #ffffff;
       padding:1px 10px;
       background-color: rgba(0,0,0,0.4);
       border-radius: 3px;
+    }
+    .pre-report-right-label-show-index-cannot-delete{
+      background-color: #39ac6a;
     }
   }
   //自定义类名来控制该类下的按钮自定义颜色，小技巧之一

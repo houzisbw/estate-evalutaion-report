@@ -29,7 +29,12 @@ var PreReportInputData = new mongoose.Schema({
 			//输入框placeholder
 			placeholder:String,
 			//下拉框是否不可编辑,true表示不能编辑
-			canDropdownEditable:Boolean
+			canDropdownEditable:Boolean,
+
+			//input框不可删除(某些输入框不可删除，因为和其他有关联，然后代码里也写死了)
+			//true不可删除，false可删除
+			//index为6,7,26,34,12,27,28不可删除
+			cannotDelete:Boolean
 
 		}]
 	}]

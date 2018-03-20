@@ -14,6 +14,8 @@ class ReportTemplateInputArea extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			//当前鼠标悬浮所在input的index
+			currentMouseoverInputIndex:'',
 			//成新率的表,从数据库读出
 			buildingNewRate:[],
 			buildingNewRateDescription:[],
@@ -194,7 +196,32 @@ class ReportTemplateInputArea extends React.Component{
 
 		}
 	}
-
+	//处理鼠标悬浮显示删除按钮
+	handleInputDivOnMouseOver(index){
+		this.setState({
+			currentMouseoverInputIndex:index
+		})
+	}
+	handlehandleInputDivOnMouseOut(){
+		this.setState({
+			currentMouseoverInputIndex:''
+		})
+	}
+	//删除input的按钮事件响应
+	handleRemoveInput(indexToRemove){
+		let self = this;
+		//弹出对话框
+		Modal.confirm({
+			title: '请注意',
+			content: '确认删除该数据?',
+			okText: '确认',
+			cancelText: '取消',
+			onOk(){
+				//调用父组件的方法,将数据传递给父组件
+				self.props.onRemoveInput(indexToRemove)
+			}
+		});
+	}
 	//生成表单
 	generateInputFields(){
 		const {getFieldDecorator} = this.props.form;
@@ -287,7 +314,11 @@ class ReportTemplateInputArea extends React.Component{
 							}
 
 						</div>
-						<div className="input-div" style={inputDivStyle}>
+						<div className="input-div"
+							 style={inputDivStyle}
+							 onMouseLeave={()=>this.handlehandleInputDivOnMouseOut()}
+							 onMouseEnter={()=>this.handleInputDivOnMouseOver(t.index)}
+						>
 							{
 								<FormItem >
 								{getFieldDecorator(inputIndex,{
@@ -300,12 +331,18 @@ class ReportTemplateInputArea extends React.Component{
 							{/*显示index的div*/}
 							{
 								this.props.showIndex?(
-									<div className="pre-report-right-label-show-index">
+									<div className={t.cannotDelete?"pre-report-right-label-show-index-cannot-delete pre-report-right-label-show-index":"pre-report-right-label-show-index"}>
 										{t.index}
 									</div>
 								):null
 							}
-
+							{/*删除按钮,必须是在修改状态下 且 鼠标移入 且 是可删除字段才能显示按钮*/}
+							{
+								!t.cannotDelete && this.props.isInModifyMode && this.state.currentMouseoverInputIndex === t.index?(
+									<div className="input-div-remove-button" onClick={()=>this.handleRemoveInput(t.index)}>
+									</div>
+								):null
+							}
 						</div>
 					</div>
 				</Col>

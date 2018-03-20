@@ -190,6 +190,40 @@ router.get('/getPreReportTemplate',function(req,res,next){
 	})
 })
 
+//保存报告
+router.post('/savePreReportTemplate',function(req,res,next){
+	let reportData = req.body.reportData;
+	let preReportEstateInputData = new PreReportEstateInputData(reportData)
+	preReportEstateInputData.save(function(err){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			res.json({
+				status:1
+			})
+		}
+	});
+})
+
+//删除报告
+router.post('/deletePreReportTemplate',function(req,response,next){
+	let templateNameToDelete = req.body.templateNameToDelete;
+	let condition = {bankName:templateNameToDelete};
+	PreReportEstateInputData.findOneAndRemove(condition,function(err,res){
+		if(err){
+			response.json({
+				status:-1
+			})
+		}else{
+			response.json({
+				status:1
+			})
+		}
+	})
+})
+
 
 
 module.exports = router;
