@@ -1,0 +1,13 @@
+.modify-icon-padding{
+  margin-right: 10px;
+}
+.word-template-tab-wrapper{
+  width:90%;
+  height:1000px;
+  margin: 30px auto 0 auto;
+  .ant-tabs-tab{
+    &:hover{
+      color: #39ac6a!important;
+    }
+  }
+}

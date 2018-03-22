@@ -76,6 +76,10 @@ class PreAssesment extends React.Component{
 			showIndex:!this.state.showIndex
 		})
 	}
+	//下载预评估报告word模板
+	handleDownloadWordTemplate(){
+
+	}
 	componentDidMount(){
 		//获取银行信息
 		axios.get('/estate/bankInfo').then((resp)=>{
@@ -120,6 +124,14 @@ class PreAssesment extends React.Component{
 						</div>
 						{/*修改模板按钮区域，管理员可见*/}
 						<div className="template-modify-wrapper">
+							{/*下载预评估word模板*/}
+							{
+								this.props.userAuth===0?(
+									<Tooltip title="下载该预评估报告word模板">
+										<a className="template-modify-button fa fa-download alink-color" href="http://47.95.120.132:4000/static/estate_evaluation_docx/nonghang-style-right.docx" download="test"></a>
+									</Tooltip>
+								) :null
+							}
 							{
 								this.props.userAuth===0?(
 									<Tooltip title="显示数据序号,同word模板对应">

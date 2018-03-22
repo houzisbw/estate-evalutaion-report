@@ -10,6 +10,7 @@ import LayoutComponent from './../../components/Layout/layout'
 import {checkAuthentication} from './../../util/utils'
 import {Switch, Route, Redirect} from 'react-router-dom'
 import NormalAssesment from './../NormalAssesment/NormalAssesment'
+import WordTemplateManagement from './../WordTemplateManagement/WordTemplateManagement'
 //处理预评估的总路由
 import PreAssesmentRouter from './../PreAssesment/PreAssesmentRouter'
 class Layout extends React.Component{
@@ -27,6 +28,8 @@ class Layout extends React.Component{
 				<Switch>
 					{/*预评估页面总路由*/}
 					<Route path="/app/pre_assesment"  component={PreAssesmentRouter}/>
+					{/*word模板管理路由*/}
+					<Route path="/app/word_template_management" component={WordTemplateManagement}/>
 					<Route path="/app/normal_assesment_report" component={NormalAssesment}/>
 					<Redirect from="/app" to="/app/pre_assesment"/>
 				</Switch>

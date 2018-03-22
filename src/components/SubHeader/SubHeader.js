@@ -29,9 +29,9 @@ class SubHeader extends React.Component{
 				title:'其他功能'
 			},
 			{
-				pathTo:currentPath+'/other2',
+				pathTo:currentPath+'/word_template_management',
 				iconName:'fa fa-floppy-o fa-fw',
-				title:'其他功能'
+				title:'Word模板管理'
 			},
 		]
 		return (
