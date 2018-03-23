@@ -18,7 +18,11 @@ class WordTemplateManagement extends React.Component{
 			//文件是否上传中
 			isFileUploading:false,
 			//upload组件参数
-			fileList:[]
+			fileList:[],
+			//选择的银行名称
+			bankName:'',
+			//上传的种类
+			uploadType:''
 		}
 	}
 
@@ -49,7 +53,8 @@ class WordTemplateManagement extends React.Component{
 				if(resp.data.type === 'PRE'){
 					let formatArray = [],cnt=1;
 					for(var k in resp.data.fileData){
-						let obj = {};
+						//每条数据的是否在loading状态,这个很重要，不能全局只设置一个isloading
+						let obj = {isLoading:false};
 						if(resp.data.fileData.hasOwnProperty(k)){
 							obj['wordName'] = resp.data.fileData[k];
 							obj['bank'] = k;
@@ -78,6 +83,7 @@ class WordTemplateManagement extends React.Component{
 		}
 
 	}
+
 	//处理删除请求
 	handleRemoveWord(record){
 		//弹框确认删除
@@ -109,38 +115,123 @@ class WordTemplateManagement extends React.Component{
 			}
 		})
 	}
-	//处理word上传请求
+	//处理word上传请求,必须记录下是上传的哪个银行的模板
 	handleUploadWord(record){
-
+		this.setState({
+			bankName:record.bank,
+			uploadType:'UPLOAD'
+		})
 	}
-	//处理上传过程
-	handleUploadChange(info){
+	//处理下载请求
+	handleDownloadWord(record){
+		let docName = record.wordName;
+		let param = {
+			docName:docName,
+			type:'PRE'
+		}
+		axios.get('/estate/wordDownload',{
+			params:param
+		}).then((resp)=>{
+			console.log(resp)
+		})
+
+		//window.location.href=`/estate/wordDownload?docName=${docName}&type=${param.type}`;
+	}
+	//处理修改word请求,修改其实就是重新上传文件覆盖原来的word文件
+	//这里有要求:word必须名字和原来word的一样才行，否则会覆盖其他的
+	handleModifyWord(record){
+		this.setState({
+			bankName:record.bank,
+			uploadType:'MODIFY'
+		})
+	}
+
+	//处理上传过程,bankName表明了是那一条数据被点击
+	handleUploadChange(info,bankName,responseStatusWord){
 		let fileList = info.fileList;
 		//如果文件正在上传
 		if (info.file.status === 'uploading') {
-			console.log('uploading')
+			//console.log('uploading')
+			//遍历找出被点击的那条数据，改变其状态为上传中
+			let t = this.state.preTemplates;
+			t.forEach((item)=>{
+				if(item.bank === bankName){
+					item.isLoading = true;
+				}
+			})
 			this.setState({
-				isFileUploading:true
+				preTemplates:t
 			})
 		}
 		//文件上传完毕
 		if (info.file.status === 'done') {
-			// Get this url from response in real world.
-			console.log('done')
-			this.setState({
-				isFileUploading:false
+			//console.log('done')
+			//遍历找出被点击的那条数据，改变其状态为上传完毕
+			let t = this.state.preTemplates;
+			t.forEach((item)=>{
+				if(item.bank === bankName){
+					item.isLoading = false;
+				}
 			})
+			this.setState({
+				preTemplates:t
+			})
+			//文件上传完毕后再判断服务端返回状态,否则无法读取responese字段
+			if(info.file.response.status === -2){
+				//文件重名
+				Modal.warning({
+					title:'请注意',
+					content:responseStatusWord['-2']
+				})
+
+			}else if(info.file.response.status === -1){
+				//未知错误
+				Modal.warning({
+					title:'糟糕',
+					content:responseStatusWord['-1']
+				})
+
+			}else if(info.file.response.status === 1){
+				//上传成功
+				let self = this;
+				Modal.success({
+					title:'恭喜',
+					content:responseStatusWord['1'],
+					onOk(){
+						//重新初始化表格数据
+						self.readDocxFromServer('PRE')
+					}
+				})
+			}
 
 		}
+
+
 		this.setState({fileList});
 	}
 
 
 	render(){
+		//上传文件的responseStatusWord
+		let uploadResponseStatusWord = {
+			'1':'文件上传成功!',
+			'-1':"文件上传出现未知错误!",
+			'-2':'文件名和已有的模板名称重复，请换一个名称!'
+		}
+		//修改状态下的上传上传文件的responseStatusWord
+		let uploadModifyResponseStatusWord = {
+			'1':'Word模板文件修改成功!',
+			'-1':"文件上传出现未知错误!",
+			'-2':'上传文件名和服务器上对应模板名字不同，请上传相同名称的word!'
+		}
 		//上传组件相关的数据
-		const uploadProps = {
+		let uploadProps = {
 			name:'wordPre',
 			action:'/estate/upload_wordPre',
+			data:{
+				bankName:this.state.bankName,
+				uploadType:this.state.uploadType
+			},
 			//注前面的是doc，后面的是docx，2者都必须
 			accept:'application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 			//不展示上传列表
@@ -150,6 +241,7 @@ class WordTemplateManagement extends React.Component{
 		const columns = [{
 			title: 'word文件名称',
 			dataIndex: 'wordName',
+			width:'60%',
 			key: 'wordName',
 			render:(text)=>{
 				return (
@@ -159,14 +251,17 @@ class WordTemplateManagement extends React.Component{
 		},
 		{
 			title: '对应银行名称',
+			width:'20%',
 			dataIndex: 'bank',
 			key: 'bank',
 		}, {
 			title: '操作',
+			width:'20%',
 			key: 'action',
 			render: (text, record) => {
 				//该word模板是否存在,如果为''则不存在
 				let isWordExist = record.wordName;
+				let isLoading = record.isLoading;
 				return (
 				<span>
 					{
@@ -174,22 +269,33 @@ class WordTemplateManagement extends React.Component{
 							<span>
 								<a onClick={() => this.handleRemoveWord(record)}>删除</a>
 								<Divider type = "vertical" />
-								<a>修改</a>
+								<span>
+									{/*这里有坑，注意upload组件必须一直渲染,不能在上传时渲染为null，否则无法触发handleUploadChange,以至于无法触发done*/}
+										<Upload {...uploadProps}
+												style={{display:!isLoading?'block':'none'}}
+												fileList={this.state.fileList}
+												onChange={(info)=>this.handleUploadChange(info,record.bank,uploadModifyResponseStatusWord)}>
+										<a onClick={() => this.handleModifyWord(record)}>修改</a>
+									</Upload>
+										{
+											isLoading?<span>上传中...</span>:null
+										}
+								</span>
 								<Divider type = "vertical" />
-								<a>下载</a>
+								<a onClick={()=>this.handleDownloadWord(record)}>下载</a>
 							</span>
 							)
 						:(
 							<span>
 								{/*这里有坑，注意upload组件必须一直渲染,不能在上传时渲染为null，否则无法触发handleUploadChange,以至于无法触发done*/}
 								<Upload {...uploadProps}
-										style={{display:!this.state.isFileUploading?'block':'none'}}
+										style={{display:!isLoading?'block':'none'}}
 										fileList={this.state.fileList}
-										onChange={(info)=>this.handleUploadChange(info)}>
+										onChange={(info)=>this.handleUploadChange(info,record.bank,uploadResponseStatusWord)}>
 									<a onClick={() => this.handleUploadWord(record)}>上传</a>
 								</Upload>
 								{
-									this.state.isFileUploading?<span>上传中...</span>:null
+									isLoading?<span>上传中...</span>:null
 								}
 							</span>
 						)
