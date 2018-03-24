@@ -213,6 +213,36 @@ router.post('/savePreReportTemplate',function(req,res,next){
 	});
 })
 
+//修改状态下保存预评估报告
+router.post('/saveModifiedPreReportTemplate',function(req,res,next){
+	let reportData = req.body.reportData;
+	let bankName = reportData.bankName,
+		inputData = reportData.inputData;
+	//此处要修改PreReportEstateInputData数据库中对应的数据
+	let query = PreReportEstateInputData.where({bankName:bankName});
+	query.findOne(function(err,doc){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			if(doc){
+				//此处保存新的数据覆盖旧的inputData字段
+				doc.inputData = inputData;
+				doc.save();
+				res.json({
+					status:1
+				})
+			}else{
+				res.json({
+					status:-1
+				})
+			}
+		}
+	})
+
+})
+
 //删除报告,只删除数据库的数据，同时要记住删除word模板
 //还要删除数据库中2者的对应关系
 router.post('/deletePreReportTemplate',function(req,response,next){
@@ -274,62 +304,67 @@ router.post('/deletePreReportTemplate',function(req,response,next){
 
 //查询预评估和正报的word模板，通过参数来区分是查询哪一个
 router.post('/searchWordTemplateOnServer',function(req,res,next){
-	let type = req.body.type;
+	let type = req.body.type,
+		pageNum = parseInt(req.body.pageNum,10),
+		pageCapacity = parseInt(req.body.pageCapacity,10);
+	console.log(pageNum)
+	//检索时跳过的数量
+	let skippedItemNum = (pageNum-1)*pageCapacity;
 	if(type === 'PRE'){
-		//预评估,读取public/wordTemplate/pre下所有文件
-		//__dirname为当前路径
-		let preDirectoryName = path.join(__dirname,'../public/wordTemplate/pre');
-		//files是文件名数组
-		fs.readdir(preDirectoryName,function(err,files){
-			if(err){
+		//先到input_data中查找已经存在的银行名称(可能没有模板),再根据名称到EstateParam中查找模板
+		let bankNameList = [],
+			totalNum = 0;
+		//先查询总数
+		PreReportEstateInputData.count({},function(errCount,count){
+			if(errCount){
 				res.json({
 					status:-1
 				})
-			}else{
-				//先到input_data中查找已经存在的银行名称(可能没有模板),再根据名称到EstateParam中查找模板
-				let bankNameList = [];
-				PreReportEstateInputData.find({},function(errInputData,docInputData){
-					if(errInputData){
+			}
+			//获取总数
+			totalNum = count;
+			let PreReportEstateInputDataModal = PreReportEstateInputData.find().skip(skippedItemNum).limit(pageCapacity);
+			PreReportEstateInputDataModal.exec(function(errInputData,docInputData){
+				if(errInputData){
+					res.json({
+						status:-1
+					})
+				}
+				docInputData.forEach((item)=>{
+					bankNameList.push(item.bankName);
+				});
+				//查询对应银行中文名
+				EstateParam.findOne(function(err2,doc){
+					let retObj = {};
+					if(err2){
 						res.json({
 							status:-1
 						})
+					}else{
+						bankNameList.forEach((bank)=>{
+							//如果该银行存在对应的docx
+							if(doc.param.preReportDocx[bank]){
+								retObj[bank] = doc.param.preReportDocx[bank];
+							}else{
+								retObj[bank] = '';
+							}
+
+						});
+						res.json({
+							status:1,
+							total:totalNum,
+							fileData:retObj,
+							type:'PRE'
+						})
 					}
-					docInputData.forEach((item)=>{
-						bankNameList.push(item.bankName);
-					});
-					//查询对应银行中文名
-					EstateParam.findOne(function(err2,doc){
-						let retObj = {};
-						if(err2){
-							res.json({
-								status:-1
-							})
-						}else{
-							bankNameList.forEach((bank)=>{
-								//如果该银行存在对应的docx
-								if(doc.param.preReportDocx[bank]){
-									retObj[bank] = doc.param.preReportDocx[bank];
-								}else{
-									retObj[bank] = '';
-								}
+				})
 
-							});
-							res.json({
-								status:1,
-								fileData:retObj,
-								type:'PRE'
-							})
-						}
-					})
+			});
+		});
 
-				});
-
-
-			}
-
-		})
 
 	}
+
 })
 
 //删除word模板(包含预评估和正报)
@@ -509,21 +544,14 @@ router.post('/upload_wordPre',multiparty(),function(req,res,next){
 });
 
 //word模板下载，不能用html的a标签的download属性，因为兼容性很差
-router.get('/wordDownload',function(req,res,next){
-	console.log('download')
+router.get('/wordDownload',function(req,res){
 	//是预评估还是正报
 	let type = req.query.type,
-		docName = req.query.docName,
-		fReadStream
+		docName = req.query.docName;
 	//如果是预评估;
 	if(type === 'PRE'){
 		//获取文件路径
 		let filePath = path.join('./../public/wordTemplate/pre/',docName);
-		console.log(filePath)
-		res.set({
-			"Content-type":"application/octet-stream",
-			"Content-Disposition":"attachment;filename="+encodeURI(docName)
-		});
 		// //下载文件
 		res.download(filePath,function(err){
 			if(err){

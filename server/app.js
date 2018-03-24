@@ -37,8 +37,8 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-//这里views里面就存放前端的文件，很重要,express通过访问views里面的index.html来访问页面
-app.use(express.static(path.join(__dirname, 'views')));
+//设置静态文件目录
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 app.use('/users', users);

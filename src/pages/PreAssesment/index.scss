@@ -20,6 +20,14 @@
     }
     .template-modify-wrapper{
       float:right;
+      .bg-green{
+        background-color: #39ac6a!important;
+        color:#fff;
+        border-radius: 5px;
+        &:hover{
+          color: #ffffff!important;
+        }
+      }
       .fa-plus-padding{
         padding-top: 4px;
       }

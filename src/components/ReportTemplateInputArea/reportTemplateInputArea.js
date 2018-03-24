@@ -208,7 +208,7 @@ class ReportTemplateInputArea extends React.Component{
 		})
 	}
 	//删除input的按钮事件响应
-	handleRemoveInput(indexToRemove){
+	handleRemoveInput(indexToRemove,itemName){
 		let self = this;
 		//弹出对话框
 		Modal.confirm({
@@ -218,7 +218,7 @@ class ReportTemplateInputArea extends React.Component{
 			cancelText: '取消',
 			onOk(){
 				//调用父组件的方法,将数据传递给父组件
-				self.props.onRemoveInput(indexToRemove)
+				self.props.onRemoveInput(indexToRemove,itemName)
 			}
 		});
 	}
@@ -269,7 +269,7 @@ class ReportTemplateInputArea extends React.Component{
 			let inputDivStyle = t.size === '3' ? {width:'83%'}:{};
 			//每个控件唯一标志,注意还有dropdownlabelindex需要特殊处理
 			let inputIndex = '数据'+t.index;
-			//注意必须设置key
+			//注意必须设置key,这里的itemName不能重复
 			children.push(
 				<Col span={spanNumber} key={t.itemName}>
 					<div className="col-input-wrapper clearfix">
@@ -339,7 +339,7 @@ class ReportTemplateInputArea extends React.Component{
 							{/*删除按钮,必须是在修改状态下 且 鼠标移入 且 是可删除字段才能显示按钮*/}
 							{
 								!t.cannotDelete && this.props.isInModifyMode && this.state.currentMouseoverInputIndex === t.index?(
-									<div className="input-div-remove-button" onClick={()=>this.handleRemoveInput(t.index)}>
+									<div className="input-div-remove-button" onClick={()=>this.handleRemoveInput(t.index,t.itemName)}>
 									</div>
 								):null
 							}

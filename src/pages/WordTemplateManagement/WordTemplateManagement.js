@@ -2,7 +2,7 @@
 import React from 'react'
 import './index.scss'
 import axios from 'axios'
-import {Modal,Tabs,Divider,Upload} from 'antd'
+import {Modal,Tabs,Divider,Upload,Pagination} from 'antd'
 import {withRouter} from 'react-router-dom'
 import {connect} from 'react-redux'
 import WordTemplateManagementTable from './../../components/WordTemplateManageTable/WordTemplateManageTable'
@@ -11,6 +11,10 @@ class WordTemplateManagement extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			//总条目数量
+			totalNum:0,
+			//分页器当前页码
+			currentPage:1,
 			//预评估报告模板数组
 			preTemplates:[],
 			//表格是否加载中
@@ -47,7 +51,13 @@ class WordTemplateManagement extends React.Component{
 		this.setState({
 			isTableLoading:true
 		});
-		axios.post('/estate/searchWordTemplateOnServer',{type:type}).then((resp)=>{
+		let param = {
+			type:type,
+			pageNum:this.state.currentPage,
+			//每页容量
+			pageCapacity:10
+		};
+		axios.post('/estate/searchWordTemplateOnServer',param).then((resp)=>{
 			if(resp.data.status === 1){
 				//如果是预评估
 				if(resp.data.type === 'PRE'){
@@ -64,7 +74,8 @@ class WordTemplateManagement extends React.Component{
 					}
 					this.setState({
 						preTemplates:formatArray,
-						isTableLoading:false
+						isTableLoading:false,
+						totalNum:resp.data.total
 					})
 				}
 			}else{
@@ -123,19 +134,16 @@ class WordTemplateManagement extends React.Component{
 		})
 	}
 	//处理下载请求
-	handleDownloadWord(record){
+	handleDownloadWord(e,record){
+		e.preventDefault();
 		let docName = record.wordName;
 		let param = {
 			docName:docName,
 			type:'PRE'
 		}
-		axios.get('/estate/wordDownload',{
-			params:param
-		}).then((resp)=>{
-			console.log(resp)
-		})
-
-		//window.location.href=`/estate/wordDownload?docName=${docName}&type=${param.type}`;
+		//注意文件下载不能用ajax发送请求到后台，ajax默认会返回文件data数据而不是文件下载
+		//问题终于搞懂，必须考虑代理，因为是开发环境，3000端口被代理到5000，生产环境可以不加http://localhost:5000(默认就是5000端口)
+		window.location.href=`http://localhost:5000/estate/wordDownload?docName=${docName}&type=${param.type}`;
 	}
 	//处理修改word请求,修改其实就是重新上传文件覆盖原来的word文件
 	//这里有要求:word必须名字和原来word的一样才行，否则会覆盖其他的
@@ -210,6 +218,17 @@ class WordTemplateManagement extends React.Component{
 		this.setState({fileList});
 	}
 
+	//分页器页码改变回调
+	onPageIndexChange(page){
+		this.setState({
+			currentPage: page,
+		},()=>{
+			//重新查询数据库获取数据
+			this.readDocxFromServer('PRE');
+		});
+	}
+
+
 
 	render(){
 		//上传文件的responseStatusWord
@@ -282,7 +301,10 @@ class WordTemplateManagement extends React.Component{
 										}
 								</span>
 								<Divider type = "vertical" />
-								<a onClick={()=>this.handleDownloadWord(record)}>下载</a>
+								{/*有问题,注意这里代理到后端5000端口不是前端的3000端口*/}
+								{/*为啥无法访问到后端接口?*/}
+								{/*<a href='http://localhost:5000/pre/nonghang-style-right.docx' download="t">下载</a>*/}
+								<a onClick={(e)=>this.handleDownloadWord(e,record)}>下载</a>
 							</span>
 							)
 						:(
@@ -331,6 +353,13 @@ class WordTemplateManagement extends React.Component{
 										</TabPane>
 										<TabPane tab="评估正报Word模板" key="2">Content of Tab Pane 2</TabPane>
 									</Tabs>
+									{/*分页器*/}
+									<div className="template-pagination-wrapper">
+										<Pagination current={this.state.currentPage}
+													onChange={(page)=>this.onPageIndexChange(page)}
+													total={this.state.totalNum}
+										/>
+									</div>
 								</div>
 							</div>
 						</div>

@@ -143,9 +143,6 @@ class AddPreReportTemplate extends React.Component{
 					description: '添加数据项成功!',
 				});
 
-
-
-
 				this.setState({
 					modalVisible: false,
 				});
@@ -181,7 +178,6 @@ class AddPreReportTemplate extends React.Component{
 								preReportValidateStatus:'error',
 								preReportNameHelpString:'输入名称已经存在,请重新输入!'
 							});
-							return;
 						}else{
 							//如果不存在,保存名字
 							this.setState({

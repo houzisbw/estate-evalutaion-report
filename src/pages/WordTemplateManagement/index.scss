@@ -5,9 +5,8 @@
   width:90%;
   height:1000px;
   margin: 30px auto 0 auto;
-  .ant-tabs-tab{
-    &:hover{
-      color: #39ac6a!important;
-    }
+  .template-pagination-wrapper{
+    margin-top: 20px;
+    float:right;
   }
 }
