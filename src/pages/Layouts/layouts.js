@@ -13,6 +13,8 @@ import NormalAssesment from './../NormalAssesment/NormalAssesment'
 import WordTemplateManagement from './../WordTemplateManagement/WordTemplateManagement'
 //处理预评估的总路由
 import PreAssesmentRouter from './../PreAssesment/PreAssesmentRouter'
+//处理业务登记路由
+import BusinessRegistering from './../BusinessRegistering/BusinessRegistering'
 class Layout extends React.Component{
 	componentWillMount(){
 		checkAuthentication();
@@ -30,6 +32,8 @@ class Layout extends React.Component{
 					<Route path="/app/pre_assesment"  component={PreAssesmentRouter}/>
 					{/*word模板管理路由*/}
 					<Route path="/app/word_template_management" component={WordTemplateManagement}/>
+					{/*业务登记页面路由*/}
+					<Route path="/app/business_registering" component={BusinessRegistering}/>
 					<Route path="/app/normal_assesment_report" component={NormalAssesment}/>
 					<Redirect from="/app" to="/app/pre_assesment"/>
 				</Switch>

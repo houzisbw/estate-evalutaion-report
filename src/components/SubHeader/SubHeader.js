@@ -24,9 +24,9 @@ class SubHeader extends React.Component{
 				title:'评估报告正报'
 			},
 			{
-				pathTo:currentPath+'/other1',
+				pathTo:currentPath+'/business_registering',
 				iconName:'fa fa-paperclip fa-fw',
-				title:'其他功能'
+				title:'业务登记'
 			},
 			{
 				pathTo:currentPath+'/word_template_management',

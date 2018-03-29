@@ -789,6 +789,8 @@ class ReportTemplate extends React.Component{
 			//替换并下载预评估报告
 			//run的第一个path参数必须是url地址，本地不行，不知道为啥，在express目录static文件夹下放置docx即可
 			XDoc.run('http://47.95.120.132:4000/static/estate_evaluation_docx/'+currentDocx, "docx", dataObj,"_blank");
+			//XDoc.run('http://localhost:5000/wordTemplate/pre/'+currentDocx, "docx", dataObj,"_blank");
+
 		})
 
 	}

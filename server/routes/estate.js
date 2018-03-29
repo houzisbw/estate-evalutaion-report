@@ -307,7 +307,6 @@ router.post('/searchWordTemplateOnServer',function(req,res,next){
 	let type = req.body.type,
 		pageNum = parseInt(req.body.pageNum,10),
 		pageCapacity = parseInt(req.body.pageCapacity,10);
-	console.log(pageNum)
 	//检索时跳过的数量
 	let skippedItemNum = (pageNum-1)*pageCapacity;
 	if(type === 'PRE'){
