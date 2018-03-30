@@ -88,3 +88,12 @@ export const dateToChinese =(date)=>{
 
 
 }
+
+//函数节流,duration为最小触发间隔
+export const throttle = (fn,duration)=>{
+	let timerId = null;
+	return function(){
+		clearTimeout(timerId);
+		timerId = setTimeout(fn,duration)
+	}
+}

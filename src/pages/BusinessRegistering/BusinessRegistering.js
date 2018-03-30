@@ -2,7 +2,7 @@
  * Created by Administrator on 2018/3/28.
  */
 import React from 'react'
-import {Modal,Tooltip,Table,Pagination,Popconfirm,Input } from 'antd'
+import {Modal,Tooltip,Table,Pagination,Popconfirm,Input,notification  } from 'antd'
 import './index.scss'
 import axios from 'axios'
 //引入公有表单组件
@@ -10,10 +10,26 @@ import CommonForm from './../../components/_publicComponents/Form/CommonForm'
 import {withRouter} from 'react-router-dom'
 import {connect} from 'react-redux'
 //业务登记页面
+
+//可编辑输入框,注意这个组件得放在外面，不能放在renderColumn中，否则被重新渲染失去焦点
+const EditableCell = ({ editable, value, onChange }) => (
+	<div>
+		{editable
+			? <Input style={{ margin: '-5px 0',width:'80%' }} value={value} onChange={ e => onChange(e.target.value)} />
+			: value
+		}
+	</div>
+);
 class BusinessRegistering extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			//按序号排序的方向,1为升序,-1降序
+			sortOrder:-1,
+			//表格横向宽度
+			tableWidth:2000,
+			//操作列的宽度
+			operationColumnWidth:100,
 			//现存的项目序号
 			currentItemIndex:0,
 			//表格是否在loading
@@ -22,6 +38,8 @@ class BusinessRegistering extends React.Component{
 			totalNum:10,
 			//业务数据
 			businessData:[],
+			//业务数据缓存，用于取消修改
+			cacheBusinessData:[],
 			//每一页显示的业务登记表数量
 			itemSizePerPage:10,
 			//当前页数
@@ -239,15 +257,25 @@ class BusinessRegistering extends React.Component{
 		})
 		let param = {
 			itemSizePerPage:this.state.itemSizePerPage,
-			currentPageNum:this.state.currentPageNum
+			currentPageNum:this.state.currentPageNum,
+			sortOrder:this.state.sortOrder
 		};
 		axios.post('/business_register/getBusinessRegisterData',param).then((resp)=>{
 			if(resp.data.status === 1){
+				//businessData需要添加key,最后保存的时候要删除key属性
+				resp.data.data.forEach((item,index)=>{
+					item.key = index.toString();
+				});
+				//坑点:这里处理缓存对象不能直接slice复制，里面对象必须要重新生成，否则只复制了引用
 				this.setState({
 					businessData:resp.data.data,
+					cacheBusinessData:resp.data.data.map((item)=>({...item})),
 					totalNum:resp.data.cnt,
-					isTableDataLoading:false
+					isTableDataLoading:false,
+					tableWidth:2000,
+					operationColumnWidth:100
 				})
+
 			}else{
 				Modal.warning({
 					title:'抱歉!',
@@ -272,7 +300,7 @@ class BusinessRegistering extends React.Component{
 		let formValue = this['formData'].handleSubmit();
 		//获取当前时间
 		let d = new Date();
-		let currentDate = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+		let currentDate = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
 		let dateObj = {
 			'登记日期':currentDate,
 			'是否收齐':0
@@ -359,24 +387,21 @@ class BusinessRegistering extends React.Component{
 		})
 	}
 	//输入框编辑改变
-	onEditInputChange(v){
+	onEditInputChange(value,index,column){
+		const newData = [...this.state.businessData];
+		const target = newData.filter(item => index === item['项目序号'])[0];
+		if (target) {
+			target[column] = value;
+			this.setState({ businessData: newData });
+		}
 
 	}
 	renderColumns(text, record, column) {
-		//可编辑输入框
-		const EditableCell = ({ editable, value, onChange }) => (
-			<div>
-				{editable
-					? <Input style={{ margin: '-5px 0' }} value={value} onChange={e => onChange(e.target.value)} />
-					: value
-				}
-			</div>
-		);
 		return (
 			<EditableCell
 				editable={record.editable}
 				value={text}
-				onChange={value => this.handleChange(value, record.key, column)}
+				onChange={value => this.onEditInputChange(value, record['项目序号'], column)}
 			/>
 		);
 	}
@@ -386,11 +411,69 @@ class BusinessRegistering extends React.Component{
 		const target = newData.filter(item => key === item['项目序号'])[0];
 		if (target) {
 			target.editable = true;
-			this.setState({ businessData: newData });
+			//这里要修改列宽度
+			this.setState({
+				businessData: newData,
+				tableWidth:3500,
+				operationColumnWidth:130
+			});
 		}
 	}
+	//确认修改
+	save(key){
+		const newData = [...this.state.businessData];
+		const target = newData.filter(item => key === item['项目序号'])[0];
+		if (target) {
+			//发送后台修改数据
+			//去掉editabel，key，图片，属性
+			let targetToSave = {...target};
+			delete targetToSave.editable
+			delete targetToSave.key
+			delete targetToSave['图片']
+			axios.post('/business_register/modifyItemByIndex',{modifiedData:targetToSave}).then((resp)=>{
+				if(resp.data.status === 1){
+					notification['success']({
+						message: '恭喜',
+						description: '业务登记表数据修改成功~',
+					});
+					this.initBusinessRegisterData()
+				}else{
+					Modal.error({
+						title:'糟糕',
+						content:'业务登记保存失败!'
+					})
+				}
+			})
+		}
+	}
+	//取消修改
+	cancel(key){
+		const newData = [...this.state.businessData];
+		const target = newData.filter(item => key === item['项目序号'])[0];
+		if (target) {
+			//恢复被修改行的数据,cache是预先缓存的
+			Object.assign(target, this.state.cacheBusinessData.filter(item => key === item['项目序号'])[0]);
+			delete target.editable;
+			//恢复表格宽度
+			this.setState({
+				businessData: newData,
+				tableWidth:2000,
+				operationColumnWidth:100
+			});
+		}
+	}
+	//表格服务端排序
+	handleTableChange(pagination, filters, sorter){
+		//ascend和descend是antd内置的排序方向,这里1为升序，-1为降序
+		let sortOrder = sorter.order === 'ascend'?1:-1;
+		this.setState({
+			sortOrder:sortOrder
+		},()=>{
+			//发给后端进行排序处理
+			this.initBusinessRegisterData()
+		})
+	}
 	render(){
-
 		//表头数据,此处需要优化获取方式
 		const columns = this.state.formInputData.map((value,index)=>{
 			let obj = {
@@ -409,23 +492,32 @@ class BusinessRegistering extends React.Component{
 		columns.unshift({
 			title:'项目序号',
 			dataIndex:'项目序号',
-			render: (text, record) => this.renderColumns(text, record, '项目序号'),
+			//服务端排序
+			sorter: true,
 		});
 		//图片特殊处理，需要弹出图片框
 		columns.push({
 			title:'图片',
 			dataIndex:'图片',
+			align:'center',
+			render : (text,record)=>{
+				return (
+					<a href="#">查看</a>
+				)
+			}
 		})
 		//特殊处理
 		columns.push({
 			title:'是否收齐',
+			align:'center',
 			dataIndex:'是否收齐'
 		})
 		//这个列的数据不存数据库，注意了,且固定在右侧
 		columns.push({
 			title:'操作',
+			align:'center',
 			dataIndex:'操作',
-			width: 100,
+			width:this.state.operationColumnWidth,
 			fixed: 'right',
 			render: (text, record) => {
 				return (
@@ -435,19 +527,29 @@ class BusinessRegistering extends React.Component{
 										okText="确定"
 										cancelText="取消"
 										onConfirm={() => this.onTableDataDelete(record['项目序号'])}>
-								<i className="business-tabledata-operation-icon"></i>
+								<i className="business-tabledata-operation-icon business-tabledata-operation-icon-delete"></i>
 							</Popconfirm>
 						</Tooltip>
-						<Tooltip title="修改该条数据">
-							<i className="business-tabledata-modify-icon" onClick={()=>this.edit(record['项目序号'])}></i>
-						</Tooltip>
+						{
+							record.editable?(
+								<span>
+									<Tooltip title="确定修改">
+										<i className="business-tabledata-operation-icon business-tabledata-operation-icon-confirm" onClick={()=>this.save(record['项目序号'])}></i>
+									</Tooltip>
+									<Tooltip title="取消修改">
+										<i className="business-tabledata-operation-icon business-tabledata-operation-icon-cancel" onClick={()=>this.cancel(record['项目序号'])}></i>
+									</Tooltip>
+								</span>
+							):(
+								<Tooltip title="修改该条数据">
+									<i className="business-tabledata-operation-icon business-tabledata-operation-icon-modify" onClick={()=>this.edit(record['项目序号'])}></i>
+								</Tooltip>
+							)
+						}
+
 					</span>
 				);
 			},
-		})
-		//列表内容数据,需要添加key防止报错
-		let tableData = this.state.businessData.map((value,index)=>{
-			return Object.assign(value,{key:index})
 		})
 
 		return (
@@ -490,12 +592,13 @@ class BusinessRegistering extends React.Component{
 				</div>
 				<div className="content">
 					<div className="business-content-wrapper">
-						{/*scroll确定了横轴可滚动区域大小*/}
+						{/*scroll确定了横轴可滚动区域大小,onChange可以设置排序分页等*/}
 						<Table columns={columns}
 							   loading={this.state.isTableDataLoading}
 							   bordered
+							   onChange={(pagination, filters, sorter)=>this.handleTableChange(pagination, filters, sorter)}
 							   pagination={false}
-							   scroll={{ x: 2000}}
+							   scroll={{ x: this.state.tableWidth}}
 							   dataSource={this.state.businessData}  />
 						<div className="business-pagination">
 							{/*pageSize设置每页条数*/}

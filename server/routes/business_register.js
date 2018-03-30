@@ -24,10 +24,11 @@ router.post('/saveBusinessRegisterItem',function(req,res,next){
 //读取业务登记表
 router.post('/getBusinessRegisterData',function(req,res,next){
 	let pageNum = parseInt(req.body.currentPageNum,10),
-		pageCapacity = parseInt(req.body.itemSizePerPage,10);
+		pageCapacity = parseInt(req.body.itemSizePerPage,10),
+		sortOrder = parseInt(req.body.sortOrder,10);
 	//检索时跳过的数量
 	let skippedItemNum = (pageNum-1)*pageCapacity;
-	let businessRegister = BusinessRegister.find().skip(skippedItemNum).limit(pageCapacity);
+	let businessRegister = BusinessRegister.find().skip(skippedItemNum).limit(pageCapacity).sort({'项目序号':sortOrder});
 	BusinessRegister.count({},function(errCount,cnt){
 		if(errCount){
 			res.json({
@@ -83,6 +84,28 @@ router.post('/deleteItemByIndex',function(req,res,next){
 				status:-1
 			})
 		}else{
+			res.json({
+				status:1
+			})
+		}
+	})
+})
+
+//修改后保存业务登记表数据
+router.post('/modifyItemByIndex',function(req,res,next){
+	let modifiedData = req.body.modifiedData
+	let itemIndex = modifiedData['项目序号'];
+	BusinessRegister.findOne({'项目序号':itemIndex},function(err,doc){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			//合并更新后的数据
+			for(var key in modifiedData){
+				doc[key] = modifiedData[key]
+			}
+			doc.save();
 			res.json({
 				status:1
 			})
