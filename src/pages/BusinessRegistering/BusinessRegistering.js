@@ -1,15 +1,19 @@
 /**
- * Created by Administrator on 2018/3/28.
+ * 业务登记页面
  */
+
 import React from 'react'
-import {Modal,Tooltip,Table,Pagination,Popconfirm,Input,notification  } from 'antd'
+import {Modal,Tooltip,Table,Pagination,Popconfirm,Input,notification,Select  } from 'antd'
 import './index.scss'
 import axios from 'axios'
 //引入公有表单组件
 import CommonForm from './../../components/_publicComponents/Form/CommonForm'
 import {withRouter} from 'react-router-dom'
 import {connect} from 'react-redux'
-//业务登记页面
+import Loading from './../../components/Loading/Loading'
+//节流函数
+import {throttle} from './../../util/utils'
+const Option = Select.Option;
 
 //可编辑输入框,注意这个组件得放在外面，不能放在renderColumn中，否则被重新渲染失去焦点
 const EditableCell = ({ editable, value, onChange }) => (
@@ -20,12 +24,36 @@ const EditableCell = ({ editable, value, onChange }) => (
 		}
 	</div>
 );
+//是否收齐列的下拉框
+const DropdownCell = ({editable, value, onChange}) =>(
+	<div>
+		{editable
+			? (<Select style={{ margin: '-5px 0',width:'80%' }}
+					  defaultValue={value===0?'否':'是'}
+					  onChange={ v => onChange(v)}>
+				<Option value="0">否</Option>
+				<Option value="1">是</Option>
+			  </Select>)
+			: <span className={value===0?'business-file-red':'business-file-green'}>{value===0?'否':'是'}</span>
+		}
+	</div>
+)
+//搜索组件
+const Search = Input.Search;
 class BusinessRegistering extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			//第一次加载的loading
+			firstLoadingFlag:true,
+			//搜索关键字
+			keyword:'',
+			//搜索按钮是否禁用
+			searchButtonDisable:false,
 			//按序号排序的方向,1为升序,-1降序
 			sortOrder:-1,
+			//排序的字段
+			sortField:'项目序号',
 			//表格横向宽度
 			tableWidth:2000,
 			//操作列的宽度
@@ -258,7 +286,9 @@ class BusinessRegistering extends React.Component{
 		let param = {
 			itemSizePerPage:this.state.itemSizePerPage,
 			currentPageNum:this.state.currentPageNum,
-			sortOrder:this.state.sortOrder
+			sortOrder:this.state.sortOrder,
+			sortField:this.state.sortField,
+			keyword:this.state.keyword
 		};
 		axios.post('/business_register/getBusinessRegisterData',param).then((resp)=>{
 			if(resp.data.status === 1){
@@ -268,13 +298,16 @@ class BusinessRegistering extends React.Component{
 				});
 				//坑点:这里处理缓存对象不能直接slice复制，里面对象必须要重新生成，否则只复制了引用
 				this.setState({
+					firstLoadingFlag:false,
 					businessData:resp.data.data,
 					cacheBusinessData:resp.data.data.map((item)=>({...item})),
 					totalNum:resp.data.cnt,
 					isTableDataLoading:false,
 					tableWidth:2000,
-					operationColumnWidth:100
+					operationColumnWidth:100,
+					searchButtonDisable:false,
 				})
+
 
 			}else{
 				Modal.warning({
@@ -388,6 +421,10 @@ class BusinessRegistering extends React.Component{
 	}
 	//输入框编辑改变
 	onEditInputChange(value,index,column){
+		//是否收齐的value的特殊处理
+		if(column === '是否收齐'){
+			value = value==='1'?1:0;
+		}
 		const newData = [...this.state.businessData];
 		const target = newData.filter(item => index === item['项目序号'])[0];
 		if (target) {
@@ -399,6 +436,16 @@ class BusinessRegistering extends React.Component{
 	renderColumns(text, record, column) {
 		return (
 			<EditableCell
+				editable={record.editable}
+				value={text}
+				onChange={value => this.onEditInputChange(value, record['项目序号'], column)}
+			/>
+		);
+	}
+	//是否收齐的下拉
+	renderColumsDropdown(text, record, column){
+		return (
+			<DropdownCell
 				editable={record.editable}
 				value={text}
 				onChange={value => this.onEditInputChange(value, record['项目序号'], column)}
@@ -467,11 +514,44 @@ class BusinessRegistering extends React.Component{
 		//ascend和descend是antd内置的排序方向,这里1为升序，-1为降序
 		let sortOrder = sorter.order === 'ascend'?1:-1;
 		this.setState({
-			sortOrder:sortOrder
+			sortOrder:sortOrder,
+			sortField:sorter.field
 		},()=>{
 			//发给后端进行排序处理
 			this.initBusinessRegisterData()
 		})
+	}
+	//处理搜索
+	handleOnSearch(value){
+		if(this.state.searchButtonDisable){
+			return
+		}
+		//判断非空
+		let trimmedValue = value.replace(/(^\s*)|(\s*$)/g,'');
+		if(!trimmedValue){
+			notification['error']({
+				message: '注意',
+				description: '查询字符不能为空~',
+			});
+			return;
+		}
+
+		//发送请求
+		this.setState({
+			searchButtonDisable:true,
+			keyword:trimmedValue
+		},()=>{
+			this.initBusinessRegisterData()
+		});
+
+	}
+	//刷新
+	handleRefresh(){
+		this.setState({
+			keyword:''
+		},()=>{
+			this.initBusinessRegisterData()
+		});
 	}
 	render(){
 		//表头数据,此处需要优化获取方式
@@ -510,7 +590,11 @@ class BusinessRegistering extends React.Component{
 		columns.push({
 			title:'是否收齐',
 			align:'center',
-			dataIndex:'是否收齐'
+			dataIndex:'是否收齐',
+			fixed:'right',
+			width:120,
+			sorter: true,
+			render:(text,record)=>this.renderColumsDropdown(text,record,'是否收齐')
 		})
 		//这个列的数据不存数据库，注意了,且固定在右侧
 		columns.push({
@@ -553,63 +637,90 @@ class BusinessRegistering extends React.Component{
 		})
 
 		return (
-			<div className="my-page-wrapper">
-				{/*模态框,点击显示添加数据页面,设置最大高度400，溢出产生滚动条*/}
-				<Modal
-					title="业务登记表填写"
-					okText="确定"
-					width={600}
-					bodyStyle={{overflow:'auto',height:'400px'}}
-					maskClosable={false}
-					wrapClassName="vertical-center-modal"
-					cancelText="取消"
-					destroyOnClose={true}
-					visible={this.state.modalVisible}
-					confirmLoading={this.state.isSubmitButtonLoading}
-					onOk={()=>this.handleOk()}
-					onCancel={()=>this.handleCancel()}
-				>
-					<CommonForm formData={this.state.formInputData}
-								wrappedComponentRef={(inst) => this['formData'] = inst}
-					/>
+			<div>
+				<div className="my-page-wrapper">
+					{/*模态框,点击显示添加数据页面,设置最大高度400，溢出产生滚动条*/}
+					<Modal
+						title="业务登记表填写"
+						okText="确定"
+						width={600}
+						bodyStyle={{overflow:'auto',height:'400px'}}
+						maskClosable={false}
+						wrapClassName="vertical-center-modal"
+						cancelText="取消"
+						destroyOnClose={true}
+						visible={this.state.modalVisible}
+						confirmLoading={this.state.isSubmitButtonLoading}
+						onOk={()=>this.handleOk()}
+						onCancel={()=>this.handleCancel()}
+					>
+						<CommonForm formData={this.state.formInputData}
+									wrappedComponentRef={(inst) => this['formData'] = inst}
+						/>
 
-				</Modal>
-
-
-				<div className="page-title">
-					<i className="fa fa-pencil-square-o modify-icon-margin-right"></i><span>业务登记</span>
-					{/*修改模板按钮区域，管理员可见*/}
-					<div className="template-modify-wrapper">
-						{
-							//判断权限，管理员(0)才能修改,userAuth是redux中传来的state
-							this.props.userAuth===0?(
-								<Tooltip title="新增一条业务登记表">
-									<button className="template-modify-button fa fa-plus fa-plus-padding bg-green" onClick={()=>{this.handleAddNewEntry()}}></button>
-								</Tooltip>
-							) :null
-						}
-					</div>
-				</div>
-				<div className="content">
-					<div className="business-content-wrapper">
-						{/*scroll确定了横轴可滚动区域大小,onChange可以设置排序分页等*/}
-						<Table columns={columns}
-							   loading={this.state.isTableDataLoading}
-							   bordered
-							   onChange={(pagination, filters, sorter)=>this.handleTableChange(pagination, filters, sorter)}
-							   pagination={false}
-							   scroll={{ x: this.state.tableWidth}}
-							   dataSource={this.state.businessData}  />
-						<div className="business-pagination">
-							{/*pageSize设置每页条数*/}
-							<Pagination current={this.state.currentPageNum}
-										showQuickJumper
-										pageSize={this.state.itemSizePerPage}
-										onChange={(page)=>this.onPageIndexChange(page)}
-										total={this.state.totalNum}
-							/>
+					</Modal>
+					<div className="page-title">
+						<i className="fa fa-pencil-square-o modify-icon-margin-right"></i><span>业务登记</span>
+						{/*修改模板按钮区域，管理员可见*/}
+						<div className="template-modify-wrapper">
+							{
+								//判断权限，管理员(0)才能修改,userAuth是redux中传来的state
+								this.props.userAuth===0?(
+									<Tooltip title="新增一条业务登记表">
+										<button className="template-modify-button fa fa-plus fa-plus-padding bg-green" onClick={()=>{this.handleAddNewEntry()}}></button>
+									</Tooltip>
+								) :null
+							}
 						</div>
 					</div>
+					<div className="content">
+						<div className="business-content-wrapper ">
+							{/*搜索组件*/}
+							<div className="business-search-wrapper clearfix">
+								<div className="business-search-inner">
+									<Search placeholder="输入业务关键字进行查询"
+											enterButton="查询"
+											disabled={this.state.searchButtonDisable}
+											onSearch={(value)=>this.handleOnSearch(value)}
+											size="default" />
+								</div>
+							</div>
+							{/*scroll确定了横轴可滚动区域大小,onChange可以设置排序分页等*/}
+							{
+								this.state.businessData.length>0?(
+									<div>
+										<Table columns={columns}
+											   loading={this.state.isTableDataLoading}
+											   bordered
+											   onChange={(pagination, filters, sorter)=>this.handleTableChange(pagination, filters, sorter)}
+											   pagination={false}
+											   scroll={{ x: this.state.tableWidth}}
+											   dataSource={this.state.businessData}
+										/>
+										<div className="business-pagination">
+											{/*pageSize设置每页条数*/}
+											<Pagination current={this.state.currentPageNum}
+														showQuickJumper
+														pageSize={this.state.itemSizePerPage}
+														onChange={(page)=>this.onPageIndexChange(page)}
+														total={this.state.totalNum}
+											/>
+										</div>
+									</div>
+								): this.state.firstLoadingFlag?<Loading />:(
+										<div className="business-not-found-wrapper">
+											<div className="business-not-found-img">
+												<div className="business-not-found-img-img">
+												</div>
+												<p className="business-not-found-img-word">未找到对应关键字的条目，请重试~<a onClick={()=>this.handleRefresh()}>刷新</a></p>
+											</div>
+										</div>)
+							   }
+						</div>
+					</div>
+				</div>
+				{/*补丁区域*/}
+				<div className="bottom-padding">
 				</div>
 			</div>
 		)

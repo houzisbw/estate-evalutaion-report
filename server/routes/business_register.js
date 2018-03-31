@@ -25,18 +25,52 @@ router.post('/saveBusinessRegisterItem',function(req,res,next){
 router.post('/getBusinessRegisterData',function(req,res,next){
 	let pageNum = parseInt(req.body.currentPageNum,10),
 		pageCapacity = parseInt(req.body.itemSizePerPage,10),
-		sortOrder = parseInt(req.body.sortOrder,10);
+		sortOrder = parseInt(req.body.sortOrder,10),
+		sortField = req.body.sortField,
+		//关键字可能不存在
+		keyword = req.body.keyword;
+	let sortCondition = {
+		'项目序号':sortOrder
+	};
+	//这里是为了保证sort的字段唯一，所以要删除原来默认的字段
+	delete sortCondition['项目序号'];
+	sortCondition[sortField] = sortOrder;
 	//检索时跳过的数量
 	let skippedItemNum = (pageNum-1)*pageCapacity;
-	let businessRegister = BusinessRegister.find().skip(skippedItemNum).limit(pageCapacity).sort({'项目序号':sortOrder});
+	const reg = new RegExp(keyword, 'i'); //不区分大小写
+	//or和regex用于模糊查询,此处关键字只要任意存在于一个字段，该项都会被返回
+	let findCondition = keyword?{
+		$or: [
+			{'项目类型': {$regex: reg}},
+			{'担保公司': {$regex: reg}},
+			{'部门': {$regex: reg}},
+			{'业务员': {$regex: reg}},
+			{'银行': {$regex: reg}},
+			{'支行': {$regex: reg}},
+			{'委托人': {$regex: reg}},
+			{'电话': {$regex: reg}},
+			{'项目所在区': {$regex: reg}},
+			{'项目街道号': {$regex: reg}},
+			{'项目具体位置': {$regex: reg}},
+			{'面积': {$regex: reg}},
+			{'成数': {$regex: reg}},
+			{'贷款金额': {$regex: reg}},
+			{'登记日期': {$regex: reg}},
+			//正则不能用于Number，该字段是number
+			// {'是否收齐': parseInt(keyword,10)}
+		]
+	}:{};
+	let businessRegister = BusinessRegister.find(findCondition).skip(skippedItemNum).limit(pageCapacity).sort(sortCondition);
 	BusinessRegister.count({},function(errCount,cnt){
 		if(errCount){
+
 			res.json({
 				status:-1
 			})
 		}else{
 			businessRegister.exec(function(err,doc){
 				if(err){
+					console.log(err)
 					res.json({
 						status:-1
 					})

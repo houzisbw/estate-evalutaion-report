@@ -1,6 +1,37 @@
 .business-content-wrapper{
   width:90%;
-  margin:100px auto 0 auto;
+  margin:20px auto 0 auto;
+  .business-file-red{
+    color:#cf1322;
+  }
+  .business-file-green{
+    color:#00B247;
+  }
+  .business-not-found-wrapper{
+    height:600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .business-not-found-img{
+      .business-not-found-img-img{
+        width:256px;
+        height:256px;
+        background: url('./../../assets/img/icon/folder.png') center center no-repeat;
+      }
+      .business-not-found-img-word{
+        margin-top: 20px;
+        color:#aaaaaa;
+        text-align: center;
+      }
+    }
+  }
+  .business-search-wrapper{
+    margin-bottom: 20px;
+    .business-search-inner{
+      width:30%;
+      float:right;
+    }
+  }
   .business-pagination{
     margin-top: 20px;
     float:right;
