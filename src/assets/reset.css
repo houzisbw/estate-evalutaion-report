@@ -62,7 +62,9 @@ a{
     zoom:1;
 }
 
-/*antd的提示tip必须减少z-index，默认为1060，否则会遮挡header*/
-.ant-tooltip{
-
+/*antd的tooltip默认最大宽度250px，必须设置word-wrap强制换行*/
+.ant-tooltip-inner{
+    white-space: pre-wrap;
+    word-wrap:break-word;
 }
+

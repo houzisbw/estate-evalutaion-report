@@ -3,7 +3,7 @@
  */
 
 import React from 'react'
-import {Modal,Tooltip,Table,Pagination,Popconfirm,Input,notification,Select  } from 'antd'
+import {Modal,Tooltip,Table,Pagination,Popconfirm,Input,notification,Select,Button} from 'antd'
 import './index.scss'
 import axios from 'axios'
 //引入公有表单组件
@@ -11,6 +11,7 @@ import CommonForm from './../../components/_publicComponents/Form/CommonForm'
 import {withRouter} from 'react-router-dom'
 import {connect} from 'react-redux'
 import Loading from './../../components/Loading/Loading'
+import ImageUpload from './../../components/ImageUpload/ImageUpload'
 //节流函数
 import {throttle} from './../../util/utils'
 const Option = Select.Option;
@@ -18,10 +19,12 @@ const Option = Select.Option;
 //可编辑输入框,注意这个组件得放在外面，不能放在renderColumn中，否则被重新渲染失去焦点
 const EditableCell = ({ editable, value, onChange }) => (
 	<div>
+		<Tooltip title={value}>
 		{editable
 			? <Input style={{ margin: '-5px 0',width:'80%' }} value={value} onChange={ e => onChange(e.target.value)} />
 			: value
 		}
+		</Tooltip>
 	</div>
 );
 //是否收齐列的下拉框
@@ -44,6 +47,12 @@ class BusinessRegistering extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			//每个业务登记的图片数量
+			businessImageNum:0,
+			//图片对应的项目序号
+			itemIndex:'',
+			//图片上传组件的显示
+			imageUploadModalVisible:false,
 			//第一次加载的loading
 			firstLoadingFlag:true,
 			//搜索关键字
@@ -283,6 +292,7 @@ class BusinessRegistering extends React.Component{
 		this.setState({
 			isTableDataLoading:true
 		})
+		//做查询的时候currentPageNum要重置为1才行,否则跳过了一些项
 		let param = {
 			itemSizePerPage:this.state.itemSizePerPage,
 			currentPageNum:this.state.currentPageNum,
@@ -380,7 +390,8 @@ class BusinessRegistering extends React.Component{
 	}
 	handleCancel(){
 		this.setState({
-			modalVisible:false
+			modalVisible:false,
+			imageUploadModalVisible:false
 		})
 	}
 	//页码改变回调
@@ -536,9 +547,10 @@ class BusinessRegistering extends React.Component{
 			return;
 		}
 
-		//发送请求
+		//发送请求,注意搜索状态下必须把当前页置位1
 		this.setState({
 			searchButtonDisable:true,
+			currentPageNum:1,
 			keyword:trimmedValue
 		},()=>{
 			this.initBusinessRegisterData()
@@ -547,11 +559,29 @@ class BusinessRegistering extends React.Component{
 	}
 	//刷新
 	handleRefresh(){
+		//如果表格正在加载则返回
+		if(this.state.isTableDataLoading){
+			return;
+		}
 		this.setState({
 			keyword:''
 		},()=>{
 			this.initBusinessRegisterData()
 		});
+	}
+	//图片上传
+	showImageUpload(e,itemIndex){
+		e.preventDefault();
+		//显示图片上传的组件
+		this.setState({
+			imageUploadModalVisible:true,
+			itemIndex:itemIndex
+		})
+	}
+	handleBusinessImageNumChange(num){
+		this.setState({
+			businessImageNum:num
+		})
 	}
 	render(){
 		//表头数据,此处需要优化获取方式
@@ -566,12 +596,14 @@ class BusinessRegistering extends React.Component{
 		//添加剩余：登记日期，是否收齐
 		columns.unshift({
 			title:'登记日期',
+			width:100,
 			dataIndex:'登记日期',
 			render: (text, record) => this.renderColumns(text, record, '登记日期'),
 		});
 		columns.unshift({
 			title:'项目序号',
 			dataIndex:'项目序号',
+			align:'center',
 			//服务端排序
 			sorter: true,
 		});
@@ -580,9 +612,11 @@ class BusinessRegistering extends React.Component{
 			title:'图片',
 			dataIndex:'图片',
 			align:'center',
+			fixed:'right',
+			width:70,
 			render : (text,record)=>{
 				return (
-					<a href="#">查看</a>
+					<a href="#" onClick={(e)=>{this.showImageUpload(e,record['项目序号'])}}>查看</a>
 				)
 			}
 		})
@@ -639,6 +673,21 @@ class BusinessRegistering extends React.Component{
 		return (
 			<div>
 				<div className="my-page-wrapper">
+					{/*图片上传组件*/}
+					<Modal
+						title={"业务登记图片上传 ("+this.state.businessImageNum+"张)"}
+						width={600}
+						bodyStyle={{overflow:'auto',height:'460px'}}
+						maskClosable={false}
+						wrapClassName="vertical-center-modal"
+						cancelText="取消"
+						footer={null}
+						destroyOnClose={true}
+						visible={this.state.imageUploadModalVisible}
+						onCancel={()=>this.handleCancel()}
+					>
+						<ImageUpload itemIndex={this.state.itemIndex} handleBusinessImageNumChange={(num)=>{this.handleBusinessImageNumChange(num)}}/>
+					</Modal>
 					{/*模态框,点击显示添加数据页面,设置最大高度400，溢出产生滚动条*/}
 					<Modal
 						title="业务登记表填写"
@@ -677,6 +726,16 @@ class BusinessRegistering extends React.Component{
 						<div className="business-content-wrapper ">
 							{/*搜索组件*/}
 							<div className="business-search-wrapper clearfix">
+								<div className="business-search-inner-button">
+									<Tooltip title="刷新数据">
+										<Button shape="circle"
+												type="primary"
+												icon="sync"
+												onClick={()=>{this.handleRefresh()}}
+												className="business-refresh-button"
+										/>
+									</Tooltip>
+								</div>
 								<div className="business-search-inner">
 									<Search placeholder="输入业务关键字进行查询"
 											enterButton="查询"

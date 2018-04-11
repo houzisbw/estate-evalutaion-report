@@ -1,6 +1,14 @@
 .business-content-wrapper{
   width:90%;
   margin:20px auto 0 auto;
+  .ant-table {
+    //很关键，可以让表格自适应宽度且不换行
+    td,th {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
   .business-file-red{
     color:#cf1322;
   }
@@ -30,6 +38,14 @@
     .business-search-inner{
       width:30%;
       float:right;
+
+    }
+    .business-search-inner-button{
+      float:right;
+      margin-left: 10px;
+      .business-refresh-button{
+        margin-left: 10px;
+      }
     }
   }
   .business-pagination{
