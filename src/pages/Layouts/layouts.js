@@ -11,6 +11,8 @@ import {checkAuthentication} from './../../util/utils'
 import {Switch, Route, Redirect} from 'react-router-dom'
 import NormalAssesment from './../NormalAssesment/NormalAssesment'
 import WordTemplateManagement from './../WordTemplateManagement/WordTemplateManagement'
+//看房的总路由
+import HouseReviewArrangeRouter from './../HouseReviewArrange/HouseReviewArrangeRouter'
 //处理预评估的总路由
 import PreAssesmentRouter from './../PreAssesment/PreAssesmentRouter'
 //处理业务登记路由
@@ -34,6 +36,8 @@ class Layout extends React.Component{
 					<Route path="/app/word_template_management" component={WordTemplateManagement}/>
 					{/*业务登记页面路由*/}
 					<Route path="/app/business_registering" component={BusinessRegistering}/>
+					{/*看房派单分配*/}
+					<Route path="/app/arrange_house_review" component={HouseReviewArrangeRouter}/>
 					<Route path="/app/normal_assesment_report" component={NormalAssesment}/>
 					<Redirect from="/app" to="/app/pre_assesment"/>
 				</Switch>

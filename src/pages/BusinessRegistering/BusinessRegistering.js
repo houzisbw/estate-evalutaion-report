@@ -616,7 +616,7 @@ class BusinessRegistering extends React.Component{
 			width:70,
 			render : (text,record)=>{
 				return (
-					<a href="#" onClick={(e)=>{this.showImageUpload(e,record['项目序号'])}}>查看</a>
+					<a href="#" onClick={(e)=>{this.showImageUpload(e,record['项目序号'])}}>查看 ({record['图片'].length})</a>
 				)
 			}
 		})

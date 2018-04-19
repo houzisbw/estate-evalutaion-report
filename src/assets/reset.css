@@ -67,4 +67,9 @@ a{
     white-space: pre-wrap;
     word-wrap:break-word;
 }
+/*消除外边距折叠*/
+#root{
+    border-top:1px solid white;
+    position: relative;
+}
 

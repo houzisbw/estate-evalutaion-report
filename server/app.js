@@ -41,6 +41,7 @@ app.use(cookieParser());
 //设置静态文件目录
 app.use(express.static(path.join(__dirname, 'public')));
 
+//路由中间件
 app.use('/', index);
 app.use('/users', users);
 app.use('/estate',estate);

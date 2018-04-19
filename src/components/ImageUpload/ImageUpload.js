@@ -15,7 +15,8 @@ class ImageUpload extends React.Component{
 			showUploadProgress:false,
 			imageUrlsList:[],
 			showOverlay:false,
-			imageZoomUrl:''
+			imageZoomUrl:'',
+			uploadDisable:false
 		}
 	}
 	componentDidMount(){
@@ -46,7 +47,6 @@ class ImageUpload extends React.Component{
 	}
 	//点击查看大图
 	handleZoomImage(url){
-		console.log(url)
 		//显示大图的遮罩
 		this.setState({
 			showOverlay:true,
@@ -81,6 +81,7 @@ class ImageUpload extends React.Component{
 		const props = {
 			name: 'file',
 			accept:'image/*',
+			disabled:this.state.uploadDisable,
 			showUploadList:false,
 			fileList:this.state.fileList,
 			data:{
@@ -90,7 +91,8 @@ class ImageUpload extends React.Component{
 			beforeUpload:()=>{
 				this.setState({
 					showUploadProgress:true,
-					uploadPercent:0
+					uploadPercent:0,
+					uploadDisable:true
 				})
 			},
 			onChange(info) {
@@ -104,8 +106,14 @@ class ImageUpload extends React.Component{
 				}
 				if (status === 'done') {
 					message.success('图片上传成功');
+					self.setState({
+						uploadDisable:false
+					});
 					self.getImageUrls();
 				} else if (status === 'error') {
+					self.setState({
+						uploadDisable:false
+					});
 					message.error('图片上传失败');
 				}
 			},

@@ -227,6 +227,15 @@ router.post('/deleteImage',function(req,res,next){
 				doc['图片'] = newArray;
 				doc.save()
 			}
+			//删除服务器上的图片,获取图片名称
+			var imageName = imageUrl.split('/').pop();
+			var imageFullPath = path.join(__dirname,'../public/businessRegisteryImage/',imageName);
+			fs.exists(imageFullPath,function(isExist) {
+				if (isExist) {
+					//进行删除操作
+					fs.unlink(imageFullPath, function (err) {})
+				}
+			});
 			res.json({ status:1});
 		}
 	});
