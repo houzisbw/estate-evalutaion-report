@@ -8,6 +8,54 @@ $marginTop:120px;
     width:100%;
     height:100%;
   }
+  .map-right-bottom-button-area{
+    position: absolute;
+    right:30px;
+    bottom:30px;
+    min-width:150px;
+    height:40px;
+    .map-right-bottom-button{
+      width:40px;
+      height:40px;
+      margin-left: 10px;
+      position: relative;
+      float:right;
+      .marker-label-type-select{
+        position: absolute;
+        right:0;
+        top:0;
+        transition: all .5s;
+        height:40px;
+        width:40px;
+        line-height: 40px;
+        text-align: center;
+        background-color: #fff;
+        box-shadow: 1px 2px 1px rgba(0,0,0,.15);
+        border-radius: 40px;
+        //奇效，防止占用空间大的button突然出现产生的滚动条抖动
+        overflow: hidden;
+        .marker-radio-button-active{
+          display: block;
+        }
+        .marker-radio-button-inactive{
+          display:none;
+        }
+      }
+      .marker-label-type-select-active{
+        width:260px;
+      }
+      button{
+        z-index:300;
+        background-color: #39ac6a!important;
+        border-color: #39ac6a!important;
+        &:hover{
+          .marker-label-type-select{
+            width:300px;
+          }
+        }
+      }
+    }
+  }
   .right-side-map-operation-wrapper{
     position: absolute;
     top:30px;

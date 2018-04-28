@@ -6,7 +6,8 @@ import './index.scss'
 import axios from 'axios'
 import {connect} from 'react-redux'
 import {withRouter} from 'react-router-dom'
-import {Modal,Upload,Icon} from 'antd'
+import {Modal,Icon,Button,Tooltip,Radio} from 'antd'
+const RadioGroup = Radio.Group;
 class HouseReviewArrange extends React.Component{
 	constructor(props) {
 		super(props);
@@ -17,8 +18,11 @@ class HouseReviewArrange extends React.Component{
 			locationList: [],
 			//地图标注的marker数组
 			markerList:[],
+			//地图标注的label数组
+			labelList:[],
 			//地图标注label的样式
 			markerLabelStyle:{
+				display:'block',
 				color:'#fff',
 				backgroundColor:"#2aa056",
 				border:'none',
@@ -29,7 +33,13 @@ class HouseReviewArrange extends React.Component{
 			//excel上传文件是否正在读取中
 			isExcelReading:false,
 			//读取失败的timerid
-			isReadingSuccessTimerId:null
+			isReadingSuccessTimerId:null,
+			//地图标注文本的显示
+			showMarkerLabel:true,
+			//右下角radiobutton显示与否的flag
+			radioButtonVisible:false,
+			//选择的是哪一个radioButton，控制地图标签类型显示,1是序号，2是小区名
+			markerType:1
 
 		}
 	}
@@ -51,8 +61,42 @@ class HouseReviewArrange extends React.Component{
 	//清除地图数据
 	clearMapData(){
 		this.setState({
-			markerList:[]
+			markerList:[],
+			locationList:[],
+			labelList:[]
 		})
+	}
+
+	//设置所有marker的label种类
+	setMarkerLabel(labelType){
+		if(labelType===2){
+			//序号
+			this.state.labelList.forEach((v,idx)=>{
+				for(var i=0;i<this.state.locationList.length;i++){
+					var point = this.state.locationList[i][0];
+					var content = this.state.locationList[i][1]['A'];
+					var pos = v.getPosition();
+					//如果2者位置相同则找到对应的label
+					if(pos.lng === point.lng && pos.lat === point.lat){
+						v.setContent(content)
+						break;
+					}
+				}
+			})
+		}else{
+			//地名
+			this.state.labelList.forEach((v,idx)=>{
+				for(var i=0;i<this.state.locationList.length;i++){
+					var point = this.state.locationList[i][0];
+					var content = this.state.locationList[i][1]['B'];
+					var pos = v.getPosition();
+					if(pos.lng === point.lng && pos.lat === point.lat){
+						v.setContent(content)
+						break;
+					}
+				}
+			})
+		}
 	}
 
 	//excel上传触发的函数
@@ -70,6 +114,9 @@ class HouseReviewArrange extends React.Component{
 		});
 		//设置超时提示,10s后如果读取不出来提示失败
 		var tid = setTimeout(function(){
+			this.setState({
+				isExcelReading:false
+			});
 			Modal.error({
 				title:'悲剧',
 				content:'由于未知原因文件读取失败，请重试'
@@ -79,8 +126,7 @@ class HouseReviewArrange extends React.Component{
 			isReadingSuccessTimerId:tid
 		});
 
-
-		//获取上传的excel文件
+		//获取上传的excel文件,A列是序号，B列是地址
 		var excel = input.files[0];
 		var reader = new FileReader();
 		var wb;
@@ -93,10 +139,11 @@ class HouseReviewArrange extends React.Component{
 			wb = window.XLSX.read(data, {
 				type: 'binary'
 			});
+			//headerA是将excel的表头字母作为key
 			var jsonData = window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:'A'});
 			//除去excel空白单元格
 			jsonData = jsonData.filter(function(item){
-				return item['A']
+				return item['B'] && item['A']
 			});
 			//置空value，使得二次上传相同文件有效，否则无法触发onchange事件
 			input.value = '';
@@ -108,9 +155,9 @@ class HouseReviewArrange extends React.Component{
 			var promiseList = []
 			for(let i=0;i<jsonData.length;i++){
 				var promise = new Promise(function(resolve,reject){
-					myGeo.getPoint(jsonData[i]['A'], function(point){
+					myGeo.getPoint(jsonData[i]['B'], function(point){
 							if (point) {
-								tempLocationList.push([point,jsonData[i]['A']]);
+								tempLocationList.push([point,jsonData[i]]);
 								cnt++;
 							}
 							resolve()
@@ -121,6 +168,7 @@ class HouseReviewArrange extends React.Component{
 			}
 			//等待所有异步请求都完成
 			var tempMarkerList = [];
+			var tempLabelList = [];
 			Promise.all(promiseList).then((results)=>{
 				self.setState({
 					isExcelReading:false
@@ -129,25 +177,67 @@ class HouseReviewArrange extends React.Component{
 				//在地图上标注
 				for(var i=0;i<tempLocationList.length;i++){
 					var point = tempLocationList[i][0];
-					var labelContent = tempLocationList[i][1];
+					//b作为key才是地址,a是序号
+					var labelContent = self.state.markerType===1?tempLocationList[i][1]['B']:tempLocationList[i][1]['A'];
 					var marker = new window.BMap.Marker(point);
 					var label = new window.BMap.Label(labelContent,{offset:new window.BMap.Size(20,-2)});
-					label.setStyle(self.state.markerLabelStyle)
+					label.setStyle(self.state.markerLabelStyle);
+					tempLabelList.push(label);
 					marker.setLabel(label);
 					self.state.map.addOverlay(marker);
 					tempMarkerList.push(marker);
 				}
 
 				self.setState({
-					markerList:tempMarkerList
+					markerList:tempMarkerList,
+					labelList:tempLabelList,
+					locationList:tempLocationList
 				})
 			})
 
 		}
 
 	}
-
-
+	//显示/隐藏地图标注文本
+	handleToggleLabelShow(){
+		//隐藏label
+		if(this.state.showMarkerLabel){
+			this.state.labelList.forEach((value)=>{
+				value.setStyle({
+					display:'none'
+				})
+			});
+			this.setState({
+				showMarkerLabel:false
+			})
+		}else{
+			//显示label
+			this.state.labelList.forEach((value)=>{
+				value.setStyle(this.state.markerLabelStyle)
+			});
+			this.setState({
+				showMarkerLabel:true
+			})
+		}
+	}
+	handleRadioButtonMouseover(){
+		this.setState({
+			radioButtonVisible:true
+		})
+	}
+	handleRadioButtonMouseout(){
+		this.setState({
+			radioButtonVisible:false
+		})
+	}
+	handleRadioButtonChange(e){
+		var type = parseInt(e.target.value,10);
+		this.setState({
+			markerType:type
+		},()=>{
+			this.setMarkerLabel(this.state.markerType)
+		});
+	}
 	render(){
 		return (
 			//百度地图容器
@@ -177,6 +267,30 @@ class HouseReviewArrange extends React.Component{
 									   accept="application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 								/>
 							</span>
+						</div>
+					</div>
+				</div>
+				{/*隐藏/显示地图标注label的按钮*/}
+				<div className="map-right-bottom-button-area">
+					{/*注意，over和out事件都得放外层，因为其子元素都可以触发这2个事件*/}
+					<div className="map-right-bottom-button"
+						 onMouseOut={()=>{this.handleRadioButtonMouseout()}}
+						 onMouseOver={()=>{this.handleRadioButtonMouseover()}}>
+						<Button type="primary"
+								shape="circle"
+								icon="eye-o"
+								size="large"
+								title="点击隐藏/显示地图标注的文本"
+								onClick={()=>{this.handleToggleLabelShow()}}
+						/>
+						{/*动画效果是动态添加类触发transition*/}
+						<div className={`marker-label-type-select ${this.state.radioButtonVisible?'marker-label-type-select-active':''}`}>
+							<RadioGroup onChange={(e)=>{this.handleRadioButtonChange(e)}}
+										className={this.state.radioButtonVisible?'marker-radio-button-active':'marker-radio-button-inactive'}
+										value={this.state.markerType}>
+								<Radio value={1}>小区名</Radio>
+								<Radio value={2}>序号</Radio>
+							</RadioGroup>
 						</div>
 					</div>
 				</div>
