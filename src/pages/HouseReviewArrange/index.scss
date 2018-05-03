@@ -4,6 +4,7 @@ $marginTop:120px;
   width:100%;
   height:calc(100% - #{$marginTop});
   margin-top: $marginTop;
+  overflow: hidden;
   .house-position-map{
     width:100%;
     height:100%;

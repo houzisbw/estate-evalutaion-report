@@ -7,6 +7,7 @@ import axios from 'axios'
 import {connect} from 'react-redux'
 import {withRouter} from 'react-router-dom'
 import {Modal,Icon,Button,Tooltip,Radio} from 'antd'
+import HouseArrangePanel from './../../components/HouseArrangePanel/HouseArrangePanel'
 const RadioGroup = Radio.Group;
 class HouseReviewArrange extends React.Component{
 	constructor(props) {
@@ -244,6 +245,8 @@ class HouseReviewArrange extends React.Component{
 			<div className="house-position-map-wrapper">
 				<div className="house-position-map" id="house-position-baiduMap">
 				</div>
+				{/*右侧分配人员的面板*/}
+				<HouseArrangePanel />
 				{/*右侧栏操作区域*/}
 				<div className="right-side-map-operation-wrapper">
 					{/*文件上传区域，上传excel,注意这里不上传到服务器，只是前端读取excel内容*/}
