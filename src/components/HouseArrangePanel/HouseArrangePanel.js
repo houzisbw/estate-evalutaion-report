@@ -1,8 +1,12 @@
 //派单分配面板
 import React from 'react'
 import './index.scss'
+import { Tabs } from 'antd';
+import HouseArrangeStaffConfigSubPanel from './../../components/HouseArrangeStaffConfigSubPanel/HouseArrangeStaffConfigSubPanel'
+import HouseArrangeAllocationSubPanel from './../../components/HouseArrangeAllocationSubPanel/HouseArrangeAllocationSubPanel'
 //动画库
 import {Motion,spring} from 'react-motion'
+const TabPane = Tabs.TabPane;
 class HouseArrangePanel extends React.Component{
 	constructor(props){
 		super(props)
@@ -29,6 +33,15 @@ class HouseArrangePanel extends React.Component{
 								 onClick={()=>{this.togglePanel()}}
 							>
 							</div>
+							{/*tab，看房人员配置 和 派单*/}
+							<Tabs defaultActiveKey="1" >
+								<TabPane tab="看房人员配置" key="1">
+									<HouseArrangeStaffConfigSubPanel />
+								</TabPane>
+								<TabPane tab="派单" key="2">
+									<HouseArrangeAllocationSubPanel />
+								</TabPane>
+							</Tabs>
 						</div>
 					)
 				}

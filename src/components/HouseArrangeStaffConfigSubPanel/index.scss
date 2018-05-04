@@ -1,0 +1,18 @@
+.staff-config-panel-wrapper{
+   padding:10px;
+   padding-top: 0;
+  .staff-config-input-wrapper{
+    height:40px;
+    .staff-config-input{
+      border: none;
+      border-bottom: 1px solid #ddd;
+      padding: 5px;
+      width:70%;
+    }
+    .staff-config-add{
+      margin-left: 25px;
+      background-color: #39ac6a!important;
+      border-color:#39ac6a!important;
+    }
+  }
+}
