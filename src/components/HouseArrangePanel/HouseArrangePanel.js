@@ -28,20 +28,23 @@ class HouseArrangePanel extends React.Component{
 						<div className="house-arrange-panel" style={{
 							transform: `translateX(${x}px)`
 						}}>
-							{/*面板收缩展开按钮*/}
-							<div className={`house-arrange-panel-expand-button ${!this.state.isPanelOpen?'house-arrange-panel-shrink':'house-arrange-panel-expand'}`}
-								 onClick={()=>{this.togglePanel()}}
-							>
+							{/*非常重要，加一层wrap防止绝对定位元素house-arrange-panel-expand-button由于overflow:auto被隐藏*/}
+							<div className="house-arrange-panel-wrap">
+								{/*面板收缩展开按钮*/}
+								<div className={`house-arrange-panel-expand-button ${!this.state.isPanelOpen?'house-arrange-panel-shrink':'house-arrange-panel-expand'}`}
+									 onClick={()=>{this.togglePanel()}}
+								>
+								</div>
+								{/*tab，看房人员配置 和 派单*/}
+								<Tabs defaultActiveKey="1" >
+									<TabPane tab="看房人员配置" key="1">
+										<HouseArrangeStaffConfigSubPanel />
+									</TabPane>
+									<TabPane tab="派单" key="2">
+										<HouseArrangeAllocationSubPanel />
+									</TabPane>
+								</Tabs>
 							</div>
-							{/*tab，看房人员配置 和 派单*/}
-							<Tabs defaultActiveKey="1" >
-								<TabPane tab="看房人员配置" key="1">
-									<HouseArrangeStaffConfigSubPanel />
-								</TabPane>
-								<TabPane tab="派单" key="2">
-									<HouseArrangeAllocationSubPanel />
-								</TabPane>
-							</Tabs>
 						</div>
 					)
 				}

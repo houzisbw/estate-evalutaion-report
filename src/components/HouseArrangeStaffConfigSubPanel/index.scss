@@ -1,18 +1,30 @@
 .staff-config-panel-wrapper{
    padding:10px;
-   padding-top: 0;
   .staff-config-input-wrapper{
     height:40px;
+    margin: 0 auto;
+    width:80%;
     .staff-config-input{
       border: none;
       border-bottom: 1px solid #ddd;
       padding: 5px;
-      width:70%;
+      width:60%;
     }
     .staff-config-add{
-      margin-left: 25px;
+      margin-left: 15px;
       background-color: #39ac6a!important;
       border-color:#39ac6a!important;
+    }
+  }
+  $marginTop:40px;
+  .staff-list-wrapper{
+    margin-top: 20px;
+    padding-left:10px;
+    padding-right:10px;
+    overflow: auto;
+    .ant-list-item-meta-title{
+      position: relative;
+      top:2px;
     }
   }
 }

@@ -8,6 +8,11 @@
   height:100%;
   box-shadow: -1px 2px 1px rgba(0,0,0,.15);
   box-sizing: border-box;
+  //非常重要，加一层wrap防止绝对定位元素由于overflow:auto被隐藏,因为该div不是绝对定位
+  .house-arrange-panel-wrap{
+    overflow: auto;
+    height:100%;
+  }
   .ant-tabs-tab-active{
     color:#39ac6a;
     border-color: #39ac6a;
@@ -25,6 +30,10 @@
   .ant-tabs-nav{
     width:90%
   }
+  .ant-tabs-content{
+    height:100%;
+  }
+
 
   .house-arrange-panel-expand-button{
     position: absolute;

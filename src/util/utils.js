@@ -38,7 +38,6 @@ export const notificationPopup = (title,content,timeToClose,type)=>{
 
 //金额转换为大写中文
 export const moneyToChinese = (n)=>{
-
 	if (!/^(0|[1-9]\d*)(\.\d+)?$/.test(n))
 		return "数据非法";
 	var unit = "千百拾亿千百拾万千百拾元角分", str = "";
@@ -87,13 +86,20 @@ export const dateToChinese =(date)=>{
 	return yearStr+'年'+monthStr+'月'+dayStr+'日';
 
 
-}
+};
 
-//函数节流,duration为最小触发间隔
+//函数防抖,duration为最小触发间隔
 export const throttle = (fn,duration)=>{
 	let timerId = null;
 	return function(){
 		clearTimeout(timerId);
 		timerId = setTimeout(fn,duration)
 	}
-}
+};
+
+//获取n个随机颜色,尽量不是白色
+export const getRandomColor = function(colorNum){
+	var colorList = [];
+	var colors = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'];
+
+};
