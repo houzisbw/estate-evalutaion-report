@@ -43,8 +43,8 @@ router.get('/getStaff',function(req,res,next){
 			})
 		}else{
 			var staffList = [];
-			docs.forEach(function(item){
-				staffList.push({name:item.staffName})
+			docs.forEach(function(item,index){
+				staffList.push({name:item.staffName,index:index+1})
 			});
 			res.json({
 				status:1,

@@ -4,6 +4,11 @@
 import React from 'react'
 import './index.scss'
 import axios from 'axios'
+import store from './../../store/store'
+//react滚动插件,scroller用于滚动到element处,可以不用link
+import {scroller} from 'react-scroll'
+//actions
+import {UpdateEstateAllocationList,SaveBaiduMapInstance,SaveMapEstateMarker} from './../../store/actions/estateAllocation'
 import {connect} from 'react-redux'
 import {withRouter} from 'react-router-dom'
 import {Modal,Icon,Button,Tooltip,Radio} from 'antd'
@@ -56,6 +61,8 @@ class HouseReviewArrange extends React.Component{
 			var opts = {type: window.BMAP_NAVIGATION_CONTROL_LARGE}
 			this.state.map.addControl(new BMap.NavigationControl(opts));
 			this.state.map.enableScrollWheelZoom(true);
+			//保存map实例到redux
+			store.dispatch(SaveBaiduMapInstance(this.state.map))
 		})
 	}
 
@@ -113,9 +120,10 @@ class HouseReviewArrange extends React.Component{
 		this.setState({
 			isExcelReading:true
 		});
+		var self = this;
 		//设置超时提示,10s后如果读取不出来提示失败
 		var tid = setTimeout(function(){
-			this.setState({
+			self.setState({
 				isExcelReading:false
 			});
 			Modal.error({
@@ -176,11 +184,30 @@ class HouseReviewArrange extends React.Component{
 				});
 				clearTimeout(self.state.isReadingSuccessTimerId)
 				//在地图上标注
-				for(var i=0;i<tempLocationList.length;i++){
+				for(let i=0;i<tempLocationList.length;i++){
 					var point = tempLocationList[i][0];
 					//b作为key才是地址,a是序号
 					var labelContent = self.state.markerType===1?tempLocationList[i][1]['B']:tempLocationList[i][1]['A'];
 					var marker = new window.BMap.Marker(point);
+					//给marker添加点击事件,传入labelContent，注意闭包
+					(function(labelContent){
+						marker.addEventListener('click',(e)=>{
+							e.domEvent.stopPropagation();
+							//这里有bug，如果切换标签，则labelContent不变
+
+							//滚动目标的name
+							var scrollTargetName = labelContent;
+							//滚动到目标元素,containerId是滚动区域容器的id
+							//注意这里的offset表示滚动到元素位置+offset的位置，方向朝下，
+							scroller.scrollTo(scrollTargetName, {
+								duration: 500,
+								smooth: true,
+								containerId: 'house-arrange-panel-wrap',
+								offset: -200,
+							})
+
+						});
+					})(labelContent);
 					var label = new window.BMap.Label(labelContent,{offset:new window.BMap.Size(20,-2)});
 					label.setStyle(self.state.markerLabelStyle);
 					tempLabelList.push(label);
@@ -188,7 +215,10 @@ class HouseReviewArrange extends React.Component{
 					self.state.map.addOverlay(marker);
 					tempMarkerList.push(marker);
 				}
-
+				//更新redux房屋列表数据,便于其他组件获取
+				store.dispatch(UpdateEstateAllocationList(tempLocationList));
+				//更新marker到redux
+				store.dispatch(SaveMapEstateMarker(tempMarkerList));
 				self.setState({
 					markerList:tempMarkerList,
 					labelList:tempLabelList,

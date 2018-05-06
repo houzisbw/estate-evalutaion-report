@@ -29,7 +29,7 @@ class HouseArrangePanel extends React.Component{
 							transform: `translateX(${x}px)`
 						}}>
 							{/*非常重要，加一层wrap防止绝对定位元素house-arrange-panel-expand-button由于overflow:auto被隐藏*/}
-							<div className="house-arrange-panel-wrap">
+							<div className="house-arrange-panel-wrap" id="house-arrange-panel-wrap">
 								{/*面板收缩展开按钮*/}
 								<div className={`house-arrange-panel-expand-button ${!this.state.isPanelOpen?'house-arrange-panel-shrink':'house-arrange-panel-expand'}`}
 									 onClick={()=>{this.togglePanel()}}

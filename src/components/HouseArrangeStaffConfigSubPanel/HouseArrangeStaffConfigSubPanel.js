@@ -5,6 +5,9 @@ import React from 'react'
 import './index.scss'
 import {Button, notification,List,Avatar,Modal,Popconfirm} from 'antd'
 import axios from 'axios'
+notification.config({
+	duration: 1,
+});
 class HouseArrangeStaffConfigSubPanel extends React.Component{
 	constructor(props){
 		super(props);
@@ -134,7 +137,7 @@ class HouseArrangeStaffConfigSubPanel extends React.Component{
 							]}>
 								<List.Item.Meta
 									title={item.name}
-									avatar={<Avatar style={{backgroundColor:'#39ac6a'}} size="small"/>}
+									avatar={<Avatar style={{backgroundColor:'#39ac6a'}} size="small">{item.index}</Avatar>}
 								/>
 							</List.Item>
 						)}

@@ -97,9 +97,3 @@ export const throttle = (fn,duration)=>{
 	}
 };
 
-//获取n个随机颜色,尽量不是白色
-export const getRandomColor = function(colorNum){
-	var colorList = [];
-	var colors = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'];
-
-};
