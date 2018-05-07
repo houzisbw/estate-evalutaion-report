@@ -33,3 +33,19 @@ export const SaveMapEstateMarker = (markers)=>{
 		markers:markers
 	}
 }
+
+//右侧房屋列表当前选中项的index
+export const UpdateEstateListSelectedIndex = (currentIndex)=>{
+	return {
+		type:'UPDATE_ESTATE_SELECTED_INDEX',
+		selectedIndex:currentIndex
+	}
+}
+
+//右侧房屋列表数据
+export const UpdateEstateDataList = (list)=>{
+	return {
+		type:'UPDATE_ESTATE_DATALIST',
+		estateDataList:list
+	}
+}

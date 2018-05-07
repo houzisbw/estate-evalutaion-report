@@ -4,7 +4,9 @@
 const initialState = {
 	estateList:[],
 	map:null,
-	markerList:[]
+	markerList:[],
+	estateSelectedIndex:-1,
+	estateDataList:[]
 };
 //处理房屋派单的reducer
 export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
@@ -22,6 +24,15 @@ export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
 	}else if(action.type === 'SAVE_ESTATE_MARKER'){
 		return Object.assign({},state,{
 			markerList:action.markers
+		})
+	//房屋当前选中项
+	}else if(action.type === 'UPDATE_ESTATE_SELECTED_INDEX'){
+		return Object.assign({},state,{
+			estateSelectedIndex:action.selectedIndex
+		})
+	}else if(action.type === 'UPDATE_ESTATE_DATALIST'){
+		return Object.assign({},state,{
+			estateDataList:action.estateDataList
 		})
 	}
 	//默认返回值

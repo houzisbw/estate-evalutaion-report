@@ -26,7 +26,7 @@ class HouseArrangeStaffConfigSubPanel extends React.Component{
 			if(resp.data.status===-1){
 				Modal.error({
 					title: '糟糕！',
-					content: '数据保存出错，请重试~',
+					content: '数据读取出错，请重试~',
 				});
 			}else{
 				var staffData = resp.data.staffList;
@@ -43,7 +43,7 @@ class HouseArrangeStaffConfigSubPanel extends React.Component{
 	}
 	addStaffName(){
 		var name = this.state.staffNameInputValue.trim();
-		if(name === ''){
+		if(name === '' || name === '无'){
 			notification['error']({
 				message: '注意啦',
 				description: '人员姓名不能为空，请重新填写~',

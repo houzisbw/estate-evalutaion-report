@@ -8,7 +8,7 @@ import store from './../../store/store'
 //react滚动插件,scroller用于滚动到element处,可以不用link
 import {scroller} from 'react-scroll'
 //actions
-import {UpdateEstateAllocationList,SaveBaiduMapInstance,SaveMapEstateMarker} from './../../store/actions/estateAllocation'
+import {UpdateEstateAllocationList,SaveBaiduMapInstance,SaveMapEstateMarker,UpdateEstateListSelectedIndex} from './../../store/actions/estateAllocation'
 import {connect} from 'react-redux'
 import {withRouter} from 'react-router-dom'
 import {Modal,Icon,Button,Tooltip,Radio} from 'antd'
@@ -31,6 +31,15 @@ class HouseReviewArrange extends React.Component{
 				display:'block',
 				color:'#fff',
 				backgroundColor:"#2aa056",
+				border:'none',
+				padding:'5px',
+				borderRadius:'3px',
+				boxShadow:'1px 2px 1px rgba(0,0,0,.15)'
+			},
+			highLightLabelStyle:{
+				backgroundColor:'#1890ff',
+				display:'block',
+				color:'#fff',
 				border:'none',
 				padding:'5px',
 				borderRadius:'3px',
@@ -187,14 +196,12 @@ class HouseReviewArrange extends React.Component{
 				for(let i=0;i<tempLocationList.length;i++){
 					var point = tempLocationList[i][0];
 					//b作为key才是地址,a是序号
-					var labelContent = self.state.markerType===1?tempLocationList[i][1]['B']:tempLocationList[i][1]['A'];
-					var marker = new window.BMap.Marker(point);
+					let labelContent = self.state.markerType===1?tempLocationList[i][1]['B']:tempLocationList[i][1]['A'];
+					let marker = new window.BMap.Marker(point);
 					//给marker添加点击事件,传入labelContent，注意闭包
 					(function(labelContent){
 						marker.addEventListener('click',(e)=>{
 							e.domEvent.stopPropagation();
-							//这里有bug，如果切换标签，则labelContent不变
-
 							//滚动目标的name
 							var scrollTargetName = labelContent;
 							//滚动到目标元素,containerId是滚动区域容器的id
@@ -204,6 +211,19 @@ class HouseReviewArrange extends React.Component{
 								smooth: true,
 								containerId: 'house-arrange-panel-wrap',
 								offset: -200,
+							})
+							//高亮label
+							let label = marker.getLabel();
+							self.state.labelList.forEach((item)=>{
+								item.setStyle(self.state.markerLabelStyle)
+							});
+							label.setStyle(self.state.highLightLabelStyle)
+							//房屋列表选中项也要高亮,list是保存在redux中
+							self.props.estateDataList.forEach((item)=>{
+								if(item.estateName === labelContent){
+									//通过更新redux数据来使得房屋列表组件数据更新
+									store.dispatch(UpdateEstateListSelectedIndex(item.index))
+								}
 							})
 
 						});
@@ -336,6 +356,7 @@ class HouseReviewArrange extends React.Component{
 const mapStateToProps = (state)=>{
 	return {
 		userAuth:state.updateUserAuthState.userAuth,
+		estateDataList:state.updateEstateAllocationState.estateDataList
 	}
 };
 export default  withRouter(connect(mapStateToProps)(HouseReviewArrange))

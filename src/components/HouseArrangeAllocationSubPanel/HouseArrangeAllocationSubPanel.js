@@ -4,12 +4,19 @@
 import React from 'react'
 import './index.scss'
 import {connect} from 'react-redux'
-import {Switch,Tooltip,Button,List,Popconfirm,Avatar } from 'antd'
+import store from './../../store/store'
+import axios from 'axios'
+import {UpdateEstateListSelectedIndex,UpdateEstateDataList} from './../../store/actions/estateAllocation'
+import {Switch,Tooltip,Button,List,Popconfirm,Avatar,Menu,Dropdown,Modal} from 'antd'
 import {Element} from 'react-scroll'
+const MenuItem = Menu.Item;
+
 class HouseArrangeAllocationSubPanel extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			//分配结果，对象，key为房地产名，value为人员
+			estateAllocationResult:{},
 			highLightLabelStyle:{
 				backgroundColor:'#1890ff',
 				display:'block',
@@ -28,23 +35,50 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				borderRadius:'3px',
 				boxShadow:'1px 2px 1px rgba(0,0,0,.15)'
 			},
-			//当前选中的房地产列表项的index
-			currentSelectedEstateItemIndex:-1,
-			//当前选中的marker
-			selectedMarker:null
+			selectedMarker:null,
+			//房屋派单人员
+			estateAllocationStaffList:[]
 		}
 	}
 	componentDidMount(){
+		//获取房屋派单人员
+		axios.get('/staff_arrange/getStaff').then((resp)=>{
+			if(resp.data.status===-1){
+				Modal.error({
+					title: '糟糕！',
+					content: '数据读取出错，请重试~',
+				});
+			}else{
+				var staffData = resp.data.staffList;
+				var staffList = staffData.map((v)=>{
+					return v.name
+				});
+				staffList.unshift('无');
+				this.setState({
+					estateAllocationStaffList:staffList
+				})
+			}
+		});
+
 		//点击地图，取消房屋列表的选中项
 		this.props.baiduMap.addEventListener('click',()=>{
 			if(this.state.selectedMarker){
 				var label = this.state.selectedMarker.getLabel();
 				label.setStyle(this.state.defaultLabelStyle)
 				//恢复右侧列表avatar颜色
-				this.setState({
-					currentSelectedEstateItemIndex:-1
-				})
+				store.dispatch(UpdateEstateListSelectedIndex(-1))
 			}
+		});
+		//更新redux
+		var estateList = this.processEstateList();
+		store.dispatch(UpdateEstateDataList(estateList));
+		//初始化派单结果对象,将key初始化为房地产名
+		var resultObj = {};
+		estateList.forEach((item)=>{
+			resultObj[item.estateName]=null;
+		});
+		this.setState({
+			estateAllocationResult:resultObj
 		})
 	}
 	handleSwitchChange(v){
@@ -73,9 +107,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				label.setStyle(this.state.defaultLabelStyle)
 			}
 		});
-		this.setState({
-			currentSelectedEstateItemIndex:estateIndex
-		})
+		store.dispatch(UpdateEstateListSelectedIndex(estateIndex))
 
 	}
 	//针对estateList进行处理，获取到新的列表[片区名，小区名字]
@@ -112,8 +144,34 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		});
 		return retList;
 	}
+	//处理人员分配
+	handleMenuClick(staffName,estateName){
+		var tempResult = this.state.estateAllocationResult;
+		tempResult[estateName] = staffName==='无'?null:staffName;
+		this.setState({
+			estateAllocationResult:tempResult
+		});
+
+	}
 	render(){
 		var estateList = this.processEstateList();
+		//生成看房人员下拉名单,小技巧:用函数返回Menu，目的是为了传入参数
+		const getMenu =(estateName)=>{
+			return (
+				<Menu onClick={({key})=>{this.handleMenuClick(key,estateName)}}>
+					{
+						this.state.estateAllocationStaffList.map((item)=>{
+							return (
+								<MenuItem key={item}>
+									{item}
+								</MenuItem>
+							)
+						})
+					}
+				</Menu>
+			)
+		};
+
 		return (
 			<div className="staff-allocation-panel-wrapper">
 				<div className="staff-allocation-operation-wrapper clearfix">
@@ -134,21 +192,39 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 						locale={{emptyText:'无房屋数据,请先导入'}}
 						itemLayout="horizontal"
 						dataSource={estateList}
-						renderItem={item => (
-							//Element标签是react-scroll插件的元素，表示滚动到的目标元素，name用于srcollTo参数
-							<Element name={item.estateName}>
-								<List.Item actions={[
-									<a onClick={()=>{this.handleAllocation(item.estateName,item.regionName)}}>分配</a>,
-									<a onClick={()=>{this.handleMapPan(item.location,item.index)}}>地图</a>
-								]}>
-									<List.Item.Meta
-										title={item.regionName}
-										description={item.estateName}
-										avatar={<Avatar style={this.state.currentSelectedEstateItemIndex === item.index ? {backgroundColor:'#1890ff'}:{backgroundColor:'#39ac6a'}} size="small">{item.index}</Avatar>}
-									/>
-								</List.Item>
-							</Element>
-						)}
+						renderItem={item => {
+							//List.item.meta的title用reactNode表示，因为要处理不同的颜色,默认是string，很局限
+							let titleNode = (
+								<span>
+									{item.regionName} <span className="estate-allocated-staff-highlight">{this.state.estateAllocationResult[item.estateName] ? '['+this.state.estateAllocationResult[item.estateName]+']':null}</span>
+								</span>
+							);
+							return (
+								//Element标签是react-scroll插件的元素，表示滚动到的目标元素，name用于srcollTo参数
+								<Element name={item.estateName}>
+									<List.Item actions={[
+										<Dropdown overlay={getMenu(item.estateName)}
+												  getPopupContainer={() => document.getElementById('house-arrange-panel-wrap')}>
+											<a onClick={() => {
+												this.handleAllocation(item.estateName, item.regionName)
+											}}>分配</a>
+										</Dropdown>
+										,
+										<a onClick={() => {
+											this.handleMapPan(item.location, item.index)
+										}}>地图</a>
+									]}>
+										<List.Item.Meta
+											title={titleNode}
+											description={item.estateName}
+											avatar={<Avatar
+												style={this.props.estateSelectedIndex === item.index ? {backgroundColor: '#1890ff'} : {backgroundColor: '#39ac6a'}}
+												size="small">{item.index}</Avatar>}
+										/>
+									</List.Item>
+								</Element>
+							)
+						}}
 					/>
 				</div>
 			</div>
@@ -161,7 +237,8 @@ const mapStateToProps = (state)=>{
 	return {
 		estateList:state.updateEstateAllocationState.estateList,
 		baiduMap:state.updateEstateAllocationState.map,
-		markerList:state.updateEstateAllocationState.markerList
+		markerList:state.updateEstateAllocationState.markerList,
+		estateSelectedIndex:state.updateEstateAllocationState.estateSelectedIndex
 	}
 };
 export default  connect(mapStateToProps)(HouseArrangeAllocationSubPanel)
