@@ -7,6 +7,8 @@ import axios from 'axios'
 import store from './../../store/store'
 //react滚动插件,scroller用于滚动到element处,可以不用link
 import {scroller} from 'react-scroll'
+//动画库
+import {Motion,spring} from 'react-motion'
 //actions
 import {UpdateEstateAllocationList,SaveBaiduMapInstance,SaveMapEstateMarker,UpdateEstateListSelectedIndex} from './../../store/actions/estateAllocation'
 import {connect} from 'react-redux'
@@ -54,10 +56,19 @@ class HouseReviewArrange extends React.Component{
 			//右下角radiobutton显示与否的flag
 			radioButtonVisible:false,
 			//选择的是哪一个radioButton，控制地图标签类型显示,1是序号，2是小区名
-			markerType:1
+			markerType:1,
+			//右侧派单面板是否展开的标志
+			isAllocationPanelOpen:false
 
 		}
 	}
+	//toggle右侧派单面板
+	toggleAllocationPanelOpen(){
+		this.setState({
+			isAllocationPanelOpen:!this.state.isAllocationPanelOpen
+		})
+	}
+
 	componentDidMount(){
 		//加载百度地图
 		let BMap = window.BMap;
@@ -296,7 +307,7 @@ class HouseReviewArrange extends React.Component{
 				<div className="house-position-map" id="house-position-baiduMap">
 				</div>
 				{/*右侧分配人员的面板*/}
-				<HouseArrangePanel />
+				<HouseArrangePanel togglePanel={()=>{this.toggleAllocationPanelOpen()}} isOpen={this.state.isAllocationPanelOpen}/>
 				{/*右侧栏操作区域*/}
 				<div className="right-side-map-operation-wrapper">
 					{/*文件上传区域，上传excel,注意这里不上传到服务器，只是前端读取excel内容*/}
@@ -324,29 +335,39 @@ class HouseReviewArrange extends React.Component{
 					</div>
 				</div>
 				{/*隐藏/显示地图标注label的按钮*/}
-				<div className="map-right-bottom-button-area">
-					{/*注意，over和out事件都得放外层，因为其子元素都可以触发这2个事件*/}
-					<div className="map-right-bottom-button"
-						 onMouseOut={()=>{this.handleRadioButtonMouseout()}}
-						 onMouseOver={()=>{this.handleRadioButtonMouseover()}}>
-						<Button type="primary"
-								shape="circle"
-								icon="eye-o"
-								size="large"
-								title="点击隐藏/显示地图标注的文本"
-								onClick={()=>{this.handleToggleLabelShow()}}
-						/>
-						{/*动画效果是动态添加类触发transition*/}
-						<div className={`marker-label-type-select ${this.state.radioButtonVisible?'marker-label-type-select-active':''}`}>
-							<RadioGroup onChange={(e)=>{this.handleRadioButtonChange(e)}}
-										className={this.state.radioButtonVisible?'marker-radio-button-active':'marker-radio-button-inactive'}
-										value={this.state.markerType}>
-								<Radio value={1}>小区名</Radio>
-								<Radio value={2}>序号</Radio>
-							</RadioGroup>
-						</div>
-					</div>
-				</div>
+				{/*动画效果是动态添加类触发transition*/}
+				<Motion style={{x:spring(this.state.isAllocationPanelOpen?-350:0)}}>
+					{
+						({x}) => (
+							<div className="map-right-bottom-button-area" style={{
+								transform: `translateX(${x}px)`
+							}}>
+								{/*注意，over和out事件都得放外层，因为其子元素都可以触发这2个事件*/}
+								<div className="map-right-bottom-button"
+									 onMouseOut={()=>{this.handleRadioButtonMouseout()}}
+									 onMouseOver={()=>{this.handleRadioButtonMouseover()}}>
+									<Button type="primary"
+											shape="circle"
+											icon="eye-o"
+											size="large"
+											title="点击隐藏/显示地图标注的文本"
+											onClick={()=>{this.handleToggleLabelShow()}}
+									/>
+										<div className={`marker-label-type-select ${this.state.radioButtonVisible ? 'marker-label-type-select-active' : ''}`}>
+											<RadioGroup onChange={(e) => {
+												this.handleRadioButtonChange(e)
+											}}
+														className={this.state.radioButtonVisible ? 'marker-radio-button-active' : 'marker-radio-button-inactive'}
+														value={this.state.markerType}>
+												<Radio value={1}>小区名</Radio>
+												<Radio value={2}>序号</Radio>
+											</RadioGroup>
+										</div>
+								</div>
+							</div>
+						)
+					}
+				</Motion>
 			</div>
 		)
 	}

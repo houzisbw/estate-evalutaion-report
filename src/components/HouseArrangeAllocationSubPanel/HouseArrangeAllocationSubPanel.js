@@ -37,7 +37,9 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			},
 			selectedMarker:null,
 			//房屋派单人员
-			estateAllocationStaffList:[]
+			estateAllocationStaffList:[],
+			//是否智能选择
+			isSmartChooseOn:true
 		}
 	}
 	componentDidMount(){
@@ -81,8 +83,11 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			estateAllocationResult:resultObj
 		})
 	}
+	//智能选择开关
 	handleSwitchChange(v){
-
+		this.setState({
+			isSmartChooseOn:v
+		})
 	}
 	//处理房屋分配
 	handleAllocation(estateName,regionName){
@@ -145,9 +150,23 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		return retList;
 	}
 	//处理人员分配
-	handleMenuClick(staffName,estateName){
+	handleMenuClick(staffName,estateName,regionName){
 		var tempResult = this.state.estateAllocationResult;
-		tempResult[estateName] = staffName==='无'?null:staffName;
+		//如果智能选择开启
+
+
+
+		//此处有bug
+		if(this.state.isSmartChooseOn){
+			for(var key in tempResult){
+				if(tempResult.hasOwnProperty(key) && key.indexOf(regionName)!==-1){
+					tempResult[key]= staffName==='无'?null:staffName;
+				}
+			}
+		}else{
+			tempResult[estateName] = staffName==='无'?null:staffName;
+		}
+
 		this.setState({
 			estateAllocationResult:tempResult
 		});
@@ -156,9 +175,9 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 	render(){
 		var estateList = this.processEstateList();
 		//生成看房人员下拉名单,小技巧:用函数返回Menu，目的是为了传入参数
-		const getMenu =(estateName)=>{
+		const getMenu =(estateName,regionName)=>{
 			return (
-				<Menu onClick={({key})=>{this.handleMenuClick(key,estateName)}}>
+				<Menu onClick={({key})=>{this.handleMenuClick(key,estateName,regionName)}}>
 					{
 						this.state.estateAllocationStaffList.map((item)=>{
 							return (
@@ -203,7 +222,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 								//Element标签是react-scroll插件的元素，表示滚动到的目标元素，name用于srcollTo参数
 								<Element name={item.estateName}>
 									<List.Item actions={[
-										<Dropdown overlay={getMenu(item.estateName)}
+										<Dropdown overlay={getMenu(item.estateName,item.regionName)}
 												  getPopupContainer={() => document.getElementById('house-arrange-panel-wrap')}>
 											<a onClick={() => {
 												this.handleAllocation(item.estateName, item.regionName)
