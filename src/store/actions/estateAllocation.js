@@ -49,3 +49,11 @@ export const UpdateEstateDataList = (list)=>{
 		estateDataList:list
 	}
 }
+
+//地图上所有label实例的列表
+export const UpdateMapEstateLabel = (labels)=>{
+	return {
+		type:'UPDATE_ESTATE_LABEL',
+		labels:labels
+	}
+}

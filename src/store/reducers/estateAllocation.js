@@ -6,7 +6,8 @@ const initialState = {
 	map:null,
 	markerList:[],
 	estateSelectedIndex:-1,
-	estateDataList:[]
+	estateDataList:[],
+	labelList:[]
 };
 //处理房屋派单的reducer
 export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
@@ -30,9 +31,16 @@ export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
 		return Object.assign({},state,{
 			estateSelectedIndex:action.selectedIndex
 		})
+	//房屋列表数据
 	}else if(action.type === 'UPDATE_ESTATE_DATALIST'){
 		return Object.assign({},state,{
 			estateDataList:action.estateDataList
+		})
+	}
+	//地图上marker的label列表
+	else if(action.type === 'UPDATE_ESTATE_LABEL'){
+		return Object.assign({},state,{
+			labelList:action.labels
 		})
 	}
 	//默认返回值

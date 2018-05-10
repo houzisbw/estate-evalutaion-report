@@ -17,6 +17,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		this.state = {
 			//分配结果，对象，key为房地产名，value为人员
 			estateAllocationResult:{},
+			//选中标签的颜色
 			highLightLabelStyle:{
 				backgroundColor:'#1890ff',
 				display:'block',
@@ -26,6 +27,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				borderRadius:'3px',
 				boxShadow:'1px 2px 1px rgba(0,0,0,.15)'
 			},
+			//默认标签的颜色
 			defaultLabelStyle:{
 				display:'block',
 				color:'#fff',
@@ -35,11 +37,23 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				borderRadius:'3px',
 				boxShadow:'1px 2px 1px rgba(0,0,0,.15)'
 			},
+			//已被分配的标签的颜色
+			allocatedLabelStyle:{
+				display:'block',
+				color:'#fff',
+				backgroundColor:"#7b7b7b",
+				border:'none',
+				padding:'5px',
+				borderRadius:'3px',
+				boxShadow:'1px 2px 1px rgba(0,0,0,.15)'
+			},
 			selectedMarker:null,
 			//房屋派单人员
 			estateAllocationStaffList:[],
 			//是否智能选择
-			isSmartChooseOn:true
+			isSmartChooseOn:true,
+			//房地产名字和编号的对应关系对象
+			estateIndexToEstateNameObj:{}
 		}
 	}
 	componentDidMount(){
@@ -79,6 +93,8 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		estateList.forEach((item)=>{
 			resultObj[item.estateName]=null;
 		});
+		//存储对应关系
+		this.mapIndexToName();
 		this.setState({
 			estateAllocationResult:resultObj
 		})
@@ -113,7 +129,18 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			}
 		});
 		store.dispatch(UpdateEstateListSelectedIndex(estateIndex))
-
+	}
+	//保存{编号:房屋名}的对应关系
+	mapIndexToName(){
+		var tempObj = {};
+		this.props.estateList.forEach((item)=>{
+			//存储{编号:名称}的对应关系
+			tempObj[item[1]['A']] = item[1]['B'];
+		});
+		//保存对应关系
+		this.setState({
+			estateIndexToEstateNameObj:tempObj
+		});
 	}
 	//针对estateList进行处理，获取到新的列表[片区名，小区名字]
 	processEstateList(){
@@ -136,12 +163,14 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			if(index!==Number.MAX_SAFE_INTEGER){
 				regionName = location.substring(0,index+1);
 			}
+
 			return {
 				estateName:location,
 				regionName:regionName,
 				location:item[0]
 			}
 		});
+
 		//按区域排序
 		retList.sort(function(a,b){return a.regionName.localeCompare(b.regionName)})
 		retList = retList.map((v,idx)=>{
@@ -153,10 +182,6 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 	handleMenuClick(staffName,estateName,regionName){
 		var tempResult = this.state.estateAllocationResult;
 		//如果智能选择开启
-
-
-
-		//此处有bug
 		if(this.state.isSmartChooseOn){
 			for(var key in tempResult){
 				if(tempResult.hasOwnProperty(key) && key.indexOf(regionName)!==-1){
@@ -166,6 +191,20 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		}else{
 			tempResult[estateName] = staffName==='无'?null:staffName;
 		}
+		//地图上对应的marker的文本变成紫色
+		//从redux获取到labelList
+		var labelList = this.props.labelList;
+		labelList.forEach((item)=>{
+			//2个条件，后者是label为数字的情况
+			if(tempResult[item.getContent()] || tempResult[this.state.estateIndexToEstateNameObj[item.getContent()]]){
+				//如果该label对应的文本被选中,则变成紫色
+				item.setStyle(this.state.allocatedLabelStyle)
+			}else{
+				//默认绿色
+				item.setStyle(this.state.defaultLabelStyle)
+			}
+		});
+
 
 		this.setState({
 			estateAllocationResult:tempResult
@@ -257,7 +296,8 @@ const mapStateToProps = (state)=>{
 		estateList:state.updateEstateAllocationState.estateList,
 		baiduMap:state.updateEstateAllocationState.map,
 		markerList:state.updateEstateAllocationState.markerList,
-		estateSelectedIndex:state.updateEstateAllocationState.estateSelectedIndex
+		estateSelectedIndex:state.updateEstateAllocationState.estateSelectedIndex,
+		labelList:state.updateEstateAllocationState.labelList
 	}
 };
 export default  connect(mapStateToProps)(HouseArrangeAllocationSubPanel)

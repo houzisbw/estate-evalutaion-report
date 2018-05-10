@@ -10,7 +10,7 @@ import {scroller} from 'react-scroll'
 //动画库
 import {Motion,spring} from 'react-motion'
 //actions
-import {UpdateEstateAllocationList,SaveBaiduMapInstance,SaveMapEstateMarker,UpdateEstateListSelectedIndex} from './../../store/actions/estateAllocation'
+import {UpdateEstateAllocationList,SaveBaiduMapInstance,SaveMapEstateMarker,UpdateEstateListSelectedIndex,UpdateMapEstateLabel} from './../../store/actions/estateAllocation'
 import {connect} from 'react-redux'
 import {withRouter} from 'react-router-dom'
 import {Modal,Icon,Button,Tooltip,Radio} from 'antd'
@@ -58,7 +58,9 @@ class HouseReviewArrange extends React.Component{
 			//选择的是哪一个radioButton，控制地图标签类型显示,1是序号，2是小区名
 			markerType:1,
 			//右侧派单面板是否展开的标志
-			isAllocationPanelOpen:false
+			isAllocationPanelOpen:false,
+			//默认marker的icon
+			defaultIcon:null
 
 		}
 	}
@@ -70,11 +72,14 @@ class HouseReviewArrange extends React.Component{
 	}
 
 	componentDidMount(){
+		let marker = new window.BMap.Marker();
 		//加载百度地图
 		let BMap = window.BMap;
 		this.setState({
-			map:new BMap.Map('house-position-baiduMap')
+			map:new BMap.Map('house-position-baiduMap'),
+			defaultIcon:marker.getIcon()
 		},()=>{
+			console.log(this.state.defaultIcon)
 			//成都市中心坐标
 			this.state.map.centerAndZoom(new BMap.Point(104.070611,30.665017), 15);
 			//添加缩放控件
@@ -205,41 +210,44 @@ class HouseReviewArrange extends React.Component{
 				clearTimeout(self.state.isReadingSuccessTimerId)
 				//在地图上标注
 				for(let i=0;i<tempLocationList.length;i++){
-					var point = tempLocationList[i][0];
+					let point = tempLocationList[i][0];
 					//b作为key才是地址,a是序号
 					let labelContent = self.state.markerType===1?tempLocationList[i][1]['B']:tempLocationList[i][1]['A'];
 					let marker = new window.BMap.Marker(point);
 					//给marker添加点击事件,传入labelContent，注意闭包
-					(function(labelContent){
-						marker.addEventListener('click',(e)=>{
-							e.domEvent.stopPropagation();
-							//滚动目标的name
-							var scrollTargetName = labelContent;
-							//滚动到目标元素,containerId是滚动区域容器的id
-							//注意这里的offset表示滚动到元素位置+offset的位置，方向朝下，
-							scroller.scrollTo(scrollTargetName, {
-								duration: 500,
-								smooth: true,
-								containerId: 'house-arrange-panel-wrap',
-								offset: -200,
-							})
-							//高亮label
-							let label = marker.getLabel();
-							self.state.labelList.forEach((item)=>{
-								item.setStyle(self.state.markerLabelStyle)
-							});
-							label.setStyle(self.state.highLightLabelStyle)
-							//房屋列表选中项也要高亮,list是保存在redux中
-							self.props.estateDataList.forEach((item)=>{
-								if(item.estateName === labelContent){
-									//通过更新redux数据来使得房屋列表组件数据更新
-									store.dispatch(UpdateEstateListSelectedIndex(item.index))
-								}
-							})
 
+					marker.addEventListener('click',function(e){
+						e.domEvent.stopPropagation();
+						//滚动目标的name
+						let scrollTargetName = labelContent;
+						//滚动到目标元素,containerId是滚动区域容器的id
+						//注意这里的offset表示滚动到元素位置+offset的位置，方向朝下，
+						scroller.scrollTo(scrollTargetName, {
+							duration: 500,
+							smooth: true,
+							containerId: 'house-arrange-panel-wrap',
+							offset: -200,
 						});
-					})(labelContent);
-					var label = new window.BMap.Label(labelContent,{offset:new window.BMap.Size(20,-2)});
+
+						//动画
+						this.setAnimation(window.BMAP_ANIMATION_BOUNCE)
+						self.state.markerList.forEach((markerItem)=>{
+							//其余marker取消动画
+							if(markerItem!==marker){
+								markerItem.setAnimation(null)
+							}
+						});
+
+						//房屋列表选中项也要高亮,list是保存在redux中
+						self.props.estateDataList.forEach((item)=>{
+							if(item.estateName === labelContent){
+								//通过更新redux数据来使得房屋列表组件数据更新
+								store.dispatch(UpdateEstateListSelectedIndex(item.index))
+							}
+						})
+					});
+
+					let label = new window.BMap.Label(labelContent,{offset:new window.BMap.Size(20,-2)});
 					label.setStyle(self.state.markerLabelStyle);
 					tempLabelList.push(label);
 					marker.setLabel(label);
@@ -250,6 +258,8 @@ class HouseReviewArrange extends React.Component{
 				store.dispatch(UpdateEstateAllocationList(tempLocationList));
 				//更新marker到redux
 				store.dispatch(SaveMapEstateMarker(tempMarkerList));
+				//更新label到redux
+				store.dispatch(UpdateMapEstateLabel(tempLabelList));
 				self.setState({
 					markerList:tempMarkerList,
 					labelList:tempLabelList,
