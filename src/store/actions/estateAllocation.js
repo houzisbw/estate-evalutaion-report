@@ -57,3 +57,19 @@ export const UpdateMapEstateLabel = (labels)=>{
 		labels:labels
 	}
 }
+
+//地图marker的label类别
+export const UpdateMarkerLabelType = (type) =>{
+	return {
+		type:'UPDATE_LABEL_TYPE',
+		labelType:type
+	}
+}
+
+//房屋分配结果的对象{人员：房屋名}
+export const UpdateAllocationResultObj = (resultObj)=>{
+	return {
+		type:'UPDATE_ALLOCATION_RESULT',
+		result:resultObj
+	}
+}

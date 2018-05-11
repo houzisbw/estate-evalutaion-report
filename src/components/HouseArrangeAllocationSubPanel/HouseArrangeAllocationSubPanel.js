@@ -6,7 +6,7 @@ import './index.scss'
 import {connect} from 'react-redux'
 import store from './../../store/store'
 import axios from 'axios'
-import {UpdateEstateListSelectedIndex,UpdateEstateDataList} from './../../store/actions/estateAllocation'
+import {UpdateEstateListSelectedIndex,UpdateEstateDataList,UpdateAllocationResultObj} from './../../store/actions/estateAllocation'
 import {Switch,Tooltip,Button,List,Popconfirm,Avatar,Menu,Dropdown,Modal} from 'antd'
 import {Element} from 'react-scroll'
 const MenuItem = Menu.Item;
@@ -78,12 +78,9 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 
 		//点击地图，取消房屋列表的选中项
 		this.props.baiduMap.addEventListener('click',()=>{
-			if(this.state.selectedMarker){
-				var label = this.state.selectedMarker.getLabel();
-				label.setStyle(this.state.defaultLabelStyle)
-				//恢复右侧列表avatar颜色
-				store.dispatch(UpdateEstateListSelectedIndex(-1))
-			}
+			this.props.markerList.forEach((item)=>{
+				item.setAnimation(null)
+			})
 		});
 		//更新redux
 		var estateList = this.processEstateList();
@@ -105,10 +102,6 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			isSmartChooseOn:v
 		})
 	}
-	//处理房屋分配
-	handleAllocation(estateName,regionName){
-
-	}
 	//处理地图平移到指定房地产,且指定房产颜色高亮
 	handleMapPan(estateLocation,estateIndex){
 		//baiduMap实例保存在redux中
@@ -116,16 +109,15 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		this.props.markerList.forEach((item)=>{
 			//如果是指定的房地产，根据位置坐标来判断
 			var pos = item.getPosition();
-			var label = item.getLabel();
 			if(pos.lng===estateLocation.lng && pos.lat===estateLocation.lat){
-				//高亮marker,获取到marker的label
-				label.setStyle(this.state.highLightLabelStyle)
+				//设置marker弹跳动画
+				item.setAnimation(window.BMAP_ANIMATION_BOUNCE);
 				this.setState({
 					selectedMarker:item
 				})
-			}else{
-				//设置style为默认
-				label.setStyle(this.state.defaultLabelStyle)
+			}else {
+				//取消弹跳动画
+				item.setAnimation(null);
 			}
 		});
 		store.dispatch(UpdateEstateListSelectedIndex(estateIndex))
@@ -181,31 +173,63 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 	//处理人员分配
 	handleMenuClick(staffName,estateName,regionName){
 		var tempResult = this.state.estateAllocationResult;
+		//处理人员和房产的分配结果
 		//如果智能选择开启
 		if(this.state.isSmartChooseOn){
 			for(var key in tempResult){
 				if(tempResult.hasOwnProperty(key) && key.indexOf(regionName)!==-1){
-					tempResult[key]= staffName==='无'?null:staffName;
+					tempResult[key]= (staffName==='无')?null:staffName;
 				}
 			}
 		}else{
-			tempResult[estateName] = staffName==='无'?null:staffName;
+
+			tempResult[estateName] = (staffName==='无')?null:staffName;
+			console.log(tempResult[estateName])
 		}
+		//marker的label类型
+		var labelType = this.props.labelType;
 		//地图上对应的marker的文本变成紫色
 		//从redux获取到labelList
 		var labelList = this.props.labelList;
 		labelList.forEach((item)=>{
-			//2个条件，后者是label为数字的情况
-			if(tempResult[item.getContent()] || tempResult[this.state.estateIndexToEstateNameObj[item.getContent()]]){
-				//如果该label对应的文本被选中,则变成紫色
-				item.setStyle(this.state.allocatedLabelStyle)
+			//如果是显示房地产名称
+			if(labelType === 'ESTATE_NAME'){
+				if(tempResult[item.getContent()]){
+					//如果该label对应的文本被选中,则变成灰色
+					item.setStyle(this.state.allocatedLabelStyle)
+				}else{
+					//默认绿色
+					item.setStyle(this.state.defaultLabelStyle)
+				}
 			}else{
-				//默认绿色
-				item.setStyle(this.state.defaultLabelStyle)
+				//显示房地产编号
+				let labelContent = item.getContent();
+				//获取内容前面的index部分
+				let splitted = labelContent.split(' ');
+				let labelIndexPart = splitted[0];
+				let staffNamePart = splitted.length>1?splitted[1]:null;
+				if(tempResult[this.state.estateIndexToEstateNameObj[labelIndexPart]]){
+					//如果该label对应的文本被选中,则变成灰色
+					item.setStyle(this.state.allocatedLabelStyle);
+					//将内容设置为index+人员名字
+					console.log(labelIndexPart+' ['+staffName+']');
+					if(staffName==='无'){
+						item.setContent(labelIndexPart+' ['+staffNamePart.substring(1,staffNamePart.length-1)+']');
+					}else{
+						item.setContent(labelIndexPart+' ['+staffName+']');
+					}
+
+				}else{
+					//默认绿色
+					item.setStyle(this.state.defaultLabelStyle);
+					//内容只有index部分
+					item.setContent(labelIndexPart);
+				}
 			}
+
 		});
-
-
+		//更新redux
+		store.dispatch(UpdateAllocationResultObj(tempResult))
 		this.setState({
 			estateAllocationResult:tempResult
 		});
@@ -263,9 +287,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 									<List.Item actions={[
 										<Dropdown overlay={getMenu(item.estateName,item.regionName)}
 												  getPopupContainer={() => document.getElementById('house-arrange-panel-wrap')}>
-											<a onClick={() => {
-												this.handleAllocation(item.estateName, item.regionName)
-											}}>分配</a>
+											<a>分配</a>
 										</Dropdown>
 										,
 										<a onClick={() => {
@@ -297,7 +319,8 @@ const mapStateToProps = (state)=>{
 		baiduMap:state.updateEstateAllocationState.map,
 		markerList:state.updateEstateAllocationState.markerList,
 		estateSelectedIndex:state.updateEstateAllocationState.estateSelectedIndex,
-		labelList:state.updateEstateAllocationState.labelList
+		labelList:state.updateEstateAllocationState.labelList,
+		labelType:state.updateEstateAllocationState.labelType
 	}
 };
 export default  connect(mapStateToProps)(HouseArrangeAllocationSubPanel)

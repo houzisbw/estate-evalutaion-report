@@ -10,7 +10,12 @@ import {scroller} from 'react-scroll'
 //动画库
 import {Motion,spring} from 'react-motion'
 //actions
-import {UpdateEstateAllocationList,SaveBaiduMapInstance,SaveMapEstateMarker,UpdateEstateListSelectedIndex,UpdateMapEstateLabel} from './../../store/actions/estateAllocation'
+import {UpdateEstateAllocationList,
+		SaveBaiduMapInstance,
+		SaveMapEstateMarker,
+		UpdateMarkerLabelType,
+		UpdateEstateListSelectedIndex,
+		UpdateMapEstateLabel} from './../../store/actions/estateAllocation'
 import {connect} from 'react-redux'
 import {withRouter} from 'react-router-dom'
 import {Modal,Icon,Button,Tooltip,Radio} from 'antd'
@@ -72,14 +77,11 @@ class HouseReviewArrange extends React.Component{
 	}
 
 	componentDidMount(){
-		let marker = new window.BMap.Marker();
 		//加载百度地图
 		let BMap = window.BMap;
 		this.setState({
-			map:new BMap.Map('house-position-baiduMap'),
-			defaultIcon:marker.getIcon()
+			map:new BMap.Map('house-position-baiduMap')
 		},()=>{
-			console.log(this.state.defaultIcon)
 			//成都市中心坐标
 			this.state.map.centerAndZoom(new BMap.Point(104.070611,30.665017), 15);
 			//添加缩放控件
@@ -109,9 +111,11 @@ class HouseReviewArrange extends React.Component{
 					var point = this.state.locationList[i][0];
 					var content = this.state.locationList[i][1]['A'];
 					var pos = v.getPosition();
+					//对应的分配到的人员名字
+					let allocatedStaffName  = this.props.allocationResultObj[this.state.locationList[i][1]['B']];
 					//如果2者位置相同则找到对应的label
 					if(pos.lng === point.lng && pos.lat === point.lat){
-						v.setContent(content)
+						v.setContent(content+(allocatedStaffName?' ['+allocatedStaffName+']':''));
 						break;
 					}
 				}
@@ -167,7 +171,6 @@ class HouseReviewArrange extends React.Component{
 		//读取excel
 		reader.readAsBinaryString(excel);
 		//异步读取完成
-		var self = this;
 		reader.onload = function(e) {
 			var data = e.target.result;
 			wb = window.XLSX.read(data, {
@@ -304,6 +307,11 @@ class HouseReviewArrange extends React.Component{
 	}
 	handleRadioButtonChange(e){
 		var type = parseInt(e.target.value,10);
+		if(type === 1){
+			store.dispatch(UpdateMarkerLabelType('ESTATE_NAME'))
+		}else{
+			store.dispatch(UpdateMarkerLabelType('ESTATE_INDEX'))
+		}
 		this.setState({
 			markerType:type
 		},()=>{
@@ -387,7 +395,8 @@ class HouseReviewArrange extends React.Component{
 const mapStateToProps = (state)=>{
 	return {
 		userAuth:state.updateUserAuthState.userAuth,
-		estateDataList:state.updateEstateAllocationState.estateDataList
+		estateDataList:state.updateEstateAllocationState.estateDataList,
+		allocationResultObj:state.updateEstateAllocationState.allocationResultObj
 	}
 };
 export default  withRouter(connect(mapStateToProps)(HouseReviewArrange))

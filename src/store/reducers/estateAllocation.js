@@ -7,7 +7,10 @@ const initialState = {
 	markerList:[],
 	estateSelectedIndex:-1,
 	estateDataList:[],
-	labelList:[]
+	labelList:[],
+	//2种类型，ESTATE_NAME, ESTATE_INDEX
+	labelType:'ESTATE_NAME',
+	allocationResultObj:{}
 };
 //处理房屋派单的reducer
 export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
@@ -41,6 +44,18 @@ export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
 	else if(action.type === 'UPDATE_ESTATE_LABEL'){
 		return Object.assign({},state,{
 			labelList:action.labels
+		})
+	}
+	//marker的label类型
+	else if (action.type === 'UPDATE_LABEL_TYPE'){
+		return Object.assign({},state,{
+			labelType:action.labelType
+		})
+	}
+	//分配结果
+	else if (action.type === 'UPDATE_ALLOCATION_RESULT'){
+		return Object.assign({},state,{
+			allocationResultObj:action.result
 		})
 	}
 	//默认返回值
