@@ -12,6 +12,9 @@
   .house-arrange-panel-wrap{
     overflow: auto;
     height:100%;
+    #ant-panel-wrapper{
+      position: relative;
+    }
   }
   .ant-tabs-tab-active{
     color:#39ac6a;

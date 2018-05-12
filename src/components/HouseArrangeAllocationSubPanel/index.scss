@@ -15,11 +15,21 @@
       width:50%;
       height:40px;
       float:left;
-      text-align: center;
+      .staff-allocation-sort{
+        display: inline-block;
+        position: relative;
+        top:-5px;
+        left:-2px;
+        width:32px;
+        height:32px;
+        cursor: pointer;
+        background: url('./../../assets/img/icon/estateListSort.png') center center no-repeat;
+      }
       .staff-allocation-excel-button{
         width:100px;
         position: relative;
-        top:-5px;
+        top:-15px;
+        margin-left: 20px;
         background-color: #39ac6a!important;
         border-color: #39ac6a!important;
       }

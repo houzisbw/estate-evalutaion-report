@@ -42,7 +42,8 @@ class HouseArrangeStaffConfigSubPanel extends React.Component{
 		})
 	}
 	addStaffName(){
-		var name = this.state.staffNameInputValue.trim();
+		//去掉所有空白字符
+		var name = this.state.staffNameInputValue.replace(/\s/g,'');
 		if(name === '' || name === '无'){
 			notification['error']({
 				message: '注意啦',

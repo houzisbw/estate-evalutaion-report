@@ -7,7 +7,7 @@ import {connect} from 'react-redux'
 import store from './../../store/store'
 import axios from 'axios'
 import {UpdateEstateListSelectedIndex,UpdateEstateDataList,UpdateAllocationResultObj} from './../../store/actions/estateAllocation'
-import {Switch,Tooltip,Button,List,Popconfirm,Avatar,Menu,Dropdown,Modal} from 'antd'
+import {Switch,Tooltip,Button,List,Popconfirm,Avatar,Menu,Dropdown,Modal,notification} from 'antd'
 import {Element} from 'react-scroll'
 const MenuItem = Menu.Item;
 
@@ -53,8 +53,24 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			//是否智能选择
 			isSmartChooseOn:true,
 			//房地产名字和编号的对应关系对象
-			estateIndexToEstateNameObj:{}
+			estateIndexToEstateNameObj:{},
+			//房地产编号和名字的对应关系对象
+			estateNameToIndexObj:{},
+			//排序变量,false表示按默认排序，true按未分配排序
+			isDefaultSortOrUnallocated:false,
+			//房屋的数据列表
+			selfEstateList:[],
+			//生成excel的popconfirm是否可见
+			popConfirmVisible:false,
+			//未分配的房屋总数
+			leftUnallocatedCnt:0
 		}
+	}
+	//props发生变化时执行该函数，改变state,如果不写则props发生变化了不会触发estateList更新
+	componentWillReceiveProps(nextProps){
+		this.setState({
+			selfEstateList:this.processEstateList(nextProps.estateList)
+		})
 	}
 	componentDidMount(){
 		//获取房屋派单人员
@@ -80,10 +96,12 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		this.props.baiduMap.addEventListener('click',()=>{
 			this.props.markerList.forEach((item)=>{
 				item.setAnimation(null)
-			})
+			});
+			//重置index取消右侧列表选中项
+			store.dispatch(UpdateEstateListSelectedIndex(-1));
 		});
 		//更新redux
-		var estateList = this.processEstateList();
+		var estateList = this.processEstateList(this.props.estateList);
 		store.dispatch(UpdateEstateDataList(estateList));
 		//初始化派单结果对象,将key初始化为房地产名
 		var resultObj = {};
@@ -93,7 +111,8 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		//存储对应关系
 		this.mapIndexToName();
 		this.setState({
-			estateAllocationResult:resultObj
+			estateAllocationResult:resultObj,
+			selfEstateList:estateList
 		})
 	}
 	//智能选择开关
@@ -122,22 +141,24 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		});
 		store.dispatch(UpdateEstateListSelectedIndex(estateIndex))
 	}
-	//保存{编号:房屋名}的对应关系
+	//保存{编号:房屋名}{房屋名:编号}的对应关系
 	mapIndexToName(){
-		var tempObj = {};
+		var tempObj = {},tempObj2 = {};
 		this.props.estateList.forEach((item)=>{
 			//存储{编号:名称}的对应关系
 			tempObj[item[1]['A']] = item[1]['B'];
+			tempObj2[item[1]['B']] = item[1]['A'];
 		});
 		//保存对应关系
 		this.setState({
-			estateIndexToEstateNameObj:tempObj
+			estateIndexToEstateNameObj:tempObj,
+			estateNameToIndexObj:tempObj2
 		});
 	}
 	//针对estateList进行处理，获取到新的列表[片区名，小区名字]
-	processEstateList(){
+	processEstateList(list){
 		//注意处理过程中如果不属于任何一个片区，则特殊处理
-		var retList = this.props.estateList.map((item)=>{
+		var retList = list.map((item)=>{
 			var location = item.length>1?item[1]['B']:'';
 			var splitter = ['市','区','县'];
 			var index = Number.MAX_SAFE_INTEGER;
@@ -182,9 +203,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				}
 			}
 		}else{
-
 			tempResult[estateName] = (staffName==='无')?null:staffName;
-			console.log(tempResult[estateName])
 		}
 		//marker的label类型
 		var labelType = this.props.labelType;
@@ -212,7 +231,6 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 					//如果该label对应的文本被选中,则变成灰色
 					item.setStyle(this.state.allocatedLabelStyle);
 					//将内容设置为index+人员名字
-					console.log(labelIndexPart+' ['+staffName+']');
 					if(staffName==='无'){
 						item.setContent(labelIndexPart+' ['+staffNamePart.substring(1,staffNamePart.length-1)+']');
 					}else{
@@ -235,16 +253,99 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		});
 
 	}
+	//房屋列表排序
+	handleSort(){
+		let resultObj = this.state.estateAllocationResult;
+		let t = this.state.selfEstateList;
+		if(!this.state.isDefaultSortOrUnallocated){
+			//如果是默认排序，则切换到按未分配排序
+			t.sort(function(a,b){
+				if(resultObj[a.estateName]&&!resultObj[b.estateName]){
+					return 1
+				}else if(!resultObj[a.estateName]&&resultObj[b.estateName]){
+					return -1
+				}
+				return 0
+			});
+		}else{
+			//如果是按未分配排序，则切换到默认排序
+			t.sort(function(a,b){return a.regionName.localeCompare(b.regionName)});
+		}
+		this.setState({
+			selfEstateList:t,
+			isDefaultSortOrUnallocated:!this.state.isDefaultSortOrUnallocated
+		})
+	}
+	//控制popconfirm显示与否
+	handleAllocationExcelResult(){
+		//如果还未导入数据，提示
+		if(this.state.selfEstateList.length===0){
+			notification['error']({
+				message: '注意啦',
+				description: '还没有导入数据，无法下载~',
+			});
+			return
+		}
+		let allocatedCnt = 0;
+		for(var key in this.state.estateAllocationResult){
+			if(this.state.estateAllocationResult.hasOwnProperty(key) && this.state.estateAllocationResult[key]){
+				allocatedCnt++;
+			}
+		}
+		//若没有分配完成，提示用户是否继续
+		if(allocatedCnt!==this.state.selfEstateList.length){
+			this.setState({
+				popConfirmVisible:true,
+				leftUnallocatedCnt:this.state.selfEstateList.length-allocatedCnt
+			});
+		}else{
+			//分配完成，直接开始下载
+			this.downloadExcelResult()
+		}
+
+	}
+	//下载处理
+	downloadExcelResult(){
+		//分配完成，生成最终excel
+		//生成一张空白的excel工作簿
+		var wb = window.XLSX.utils.book_new();
+		//根据房屋json数据生成worksheet
+		var estateJsonData = [];
+		for(var key in this.state.estateAllocationResult){
+			if(this.state.estateAllocationResult.hasOwnProperty(key)){
+				estateJsonData.push({A:this.state.estateNameToIndexObj[key],B:key,C:this.state.estateAllocationResult[key]})
+			}
+		}
+		//按编号从小到大排序
+		estateJsonData.sort(function(a,b){
+			return parseInt(a.A,10) - parseInt(b.A,10)
+		});
+		var ws = window.XLSX.utils.json_to_sheet(estateJsonData,{
+			headers:['A','B','C'],skipHeader:true
+		});
+		//将worksheet添加到工作簿上
+		window.XLSX.utils.book_append_sheet(wb, ws, '分配结果');
+		//下载
+		window.XLSX.writeFile(wb,'看房配分结果.xlsx');
+	}
+	//生成excel
+	handleExcelGenerate(type){
+		if(type==='CONFIRM'){
+			this.downloadExcelResult();
+		}
+		this.setState({
+			popConfirmVisible:false
+		})
+	}
 	render(){
-		var estateList = this.processEstateList();
 		//生成看房人员下拉名单,小技巧:用函数返回Menu，目的是为了传入参数
 		const getMenu =(estateName,regionName)=>{
 			return (
 				<Menu onClick={({key})=>{this.handleMenuClick(key,estateName,regionName)}}>
 					{
-						this.state.estateAllocationStaffList.map((item)=>{
+						this.state.estateAllocationStaffList.map((item,index)=>{
 							return (
-								<MenuItem key={item}>
+								<MenuItem key={item} style={index===0?{color:'red'}:{}}>
 									{item}
 								</MenuItem>
 							)
@@ -264,7 +365,20 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 						<Switch defaultChecked onChange={(v)=>{this.handleSwitchChange(v)}} />
 					</div>
 					<div className="staff-allocation-button-wrapper">
-						<Button type="primary" className='staff-allocation-excel-button'>生成Excel</Button>
+						<Tooltip title="列表排序(点击切换默认/未分配)">
+							<span className="staff-allocation-sort" onClick={()=>{this.handleSort()}}></span>
+						</Tooltip>
+						<Popconfirm placement="topRight"
+									title={this.state.leftUnallocatedCnt>0?("还有"+this.state.leftUnallocatedCnt+"个未分配的房产，确认生成excel?"):"还有未分配的房屋，确认生成excel?"}
+									okText="是"
+									cancelText="否"
+									getPopupContainer={()=>document.getElementById('ant-panel-wrapper')}
+									onConfirm={()=>{this.handleExcelGenerate('CONFIRM')}}
+									onCancel={()=>{this.handleExcelGenerate('CANCEL')}}
+									visible={this.state.popConfirmVisible}
+						>
+							<Button type="primary" className='staff-allocation-excel-button' onClick={()=>{this.handleAllocationExcelResult()}}>生成Excel</Button>
+						</Popconfirm>
 					</div>
 				</div>
 				{/*房屋列表*/}
@@ -273,7 +387,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 						loading={false}
 						locale={{emptyText:'无房屋数据,请先导入'}}
 						itemLayout="horizontal"
-						dataSource={estateList}
+						dataSource={this.state.selfEstateList}
 						renderItem={item => {
 							//List.item.meta的title用reactNode表示，因为要处理不同的颜色,默认是string，很局限
 							let titleNode = (

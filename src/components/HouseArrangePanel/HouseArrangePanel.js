@@ -28,14 +28,17 @@ class HouseArrangePanel extends React.Component{
 								>
 								</div>
 								{/*tab，看房人员配置 和 派单*/}
-								<Tabs defaultActiveKey="1" >
-									<TabPane tab="看房人员配置" key="1">
-										<HouseArrangeStaffConfigSubPanel />
-									</TabPane>
-									<TabPane tab="派单" key="2">
-										<HouseArrangeAllocationSubPanel />
-									</TabPane>
-								</Tabs>
+								{/*此处div的id表示这个div用于设置popconfirm的挂载点，注意必须设置该div的position:relative，因为popconfirm的position是absolute*/}
+								<div id="ant-panel-wrapper">
+									<Tabs defaultActiveKey="1" >
+										<TabPane tab="看房人员配置" key="1">
+											<HouseArrangeStaffConfigSubPanel />
+										</TabPane>
+										<TabPane tab="派单" key="2">
+											<HouseArrangeAllocationSubPanel />
+										</TabPane>
+									</Tabs>
+								</div>
 							</div>
 						</div>
 					)
