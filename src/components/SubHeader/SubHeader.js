@@ -21,7 +21,7 @@ class SubHeader extends React.Component{
 				auth:[0,1]
 			},
 			{
-				pathTo:currentPath+'/normal_assesment_report',
+				pathTo:currentPath+'/normal_assesment/report',
 				iconName:'fa fa-file-text-o fa-fw',
 				title:'评估报告正报',
 				auth:[0,1]

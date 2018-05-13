@@ -9,12 +9,15 @@ import {connect} from 'react-redux'
 import LayoutComponent from './../../components/Layout/layout'
 import {checkAuthentication} from './../../util/utils'
 import {Switch, Route, Redirect} from 'react-router-dom'
+//正报
 import NormalAssesment from './../NormalAssesment/NormalAssesment'
 import WordTemplateManagement from './../WordTemplateManagement/WordTemplateManagement'
 //看房的总路由
 import HouseReviewArrangeRouter from './../HouseReviewArrange/HouseReviewArrangeRouter'
 //处理预评估的总路由
 import PreAssesmentRouter from './../PreAssesment/PreAssesmentRouter'
+//正报的总路由
+import NormalAssesmentRouter from './../NormalAssesment/NormalAssesmentRouter'
 //处理业务登记路由
 import BusinessRegistering from './../BusinessRegistering/BusinessRegistering'
 class Layout extends React.Component{
@@ -38,7 +41,8 @@ class Layout extends React.Component{
 					<Route path="/app/business_registering" component={BusinessRegistering}/>
 					{/*看房派单分配*/}
 					<Route path="/app/arrange_house_review" component={HouseReviewArrangeRouter}/>
-					<Route path="/app/normal_assesment_report" component={NormalAssesment}/>
+					{/*正式报告页面总路由*/}
+					<Route path="/app/normal_assesment" component={NormalAssesmentRouter}/>
 					<Redirect from="/app" to="/app/pre_assesment"/>
 				</Switch>
 			</LayoutComponent>
