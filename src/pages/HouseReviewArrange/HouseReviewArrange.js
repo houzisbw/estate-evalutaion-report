@@ -65,7 +65,9 @@ class HouseReviewArrange extends React.Component{
 			//右侧派单面板是否展开的标志
 			isAllocationPanelOpen:false,
 			//默认marker的icon
-			defaultIcon:null
+			defaultIcon:null,
+			//用户是否上传了新的excel文件
+			isEstateListUpdated:false
 
 		}
 	}
@@ -100,13 +102,14 @@ class HouseReviewArrange extends React.Component{
 			locationList:[],
 			labelList:[]
 		})
+		this.state.map.clearOverlays();
 	}
 
 	//设置所有marker的label种类
 	setMarkerLabel(labelType){
 		if(labelType===2){
 			//序号
-			this.state.labelList.forEach((v,idx)=>{
+			this.state.labelList.forEach((v)=>{
 				for(var i=0;i<this.state.locationList.length;i++){
 					var point = this.state.locationList[i][0];
 					var content = this.state.locationList[i][1]['A'];
@@ -260,6 +263,8 @@ class HouseReviewArrange extends React.Component{
 					self.state.map.addOverlay(marker);
 					tempMarkerList.push(marker);
 				}
+				//检查tempLocationList是否更新了(用于重新上传excel文件)
+				let isUpdated = self.checkUploadedExcelDataChanged(tempLocationList);
 				//更新redux房屋列表数据,便于其他组件获取
 				store.dispatch(UpdateEstateAllocationList(tempLocationList));
 				//更新marker到redux
@@ -269,12 +274,35 @@ class HouseReviewArrange extends React.Component{
 				self.setState({
 					markerList:tempMarkerList,
 					labelList:tempLabelList,
-					locationList:tempLocationList
+					locationList:tempLocationList,
+					isEstateListUpdated:isUpdated ? !self.state.isEstateListUpdated : self.state.isEstateListUpdated
 				})
 			})
 
 		}
 
+	}
+	//检查上传excel数据是否有变化
+	checkUploadedExcelDataChanged(list){
+		//获取当前redux的list
+		let currentListInRedux = this.props.estateList;
+		let isUpdated = false;
+		console.log(list, currentListInRedux)
+		if(currentListInRedux.length!==list.length){
+			isUpdated = true;
+		}else{
+			//判断2个estateList是否不同
+			let len = currentListInRedux.length;
+			for(var i=0;i<len;i++){
+				if( list[i][0].lng !== currentListInRedux[i][0].lng ||
+					list[i][0].lat !== currentListInRedux[i][0].lat)
+				{
+					isUpdated = true;
+					break;
+				}
+			}
+		}
+		return isUpdated
 	}
 	//显示/隐藏地图标注文本
 	handleToggleLabelShow(){
@@ -328,7 +356,9 @@ class HouseReviewArrange extends React.Component{
 				<div className="house-position-map" id="house-position-baiduMap">
 				</div>
 				{/*右侧分配人员的面板*/}
-				<HouseArrangePanel togglePanel={()=>{this.toggleAllocationPanelOpen()}} isOpen={this.state.isAllocationPanelOpen}/>
+				<HouseArrangePanel togglePanel={()=>{this.toggleAllocationPanelOpen()}}
+								   isEstateListUpdated={this.state.isEstateListUpdated}
+								   isOpen={this.state.isAllocationPanelOpen}/>
 				{/*右侧栏操作区域*/}
 				<div className="right-side-map-operation-wrapper">
 					{/*文件上传区域，上传excel,注意这里不上传到服务器，只是前端读取excel内容*/}
@@ -399,6 +429,7 @@ const mapStateToProps = (state)=>{
 	return {
 		userAuth:state.updateUserAuthState.userAuth,
 		estateDataList:state.updateEstateAllocationState.estateDataList,
+		estateList:state.updateEstateAllocationState.estateList,
 		allocationResultObj:state.updateEstateAllocationState.allocationResultObj
 	}
 };

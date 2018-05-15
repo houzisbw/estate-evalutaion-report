@@ -2,6 +2,7 @@
  * Created by Administrator on 2018/5/5.
  */
 const initialState = {
+	//ESTATE_ALLOCATION_LIST
 	estateList:[],
 	map:null,
 	markerList:[],

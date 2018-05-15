@@ -68,40 +68,25 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 	}
 	//props发生变化时执行该函数，改变state,如果不写则props发生变化了不会触发estateList更新
 	componentWillReceiveProps(nextProps){
-		this.setState({
-			selfEstateList:this.processEstateList(nextProps.estateList)
-		})
-	}
-	componentDidMount(){
-		//获取房屋派单人员
-		axios.get('/staff_arrange/getStaff').then((resp)=>{
-			if(resp.data.status===-1){
-				Modal.error({
-					title: '糟糕！',
-					content: '数据读取出错，请重试~',
-				});
-			}else{
-				var staffData = resp.data.staffList;
-				var staffList = staffData.map((v)=>{
-					return v.name
-				});
-				staffList.unshift('无');
-				this.setState({
-					estateAllocationStaffList:staffList
-				})
-			}
-		});
-
-		//点击地图，取消房屋列表的选中项
-		this.props.baiduMap.addEventListener('click',()=>{
-			this.props.markerList.forEach((item)=>{
-				item.setAnimation(null)
+		//如果传入的estateList和当前的不同则初始化数据(用户再次点击excel上传按钮)
+		//需要重新初始化,注意这里nextProps里面不能检测数组，如果数组的引用不变，无法触发componentWillReceiveProps
+		//这里用另个一基本类型bool变量来判断是否上传了新的excel
+		if(nextProps.isEstateListUpdated !== this.props.isEstateListUpdated){
+			this.setState({
+				selectedMarker:null,
+				isSmartChooseOn:true,
+				isDefaultSortOrUnallocated:false,
+				popConfirmVisible:false,
+				leftUnallocatedCnt:0,
+				selfEstateList:this.processEstateList(nextProps.estateList)
 			});
-			//重置index取消右侧列表选中项
-			store.dispatch(UpdateEstateListSelectedIndex(-1));
-		});
+			this.initWorks(nextProps.estateList);
+		}
+	}
+	//组件加载时的初始化工作
+	initWorks(list){
 		//更新redux
-		var estateList = this.processEstateList(this.props.estateList);
+		var estateList = this.processEstateList(list);
 		store.dispatch(UpdateEstateDataList(estateList));
 		//初始化派单结果对象,将key初始化为房地产名,注意这里用cnt记录了出现的次数
 		//注意这里多个相同的房屋拥有不同的序号，需要记录下这些序号
@@ -123,7 +108,37 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		this.setState({
 			estateAllocationResult:resultObj,
 			selfEstateList:estateList
-		})
+		});
+	}
+	componentDidMount(){
+		//点击地图，取消房屋列表的选中项
+		this.props.baiduMap.addEventListener('click',()=>{
+			this.props.markerList.forEach((item)=>{
+				item.setAnimation(null)
+			});
+			//重置index取消右侧列表选中项
+			store.dispatch(UpdateEstateListSelectedIndex(-1));
+		});
+		//获取房屋派单人员
+		axios.get('/staff_arrange/getStaff').then((resp)=>{
+			if(resp.data.status===-1){
+				Modal.error({
+					title: '糟糕！',
+					content: '数据读取出错，请重试~',
+				});
+			}else{
+				var staffData = resp.data.staffList;
+				var staffList = staffData.map((v)=>{
+					return v.name
+				});
+				staffList.unshift('无');
+				this.setState({
+					estateAllocationStaffList:staffList
+				})
+			}
+		});
+		//初始化
+		this.initWorks(this.props.estateList)
 	}
 	//智能选择开关
 	handleSwitchChange(v){
@@ -191,14 +206,29 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				estateName:location,
 				regionName:regionName,
 				location:item[0],
-				estateIndex:item[1]['A']
+				estateIndex:parseInt(item[1]['A'],10)
 			}
 		});
 
 		//按区域排序
 		retList.sort(function(a,b){return a.regionName.localeCompare(b.regionName)})
 		retList = retList.map((v,idx)=>{
-			return Object.assign(v,{index:idx+1})
+			return Object.assign(v,{
+				index:idx+1,
+				unchangedIndex:idx+1
+			})
+		});
+		//按默认规则排序
+		retList.sort(function(a,b){
+			//区域名相同按序号从小到大排列
+			if(a.regionName === b.regionName){
+				return a.estateIndex - b.estateIndex
+			}
+			return a.regionName.localeCompare(b.regionName)
+		});
+		//改变selfEstateList里面index的值，按顺序排列
+		retList.forEach((item,idx)=>{
+			item.unchangedIndex = idx+1;
 		});
 		return retList;
 	}
@@ -284,8 +314,18 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			});
 		}else{
 			//如果是按未分配排序，则切换到默认排序
-			t.sort(function(a,b){return a.regionName.localeCompare(b.regionName)});
+			t.sort(function(a,b){
+				//区域名相同按序号从小到大排列
+				if(a.regionName === b.regionName){
+					return a.estateIndex - b.estateIndex
+				}
+				return a.regionName.localeCompare(b.regionName)
+			});
 		}
+		//改变selfEstateList里面index的值，按顺序排列
+		t.forEach((item,idx)=>{
+			item.unchangedIndex = idx+1;
+		});
 		this.setState({
 			selfEstateList:t,
 			isDefaultSortOrUnallocated:!this.state.isDefaultSortOrUnallocated
@@ -412,7 +452,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 							//List.item.meta的title用reactNode表示，因为要处理不同的颜色,默认是string，很局限
 							let titleNode = (
 								<span>
-									{item.regionName} <span className="estate-allocated-staff-highlight">{this.state.estateAllocationResult[item.estateName].staffName ? '['+this.state.estateAllocationResult[item.estateName].staffName+']':null}</span>
+									{item.regionName}-{item.estateIndex} <span className="estate-allocated-staff-highlight">{this.state.estateAllocationResult[item.estateName].staffName ? '['+this.state.estateAllocationResult[item.estateName].staffName+']':null}</span>
 								</span>
 							);
 							return (
@@ -433,7 +473,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 											description={item.estateName}
 											avatar={<Avatar
 												style={this.props.estateSelectedIndex === item.index ? {backgroundColor: '#1890ff'} : {backgroundColor: '#39ac6a'}}
-												size="small">{item.index}</Avatar>}
+												size="small">{item.unchangedIndex}</Avatar>}
 										/>
 									</List.Item>
 								</Element>

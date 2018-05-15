@@ -35,7 +35,7 @@ class HouseArrangePanel extends React.Component{
 											<HouseArrangeStaffConfigSubPanel />
 										</TabPane>
 										<TabPane tab="派单" key="2">
-											<HouseArrangeAllocationSubPanel />
+											<HouseArrangeAllocationSubPanel isEstateListUpdated={this.props.isEstateListUpdated}/>
 										</TabPane>
 									</Tabs>
 								</div>
