@@ -14,6 +14,7 @@ class NormalAssesment extends React.Component{
 	}
 	render(){
 		//上传word相关配置项,name字段用于标记服务端req.files里面对应的文件
+		let self = this;
 		let uploadProps = {
 			name:'wordPreReport',
 			action:'/normal_assesment/getPreReportDocx',
@@ -28,7 +29,7 @@ class NormalAssesment extends React.Component{
 				const status = file.status;
 				//文件上传完成返回数据
 				if (status === 'done') {
-					this.setState({
+					self.setState({
 						preReportParagraphData:file.response.data
 					})
 

@@ -13,7 +13,6 @@ var admZip = require('adm-zip');
 //路由
 var router = express.Router();
 
-
 //上传正报对应的预评估报告
 router.post('/getPreReportDocx',multiparty(),function(req,res,next){
 	//获得文件名,注意此处的wordPre是前端设置的name字段值
@@ -22,7 +21,7 @@ router.post('/getPreReportDocx',multiparty(),function(req,res,next){
 	var targetPath = './../public/tempFiles/tempPreReportFile/' + filename;
 	var fileReadStream = fs.createReadStream(req.files.wordPreReport.path);
 	var fileWriteStream = fs.createWriteStream(targetPath);
-	var fullPath = __dirname+targetPath
+	var fullPath = path.join(__dirname,targetPath);
 	//复制文件到指定目录保存
 	fileReadStream.pipe(fileWriteStream);
 	//文件写入完成，异步操作,注意错误处理，防止崩溃

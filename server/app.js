@@ -40,8 +40,9 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-//设置静态文件目录
+//设置静态文件目录,注意是2个，views是最终的打包结果
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'views')));
 
 //路由中间件
 app.use('/', index);

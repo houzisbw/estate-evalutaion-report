@@ -221,22 +221,26 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 					item.setStyle(this.state.defaultLabelStyle)
 				}
 			}else{
-				//显示房地产编号
+				//如果是显示房地产编号
 				let labelContent = item.getContent();
 				//获取内容前面的index部分
 				let splitted = labelContent.split(' ');
 				let labelIndexPart = splitted[0];
 				let staffNamePart = splitted.length>1?splitted[1]:null;
-				if(tempResult[this.state.estateIndexToEstateNameObj[labelIndexPart]]){
-					//如果该label对应的文本被选中,则变成灰色
-					item.setStyle(this.state.allocatedLabelStyle);
-					//将内容设置为index+人员名字
-					if(staffName==='无'){
-						item.setContent(labelIndexPart+' ['+staffNamePart.substring(1,staffNamePart.length-1)+']');
-					}else{
-						item.setContent(labelIndexPart+' ['+staffName+']');
+				//获取该房屋对应的已分配员工姓名，可能为空
+				let allocatedStaffName = tempResult[this.state.estateIndexToEstateNameObj[labelIndexPart]];
+				if(allocatedStaffName){
+					//如果是对应的姓名
+					if(allocatedStaffName === staffName){
+						//如果该label对应的文本被选中,则变成灰色
+						item.setStyle(this.state.allocatedLabelStyle);
+						//将内容设置为index+人员名字
+						if(staffName==='无'){
+							item.setContent(labelIndexPart+' ['+staffNamePart.substring(1,staffNamePart.length-1)+']');
+						}else{
+							item.setContent(labelIndexPart+' ['+staffName+']');
+						}
 					}
-
 				}else{
 					//默认绿色
 					item.setStyle(this.state.defaultLabelStyle);

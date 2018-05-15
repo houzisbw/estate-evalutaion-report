@@ -143,7 +143,7 @@ class WordTemplateManagement extends React.Component{
 		}
 		//注意文件下载不能用ajax发送请求到后台，ajax默认会返回文件data数据而不是文件下载
 		//问题终于搞懂，必须考虑代理，因为是开发环境，3000端口被代理到5000，生产环境可以不加http://localhost:5000(默认就是5000端口)
-		window.location.href=`http://localhost:5000/estate/wordDownload?docName=${docName}&type=${param.type}`;
+		window.location.href=`/estate/wordDownload?docName=${docName}&type=${param.type}`;
 	}
 	//处理修改word请求,修改其实就是重新上传文件覆盖原来的word文件
 	//这里有要求:word必须名字和原来word的一样才行，否则会覆盖其他的
