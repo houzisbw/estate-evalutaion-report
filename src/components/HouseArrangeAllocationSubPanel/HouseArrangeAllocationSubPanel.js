@@ -15,7 +15,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
-			//分配结果，对象，key为房地产名，value为人员
+			//分配结果，对象，key为房地产名，value为{staffName,cnt},因为有重复的房屋，所以得用cnt记录下次数
 			estateAllocationResult:{},
 			//选中标签的颜色
 			highLightLabelStyle:{
@@ -103,10 +103,20 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		//更新redux
 		var estateList = this.processEstateList(this.props.estateList);
 		store.dispatch(UpdateEstateDataList(estateList));
-		//初始化派单结果对象,将key初始化为房地产名
+		//初始化派单结果对象,将key初始化为房地产名,注意这里用cnt记录了出现的次数
+		//注意这里多个相同的房屋拥有不同的序号，需要记录下这些序号
 		var resultObj = {};
 		estateList.forEach((item)=>{
-			resultObj[item.estateName]=null;
+			if(!resultObj[item.estateName]){
+				resultObj[item.estateName] = {
+					staffName:null,
+					cnt:1,
+					indexList:[item.estateIndex]
+				}
+			}else{
+				resultObj[item.estateName].cnt++;
+				resultObj[item.estateName].indexList.push(item.estateIndex)
+			}
 		});
 		//存储对应关系
 		this.mapIndexToName();
@@ -180,7 +190,8 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			return {
 				estateName:location,
 				regionName:regionName,
-				location:item[0]
+				location:item[0],
+				estateIndex:item[1]['A']
 			}
 		});
 
@@ -199,11 +210,11 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		if(this.state.isSmartChooseOn){
 			for(var key in tempResult){
 				if(tempResult.hasOwnProperty(key) && key.indexOf(regionName)!==-1){
-					tempResult[key]= (staffName==='无')?null:staffName;
+					tempResult[key].staffName= (staffName==='无')?null:staffName;
 				}
 			}
 		}else{
-			tempResult[estateName] = (staffName==='无')?null:staffName;
+			tempResult[estateName].staffName = (staffName==='无')?null:staffName;
 		}
 		//marker的label类型
 		var labelType = this.props.labelType;
@@ -213,8 +224,8 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		labelList.forEach((item)=>{
 			//如果是显示房地产名称
 			if(labelType === 'ESTATE_NAME'){
-				if(tempResult[item.getContent()]){
-					//如果该label对应的文本被选中,则变成灰色
+				if(tempResult[item.getContent()].staffName){
+					//如果该label对应的文本已经被分配,则变成灰色
 					item.setStyle(this.state.allocatedLabelStyle)
 				}else{
 					//默认绿色
@@ -228,7 +239,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				let labelIndexPart = splitted[0];
 				let staffNamePart = splitted.length>1?splitted[1]:null;
 				//获取该房屋对应的已分配员工姓名，可能为空
-				let allocatedStaffName = tempResult[this.state.estateIndexToEstateNameObj[labelIndexPart]];
+				let allocatedStaffName = tempResult[this.state.estateIndexToEstateNameObj[labelIndexPart]].staffName;
 				if(allocatedStaffName){
 					//如果是对应的姓名
 					if(allocatedStaffName === staffName){
@@ -264,9 +275,9 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		if(!this.state.isDefaultSortOrUnallocated){
 			//如果是默认排序，则切换到按未分配排序
 			t.sort(function(a,b){
-				if(resultObj[a.estateName]&&!resultObj[b.estateName]){
+				if(resultObj[a.estateName].staffName && !resultObj[b.estateName].staffName){
 					return 1
-				}else if(!resultObj[a.estateName]&&resultObj[b.estateName]){
+				}else if(!resultObj[a.estateName].staffName && resultObj[b.estateName].staffName){
 					return -1
 				}
 				return 0
@@ -292,8 +303,8 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		}
 		let allocatedCnt = 0;
 		for(var key in this.state.estateAllocationResult){
-			if(this.state.estateAllocationResult.hasOwnProperty(key) && this.state.estateAllocationResult[key]){
-				allocatedCnt++;
+			if(this.state.estateAllocationResult.hasOwnProperty(key) && this.state.estateAllocationResult[key].staffName){
+				allocatedCnt+=this.state.estateAllocationResult[key].cnt;
 			}
 		}
 		//若没有分配完成，提示用户是否继续
@@ -315,9 +326,14 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		var wb = window.XLSX.utils.book_new();
 		//根据房屋json数据生成worksheet
 		var estateJsonData = [];
-		for(var key in this.state.estateAllocationResult){
+		for(let key in this.state.estateAllocationResult){
 			if(this.state.estateAllocationResult.hasOwnProperty(key)){
-				estateJsonData.push({A:this.state.estateNameToIndexObj[key],B:key,C:this.state.estateAllocationResult[key]})
+				//读取estateAllocationResult里的cnt获取到相同房屋的次数
+				let cnt = this.state.estateAllocationResult[key].cnt;
+				let indexList = this.state.estateAllocationResult[key].indexList;
+				for(let i=1;i<=cnt;i++){
+					estateJsonData.push({A:indexList[i-1],B:key,C:this.state.estateAllocationResult[key].staffName})
+				}
 			}
 		}
 		//按编号从小到大排序
@@ -396,7 +412,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 							//List.item.meta的title用reactNode表示，因为要处理不同的颜色,默认是string，很局限
 							let titleNode = (
 								<span>
-									{item.regionName} <span className="estate-allocated-staff-highlight">{this.state.estateAllocationResult[item.estateName] ? '['+this.state.estateAllocationResult[item.estateName]+']':null}</span>
+									{item.regionName} <span className="estate-allocated-staff-highlight">{this.state.estateAllocationResult[item.estateName].staffName ? '['+this.state.estateAllocationResult[item.estateName].staffName+']':null}</span>
 								</span>
 							);
 							return (

@@ -190,27 +190,21 @@ class HouseReviewArrange extends React.Component{
 			//地址解析,用geoCoder，这里似乎并没有并发数量限制，注意如果某一行excel为空，则point也为空
 			var cnt=0;
 			var promiseList = [];
-			//去重，防止有重复地名
-			var estateNameUniqueObj = {};
 			for(let i=0;i<jsonData.length;i++){
 				//除去字符串中所有空格
 				jsonData[i]['A'] = jsonData[i]['A'].replace(/\s/g,'');
 				jsonData[i]['B'] = jsonData[i]['B'].replace(/\s/g,'');
-				if(!estateNameUniqueObj[jsonData[i]['B']]){
-					var promise = new Promise(function(resolve,reject){
-						myGeo.getPoint(jsonData[i]['B'], function(point){
-								if (point) {
-									tempLocationList.push([point,jsonData[i]]);
-									cnt++;
-								}
-								resolve()
-							},
-							"成都市");
-					});
-					promiseList.push(promise);
-				}
-				//去重
-				estateNameUniqueObj[jsonData[i]['B']]=true;
+				var promise = new Promise(function(resolve,reject){
+					myGeo.getPoint(jsonData[i]['B'], function(point){
+							if (point) {
+								tempLocationList.push([point,jsonData[i]]);
+								cnt++;
+							}
+							resolve()
+						},
+						"成都市");
+				});
+				promiseList.push(promise);
 			}
 			//等待所有异步请求都完成
 			var tempMarkerList = [];
