@@ -6,7 +6,11 @@ import './index.scss'
 import {connect} from 'react-redux'
 import store from './../../store/store'
 import axios from 'axios'
-import {UpdateEstateListSelectedIndex,UpdateEstateDataList,UpdateAllocationResultObj} from './../../store/actions/estateAllocation'
+import {UpdateEstateListSelectedIndex,
+		UpdateEstateDataList,
+		UpdateArrangeAction,
+		UpdateAllocationResultObj,
+		UpdateIndexToEstateNameObj} from './../../store/actions/estateAllocation'
 import {Switch,Tooltip,Button,List,Popconfirm,Avatar,Menu,Dropdown,Modal,notification} from 'antd'
 import {Element} from 'react-scroll'
 const MenuItem = Menu.Item;
@@ -179,6 +183,8 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			estateIndexToEstateNameObj:tempObj,
 			estateNameToIndexObj:tempObj2
 		});
+		//更新redux中数据
+		store.dispatch(UpdateIndexToEstateNameObj(tempObj))
 	}
 	//针对estateList进行处理，获取到新的列表[片区名，小区名字]
 	processEstateList(list){
@@ -292,7 +298,9 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 
 		});
 		//更新redux
-		store.dispatch(UpdateAllocationResultObj(tempResult))
+		store.dispatch(UpdateAllocationResultObj(tempResult));
+		//翻转标志变量表示操作更新了
+		store.dispatch(UpdateArrangeAction(!this.props.isArrange));
 		this.setState({
 			estateAllocationResult:tempResult
 		});
@@ -494,7 +502,8 @@ const mapStateToProps = (state)=>{
 		markerList:state.updateEstateAllocationState.markerList,
 		estateSelectedIndex:state.updateEstateAllocationState.estateSelectedIndex,
 		labelList:state.updateEstateAllocationState.labelList,
-		labelType:state.updateEstateAllocationState.labelType
+		labelType:state.updateEstateAllocationState.labelType,
+		isArrange:state.updateEstateAllocationState.isArrange
 	}
 };
 export default  connect(mapStateToProps)(HouseArrangeAllocationSubPanel)

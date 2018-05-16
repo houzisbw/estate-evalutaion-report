@@ -73,3 +73,19 @@ export const UpdateAllocationResultObj = (resultObj)=>{
 		result:resultObj
 	}
 }
+
+//存储{序号:房屋名}的对应关系
+export const UpdateIndexToEstateNameObj = (obj)=>{
+	return {
+		type:'UPDATE_INDEX_TO_ESTATE_NAME',
+		obj:obj
+	}
+}
+
+//存储是否进行了派单操作
+export const UpdateArrangeAction = (isArrange)=>{
+	return {
+		type:'UPDATE_ARRANGE_ACTION',
+		isArrange:isArrange
+	}
+}

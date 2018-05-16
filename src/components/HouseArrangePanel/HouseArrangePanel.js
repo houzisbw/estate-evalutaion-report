@@ -4,6 +4,7 @@ import './index.scss'
 import { Tabs } from 'antd';
 import HouseArrangeStaffConfigSubPanel from './../../components/HouseArrangeStaffConfigSubPanel/HouseArrangeStaffConfigSubPanel'
 import HouseArrangeAllocationSubPanel from './../../components/HouseArrangeAllocationSubPanel/HouseArrangeAllocationSubPanel'
+import HouseArrangeDetailSubPanel from './../../components/HouseArrangeDetailSubPanel/HouseArrangeDetailSubPanel'
 //动画库
 import {Motion,spring} from 'react-motion'
 const TabPane = Tabs.TabPane;
@@ -31,11 +32,14 @@ class HouseArrangePanel extends React.Component{
 								{/*此处div的id表示这个div用于设置popconfirm的挂载点，注意必须设置该div的position:relative，因为popconfirm的position是absolute*/}
 								<div id="ant-panel-wrapper">
 									<Tabs defaultActiveKey="1" >
-										<TabPane tab="看房人员配置" key="1">
+										<TabPane tab="人员设置" key="1">
 											<HouseArrangeStaffConfigSubPanel />
 										</TabPane>
-										<TabPane tab="派单" key="2">
+										<TabPane tab="派单操作" key="2">
 											<HouseArrangeAllocationSubPanel isEstateListUpdated={this.props.isEstateListUpdated}/>
+										</TabPane>
+										<TabPane tab="已派详情" key="3">
+											<HouseArrangeDetailSubPanel isEstateListUpdated={this.props.isEstateListUpdated}/>
 										</TabPane>
 									</Tabs>
 								</div>

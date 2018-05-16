@@ -11,7 +11,11 @@ const initialState = {
 	labelList:[],
 	//2种类型，ESTATE_NAME, ESTATE_INDEX
 	labelType:'ESTATE_NAME',
-	allocationResultObj:{}
+	allocationResultObj:{},
+	//{序号:房屋名}的对应对象
+	estateIndexToNameObj:{},
+	//进行派单操作的标记
+	isArrange:false
 };
 //处理房屋派单的reducer
 export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
@@ -57,6 +61,18 @@ export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
 	else if (action.type === 'UPDATE_ALLOCATION_RESULT'){
 		return Object.assign({},state,{
 			allocationResultObj:action.result
+		})
+	}
+	//序号和名字的对应关系
+	else if (action.type === 'UPDATE_INDEX_TO_ESTATE_NAME'){
+		return Object.assign({},state,{
+			estateIndexToNameObj:action.obj
+		})
+	}
+	//是否进行了派单操作
+	else if (action.type === 'UPDATE_ARRANGE_ACTION'){
+		return Object.assign({},state,{
+			isArrange:action.isArrange
 		})
 	}
 	//默认返回值

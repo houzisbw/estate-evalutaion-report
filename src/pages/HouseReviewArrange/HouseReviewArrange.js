@@ -115,7 +115,7 @@ class HouseReviewArrange extends React.Component{
 					var content = this.state.locationList[i][1]['A'];
 					var pos = v.getPosition();
 					//对应的分配到的人员名字
-					let allocatedStaffName  = this.props.allocationResultObj[this.state.locationList[i][1]['B']];
+					let allocatedStaffName  = this.props.allocationResultObj[this.state.locationList[i][1]['B']].staffName;
 					//如果2者位置相同则找到对应的label
 					if(pos.lng === point.lng && pos.lat === point.lat){
 						v.setContent(content+(allocatedStaffName?' ['+allocatedStaffName+']':''));
@@ -263,8 +263,6 @@ class HouseReviewArrange extends React.Component{
 					self.state.map.addOverlay(marker);
 					tempMarkerList.push(marker);
 				}
-				//检查tempLocationList是否更新了(用于重新上传excel文件)
-				let isUpdated = self.checkUploadedExcelDataChanged(tempLocationList);
 				//更新redux房屋列表数据,便于其他组件获取
 				store.dispatch(UpdateEstateAllocationList(tempLocationList));
 				//更新marker到redux
@@ -275,35 +273,14 @@ class HouseReviewArrange extends React.Component{
 					markerList:tempMarkerList,
 					labelList:tempLabelList,
 					locationList:tempLocationList,
-					isEstateListUpdated:isUpdated ? !self.state.isEstateListUpdated : self.state.isEstateListUpdated
+					isEstateListUpdated:!self.state.isEstateListUpdated
 				})
 			})
 
 		}
 
 	}
-	//检查上传excel数据是否有变化
-	checkUploadedExcelDataChanged(list){
-		//获取当前redux的list
-		let currentListInRedux = this.props.estateList;
-		let isUpdated = false;
-		console.log(list, currentListInRedux)
-		if(currentListInRedux.length!==list.length){
-			isUpdated = true;
-		}else{
-			//判断2个estateList是否不同
-			let len = currentListInRedux.length;
-			for(var i=0;i<len;i++){
-				if( list[i][0].lng !== currentListInRedux[i][0].lng ||
-					list[i][0].lat !== currentListInRedux[i][0].lat)
-				{
-					isUpdated = true;
-					break;
-				}
-			}
-		}
-		return isUpdated
-	}
+
 	//显示/隐藏地图标注文本
 	handleToggleLabelShow(){
 		//隐藏label
