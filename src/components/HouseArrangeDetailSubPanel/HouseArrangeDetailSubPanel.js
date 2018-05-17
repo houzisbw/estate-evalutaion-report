@@ -22,12 +22,18 @@ class HouseArrangeDetailSubPanel extends React.Component{
 			this.setState({
 				allocationResultObj:nextProps.allocationResultObj
 			})
-		}
-		if(nextProps.isEstateListUpdated !== this.props.isEstateListUpdated){
+		//这里可以比较对象是因为mapStateToProps时新建了对象，地址不同了
+		}else if(nextProps.allocationResultObj !== this.props.allocationResultObj){
 			this.setState({
 				allocationResultObj:{}
 			})
 		}
+		// if(nextProps.isEstateListUpdated !== this.props.isEstateListUpdated){
+		// 	this.setState({
+		// 		allocationResultObj:{}
+		// 	})
+		// }
+
 	}
 	componentDidMount(){
 		axios.get('/staff_arrange/getStaff').then((resp)=>{
@@ -125,8 +131,9 @@ class HouseArrangeDetailSubPanel extends React.Component{
 	}
 }
 const mapStateToProps = (state)=>{
+	//注意这里用Object.assign来生成新的对象，防止检测不出对象的变化
 	return {
-		allocationResultObj:state.updateEstateAllocationState.allocationResultObj,
+		allocationResultObj:Object.assign({},state.updateEstateAllocationState.allocationResultObj),
 		estateIndexToEstateNameObj:state.updateEstateAllocationState.estateIndexToNameObj,
 		isArrange:state.updateEstateAllocationState.isArrange,
 		estateList:state.updateEstateAllocationState.estateList,

@@ -67,7 +67,15 @@ class HouseReviewArrange extends React.Component{
 			//默认marker的icon
 			defaultIcon:null,
 			//用户是否上传了新的excel文件
-			isEstateListUpdated:false
+			isEstateListUpdated:false,
+
+			//折线覆盖物
+			polyline:null,
+			polyPointArray:[],
+			lastPolyLine:null,
+
+			//是否处于画圈派单状态
+			isInDrawingMode:false
 
 		}
 	}
@@ -81,6 +89,7 @@ class HouseReviewArrange extends React.Component{
 	componentDidMount(){
 		//加载百度地图
 		let BMap = window.BMap;
+		let self = this;
 		this.setState({
 			map:new BMap.Map('house-position-baiduMap')
 		},()=>{
@@ -90,6 +99,26 @@ class HouseReviewArrange extends React.Component{
 			var opts = {type: window.BMAP_NAVIGATION_CONTROL_LARGE}
 			this.state.map.addControl(new BMap.NavigationControl(opts));
 			this.state.map.enableScrollWheelZoom(true);
+
+			// //折线覆盖物
+			// this.state.map.addEventListener('mousemove',function(e){
+			// 	self.state.polyPointArray.push(e.point)
+			// 	self.setState({
+			// 		polyPointArray:self.state.polyPointArray
+			// 	},()=>{
+			// 		if(self.state.lastPolyLine){
+			// 			self.state.map.removeOverlay(self.state.lastPolyLine)
+			// 		}
+			// 		let polylineOverlay = new window.BMap.Polyline(self.state.polyPointArray)
+			// 		self.state.map.addOverlay(polylineOverlay)
+			// 		self.setState({
+			// 			lastPolyLine:polylineOverlay
+			// 		})
+			// 	});
+			// });
+			// this.state.map.addEventListener('mousedown',()=> {
+			// 	console.log('mousedown')
+			// })
 			//保存map实例到redux
 			store.dispatch(SaveBaiduMapInstance(this.state.map))
 		})
@@ -326,6 +355,28 @@ class HouseReviewArrange extends React.Component{
 			this.setMarkerLabel(this.state.markerType)
 		});
 	}
+	//画圈派单按钮
+	toggleDrawCircleArrange(){
+		//如果不是处于画圈状态,则跳转到画圈状态，禁用地图缩放移动
+		if(!this.state.isInDrawingMode){
+			this.state.map.disableDragging();
+			this.state.map.disableScrollWheelZoom();
+			this.state.map.disableDoubleClickZoom();
+			this.state.map.disableKeyboard();
+		}else{
+			this.state.map.enableDragging();
+			this.state.map.enableScrollWheelZoom();
+			this.state.map.enableDoubleClickZoom();
+			this.state.map.enableKeyboard();
+		}
+		this.setState({
+			isInDrawingMode:!this.state.isInDrawingMode
+		})
+	}
+	//重新画圈
+	handleRedraw(){
+
+	}
 	render(){
 		return (
 			//百度地图容器
@@ -361,6 +412,40 @@ class HouseReviewArrange extends React.Component{
 							</span>
 						</div>
 					</div>
+				</div>
+				{/*左下角画圈派单的区域,这里进入画圈状态时需要隐藏地图上其他按钮*/}
+				<div className="map-left-bottom-button-area">
+					{
+						this.state.isInDrawingMode?(
+							<div>
+								<Tooltip title="退出画圈派单">
+									<Button icon="close"
+											style={{marginRight:'10px'}}
+											type="primary"
+											shape="circle"
+											onClick={()=>{this.toggleDrawCircleArrange()}}
+											size="large"/>
+								</Tooltip>
+								<Tooltip title="重新画圈">
+									<Button icon="sync"
+											style={{marginRight:'10px'}}
+											type="primary"
+											shape="circle"
+											onClick={()=>{this.handleRedraw()}}
+											size="large"/>
+								</Tooltip>
+							</div>
+						):(
+							<Tooltip title="画圈派单">
+								<Button icon="edit"
+										type="primary"
+										shape="circle"
+										onClick={()=>{this.toggleDrawCircleArrange()}}
+										size="large"/>
+							</Tooltip>
+						)
+					}
+
 				</div>
 				{/*隐藏/显示地图标注label的按钮*/}
 				{/*动画效果是动态添加类触发transition*/}
