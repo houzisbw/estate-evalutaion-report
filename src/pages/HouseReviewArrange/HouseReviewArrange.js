@@ -75,7 +75,13 @@ class HouseReviewArrange extends React.Component{
 			lastPolyLine:null,
 
 			//是否处于画圈派单状态
-			isInDrawingMode:false
+			isInDrawingMode:false,
+			//是否处于画圈派单中鼠标按下状态
+			isInMouseDown:false,
+			//默认鼠标样式
+			defaultCursorStyle:'',
+			//画圈完成后生成的多边形
+			ploygonAfterDraw:null
 
 		}
 	}
@@ -91,7 +97,8 @@ class HouseReviewArrange extends React.Component{
 		let BMap = window.BMap;
 		let self = this;
 		this.setState({
-			map:new BMap.Map('house-position-baiduMap')
+			//禁用地图可点击功能
+			map:new BMap.Map('house-position-baiduMap',{enableMapClick:false})
 		},()=>{
 			//成都市中心坐标
 			this.state.map.centerAndZoom(new BMap.Point(104.070611,30.665017), 15);
@@ -99,31 +106,146 @@ class HouseReviewArrange extends React.Component{
 			var opts = {type: window.BMAP_NAVIGATION_CONTROL_LARGE}
 			this.state.map.addControl(new BMap.NavigationControl(opts));
 			this.state.map.enableScrollWheelZoom(true);
-
-			// //折线覆盖物
-			// this.state.map.addEventListener('mousemove',function(e){
-			// 	self.state.polyPointArray.push(e.point)
-			// 	self.setState({
-			// 		polyPointArray:self.state.polyPointArray
-			// 	},()=>{
-			// 		if(self.state.lastPolyLine){
-			// 			self.state.map.removeOverlay(self.state.lastPolyLine)
-			// 		}
-			// 		let polylineOverlay = new window.BMap.Polyline(self.state.polyPointArray)
-			// 		self.state.map.addOverlay(polylineOverlay)
-			// 		self.setState({
-			// 			lastPolyLine:polylineOverlay
-			// 		})
-			// 	});
-			// });
-			// this.state.map.addEventListener('mousedown',()=> {
-			// 	console.log('mousedown')
-			// })
+			//设置默认鼠标样式
+			this.setState({
+				defaultCursorStyle:this.state.map.getDefaultCursor()
+			});
+			//添加鼠标移动事件，触发画线
+			this.state.map.addEventListener('mousemove',function(e){
+				//如果处于鼠标按下状态才能画线
+				if(self.state.isInMouseDown){
+					self.state.polyPointArray.push(e.point);
+					self.setState({
+						polyPointArray:self.state.polyPointArray
+					},()=>{
+						//除去上次的画线
+						if(self.state.lastPolyLine){
+							self.state.map.removeOverlay(self.state.lastPolyLine)
+						}
+						let polylineOverlay = new window.BMap.Polyline(self.state.polyPointArray,{
+							strokeColor:'#00ae66',
+							strokeOpacity:1
+						});
+						//添加新的画线
+						self.state.map.addOverlay(polylineOverlay);
+						self.setState({
+							lastPolyLine:polylineOverlay
+						})
+					});
+				}
+			});
+			//给地图设置鼠标按下事件
+			this.state.map.addEventListener('mousedown',(e)=> {
+				//如果处于派单状态下
+				if(this.state.isInDrawingMode){
+					this.setState({
+						isInMouseDown:true,
+						polyPointArray:[],
+						lastPolyLine:null
+					})
+				}
+			});
+			//给地图设置鼠标抬起事件
+			this.state.map.addEventListener('mouseup',(e)=> {
+				//如果处于派单状态下
+				if(this.state.isInDrawingMode){
+					//如果处于画线状态下
+					if(this.state.isInMouseDown){
+						//退出画线状态
+						this.setState({
+							isInMouseDown:false
+						});
+						//添加多边形覆盖物
+						var polygonAfterDraw = new window.BMap.Polygon(this.state.polyPointArray,{
+							strokeColor:'#00ae66',
+							strokeOpacity:1,
+							fillColor:'#00ae66',
+							fillOpacity:0.3
+						});
+						this.state.map.addOverlay(polygonAfterDraw);
+						//保存多边形,用于后续删除该多边形
+						this.setState({
+							ploygonAfterDraw:polygonAfterDraw
+						})
+						//计算房屋对于多边形的包含情况
+						this.caculateEstateContainedInPolygon(polygonAfterDraw);
+					}
+				}
+			});
 			//保存map实例到redux
 			store.dispatch(SaveBaiduMapInstance(this.state.map))
 		})
 	}
 
+	//计算多边形包含房屋的数量
+	caculateEstateContainedInPolygon(polygon){
+		//得到多边形的点数组
+		var pointArray = polygon.getPath();
+		//获取多边形的外包矩形
+		var bound = polygon.getBounds();
+		//在多边形内的点的数组
+		var pointInPolygonArray = [];
+		//计算每个点是否包含在该多边形内
+		for(var i=0;i<this.state.markerList.length;i++){
+			//该marker的坐标点
+			var markerPoint = this.state.markerList[i].getPosition();
+			if(this.isPointInPolygon(markerPoint,bound,pointArray)){
+				pointInPolygonArray.push(this.state.markerList[i])
+			}
+		}
+
+		//测试
+		for(var i=0;i<pointInPolygonArray.length;i++){
+			console.log(pointInPolygonArray[i].getLabel().getContent())
+		}
+
+	}
+	//判定一个点是否包含在多边形内
+	isPointInPolygon(point,bound,pointArray){
+		//首先判断该点是否在外包矩形内，如果不在直接返回false
+		if(!bound.containsPoint(point)){
+			return false;
+		}
+		//如果在外包矩形内则进一步判断
+		//该点往右侧发出的射线和矩形边交点的数量,若为奇数则在多边形内，否则在外
+		var crossPointNum = 0;
+		for(var i=0;i<pointArray.length;i++){
+			//获取2个相邻的点
+			var p1 = pointArray[i];
+			var p2 = pointArray[(i+1)%pointArray.length];
+			//如果点相等直接返回true
+			if((p1.lng===point.lng && p1.lat===point.lat)||(p2.lng===point.lng && p2.lat===point.lat)){
+				return true
+			}
+			//如果point在2个点所在直线的下方则continue
+			if(point.lat < Math.min(p1.lat,p2.lat)){
+				continue;
+			}
+			//如果point在2个点所在直线的上方则continue
+			if(point.lat > Math.max(p1.lat,p2.lat)){
+				continue;
+			}
+			//有相交情况:2个点一上一下,计算交点
+			//特殊情况2个点的横坐标相同
+			var crossPointLng;
+			if(p1.lng === p2.lng){
+				crossPointLng = p1.lng;
+			}else{
+				//计算2个点的斜率
+				var k = (p2.lat - p1.lat)/(p2.lng - p1.lng);
+				//得出水平射线与这2个点形成的直线的交点的横坐标
+				crossPointLng = (point.lat - p1.lat)/k + p1.lng;
+			}
+			//如果crossPointLng的值大于point的横坐标则算交点(因为是右侧相交)
+			if(crossPointLng > point.lng){
+				crossPointNum++;
+			}
+
+		}
+		//如果是奇数个交点则点在多边形内
+		return crossPointNum%2===1
+
+	}
 	//清除地图数据
 	clearMapData(){
 		this.setState({
@@ -356,18 +478,20 @@ class HouseReviewArrange extends React.Component{
 		});
 	}
 	//画圈派单按钮
-	toggleDrawCircleArrange(){
+	toggleDrawCircleArrange(e){
 		//如果不是处于画圈状态,则跳转到画圈状态，禁用地图缩放移动
 		if(!this.state.isInDrawingMode){
 			this.state.map.disableDragging();
 			this.state.map.disableScrollWheelZoom();
 			this.state.map.disableDoubleClickZoom();
 			this.state.map.disableKeyboard();
+			this.state.map.setDefaultCursor("url("+require('./../../assets/img/icon/pen.cur')+"),default");
 		}else{
 			this.state.map.enableDragging();
 			this.state.map.enableScrollWheelZoom();
 			this.state.map.enableDoubleClickZoom();
 			this.state.map.enableKeyboard();
+			this.state.map.setDefaultCursor(this.state.defaultCursorStyle);
 		}
 		this.setState({
 			isInDrawingMode:!this.state.isInDrawingMode
@@ -423,7 +547,7 @@ class HouseReviewArrange extends React.Component{
 											style={{marginRight:'10px'}}
 											type="primary"
 											shape="circle"
-											onClick={()=>{this.toggleDrawCircleArrange()}}
+											onClick={(e)=>{this.toggleDrawCircleArrange(e)}}
 											size="large"/>
 								</Tooltip>
 								<Tooltip title="重新画圈">
@@ -431,7 +555,7 @@ class HouseReviewArrange extends React.Component{
 											style={{marginRight:'10px'}}
 											type="primary"
 											shape="circle"
-											onClick={()=>{this.handleRedraw()}}
+											onClick={(e)=>{this.handleRedraw(e)}}
 											size="large"/>
 								</Tooltip>
 							</div>
@@ -440,7 +564,7 @@ class HouseReviewArrange extends React.Component{
 								<Button icon="edit"
 										type="primary"
 										shape="circle"
-										onClick={()=>{this.toggleDrawCircleArrange()}}
+										onClick={(e)=>{this.toggleDrawCircleArrange(e)}}
 										size="large"/>
 							</Tooltip>
 						)
