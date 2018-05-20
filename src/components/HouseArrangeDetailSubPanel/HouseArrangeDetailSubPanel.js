@@ -22,19 +22,15 @@ class HouseArrangeDetailSubPanel extends React.Component{
 			this.setState({
 				allocationResultObj:nextProps.allocationResultObj
 			})
-		//这里可以比较对象是因为mapStateToProps时新建了对象，地址不同了
-		}else if(nextProps.allocationResultObj !== this.props.allocationResultObj){
+		}
+		//当重新上传excel时清空已分配结果
+		if(this.props.isEstateListUpdated !== nextProps.isEstateListUpdated){
 			this.setState({
 				allocationResultObj:{}
 			})
 		}
-		// if(nextProps.isEstateListUpdated !== this.props.isEstateListUpdated){
-		// 	this.setState({
-		// 		allocationResultObj:{}
-		// 	})
-		// }
-
 	}
+
 	componentDidMount(){
 		axios.get('/staff_arrange/getStaff').then((resp)=>{
 			if(resp.data.status===-1){

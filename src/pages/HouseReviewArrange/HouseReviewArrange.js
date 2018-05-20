@@ -5,6 +5,7 @@ import React from 'react'
 import './index.scss'
 import axios from 'axios'
 import store from './../../store/store'
+import { bindActionCreators } from 'redux'
 //react滚动插件,scroller用于滚动到element处,可以不用link
 import {scroller} from 'react-scroll'
 //动画库
@@ -155,12 +156,13 @@ class HouseReviewArrange extends React.Component{
 						this.setState({
 							isInMouseDown:false
 						});
-						//添加多边形覆盖物
+						//添加多边形覆盖物,设置为禁止点击
 						var polygonAfterDraw = new window.BMap.Polygon(this.state.polyPointArray,{
 							strokeColor:'#00ae66',
 							strokeOpacity:1,
 							fillColor:'#00ae66',
-							fillOpacity:0.3
+							fillOpacity:0.3,
+							enableClicking:false
 						});
 						this.state.map.addOverlay(polygonAfterDraw);
 						//保存多边形,用于后续删除该多边形
@@ -173,7 +175,7 @@ class HouseReviewArrange extends React.Component{
 				}
 			});
 			//保存map实例到redux
-			store.dispatch(SaveBaiduMapInstance(this.state.map))
+			this.props.saveBaiduMapInstance(this.state.map)
 		})
 	}
 
@@ -266,7 +268,8 @@ class HouseReviewArrange extends React.Component{
 					var content = this.state.locationList[i][1]['A'];
 					var pos = v.getPosition();
 					//对应的分配到的人员名字
-					let allocatedStaffName  = this.props.allocationResultObj[this.state.locationList[i][1]['B']].staffName;
+					let tempObj  = this.props.allocationResultObj[this.state.locationList[i][1]['B']];
+					let allocatedStaffName  = tempObj?tempObj.staffName:'';
 					//如果2者位置相同则找到对应的label
 					if(pos.lng === point.lng && pos.lat === point.lat){
 						v.setContent(content+(allocatedStaffName?' ['+allocatedStaffName+']':''));
@@ -402,7 +405,7 @@ class HouseReviewArrange extends React.Component{
 						self.props.estateDataList.forEach((item)=>{
 							if(item.estateName === labelContent){
 								//通过更新redux数据来使得房屋列表组件数据更新
-								store.dispatch(UpdateEstateListSelectedIndex(item.index))
+								self.props.updateEstateListSelectedIndex(item.index)
 							}
 						})
 					});
@@ -415,11 +418,11 @@ class HouseReviewArrange extends React.Component{
 					tempMarkerList.push(marker);
 				}
 				//更新redux房屋列表数据,便于其他组件获取
-				store.dispatch(UpdateEstateAllocationList(tempLocationList));
+				self.props.updateEstateAllocationList(tempLocationList);
 				//更新marker到redux
-				store.dispatch(SaveMapEstateMarker(tempMarkerList));
+				self.props.saveMapEstateMarker(tempMarkerList);
 				//更新label到redux
-				store.dispatch(UpdateMapEstateLabel(tempLabelList));
+				self.props.updateMapEstateLabel(tempLabelList);
 				self.setState({
 					markerList:tempMarkerList,
 					labelList:tempLabelList,
@@ -467,9 +470,9 @@ class HouseReviewArrange extends React.Component{
 	handleRadioButtonChange(e){
 		var type = parseInt(e.target.value,10);
 		if(type === 1){
-			store.dispatch(UpdateMarkerLabelType('ESTATE_NAME'))
+			this.props.updateMarkerLabelType('ESTATE_NAME')
 		}else{
-			store.dispatch(UpdateMarkerLabelType('ESTATE_INDEX'))
+			this.props.updateMarkerLabelType('ESTATE_INDEX')
 		}
 		this.setState({
 			markerType:type
@@ -619,4 +622,15 @@ const mapStateToProps = (state)=>{
 		allocationResultObj:state.updateEstateAllocationState.allocationResultObj
 	}
 };
-export default  withRouter(connect(mapStateToProps)(HouseReviewArrange))
+//组件里面可直接使用props更新redux，不用import store
+const mapDispatchToProps = {} = (dispatch,ownProps)=>{
+	return bindActionCreators({
+		saveBaiduMapInstance: (state)=>SaveBaiduMapInstance(state),
+		updateMarkerLabelType: (type)=>UpdateMarkerLabelType(type),
+		updateEstateListSelectedIndex:(index)=>UpdateEstateListSelectedIndex(index),
+		updateEstateAllocationList:(list)=>UpdateEstateAllocationList(list),
+		saveMapEstateMarker:(marker)=>SaveMapEstateMarker(marker),
+		updateMapEstateLabel:(labelList)=>UpdateMapEstateLabel(labelList)
+	}, dispatch);
+};
+export default  withRouter(connect(mapStateToProps,mapDispatchToProps)(HouseReviewArrange))
