@@ -6,7 +6,7 @@ import './index.scss'
 import {connect} from 'react-redux'
 import store from './../../store/store'
 import axios from 'axios'
-import {Collapse,Modal,List } from 'antd'
+import {Collapse,Modal,List,message } from 'antd'
 const Panel = Collapse.Panel;
 class HouseArrangeDetailSubPanel extends React.Component{
 	constructor(props){

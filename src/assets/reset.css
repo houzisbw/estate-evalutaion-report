@@ -73,3 +73,9 @@ a{
     position: relative;
 }
 
+.ant-btn-primary{
+    background-color: #39ac6a!important;
+    border-color:#39ac6a!important;
+}
+
+

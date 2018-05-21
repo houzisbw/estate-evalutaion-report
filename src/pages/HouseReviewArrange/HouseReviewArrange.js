@@ -3,9 +3,8 @@
  */
 import React from 'react'
 import './index.scss'
-import axios from 'axios'
-import store from './../../store/store'
 import { bindActionCreators } from 'redux'
+import axios from 'axios'
 //react滚动插件,scroller用于滚动到element处,可以不用link
 import {scroller} from 'react-scroll'
 //动画库
@@ -19,9 +18,15 @@ import {UpdateEstateAllocationList,
 		UpdateMapEstateLabel} from './../../store/actions/estateAllocation'
 import {connect} from 'react-redux'
 import {withRouter} from 'react-router-dom'
-import {Modal,Icon,Button,Tooltip,Radio} from 'antd'
+import {Modal,Button,Tooltip,Radio,message} from 'antd'
 import HouseArrangePanel from './../../components/HouseArrangePanel/HouseArrangePanel'
+import DrawingResultArrangePanel from './../../components/DrawingArrangeResultPanel/DrawingArrangeResultPanel'
 const RadioGroup = Radio.Group;
+message.config({
+	getContainer:()=>document.getElementById('house-position-baiduMap'),
+	top:150,
+	maxCount: 2
+});
 class HouseReviewArrange extends React.Component{
 	constructor(props) {
 		super(props);
@@ -53,6 +58,8 @@ class HouseReviewArrange extends React.Component{
 				borderRadius:'3px',
 				boxShadow:'1px 2px 1px rgba(0,0,0,.15)'
 			},
+			//看房人员名单
+			staffList:[],
 			//excel上传文件是否正在读取中
 			isExcelReading:false,
 			//读取失败的timerid
@@ -71,7 +78,6 @@ class HouseReviewArrange extends React.Component{
 			isEstateListUpdated:false,
 
 			//折线覆盖物
-			polyline:null,
 			polyPointArray:[],
 			lastPolyLine:null,
 
@@ -82,7 +88,14 @@ class HouseReviewArrange extends React.Component{
 			//默认鼠标样式
 			defaultCursorStyle:'',
 			//画圈完成后生成的多边形
-			ploygonAfterDraw:null
+			ploygonAfterDraw:null,
+			//画圈是否完成
+			isDrawingComplete:false,
+
+			//画圈完成时的分配人员名字
+			allocatedStaffNameAfterDrawing:'',
+			//画圈完成时圈出的房屋列表
+			estateListAfterDrawing:[]
 
 		}
 	}
@@ -94,6 +107,8 @@ class HouseReviewArrange extends React.Component{
 	}
 
 	componentDidMount(){
+		//获取看房人员名单
+		this.getStaffList();
 		//加载百度地图
 		let BMap = window.BMap;
 		let self = this;
@@ -154,7 +169,8 @@ class HouseReviewArrange extends React.Component{
 					if(this.state.isInMouseDown){
 						//退出画线状态
 						this.setState({
-							isInMouseDown:false
+							isInMouseDown:false,
+							isDrawingComplete:true
 						});
 						//添加多边形覆盖物,设置为禁止点击
 						var polygonAfterDraw = new window.BMap.Polygon(this.state.polyPointArray,{
@@ -195,12 +211,28 @@ class HouseReviewArrange extends React.Component{
 				pointInPolygonArray.push(this.state.markerList[i])
 			}
 		}
-
-		//测试
-		for(var i=0;i<pointInPolygonArray.length;i++){
-			console.log(pointInPolygonArray[i].getLabel().getContent())
-		}
-
+		this.setState({
+			estateListAfterDrawing:pointInPolygonArray.map((item)=>{return item.getLabel().getContent()})
+		})
+	}
+	//获取看房人员名单
+	getStaffList(){
+		axios.get('/staff_arrange/getStaff').then((resp)=>{
+			if(resp.data.status===-1){
+				Modal.error({
+					title: '糟糕！',
+					content: '数据读取出错，请重试~',
+				});
+			}else{
+				var staffData = resp.data.staffList;
+				var staffList = staffData.map((v)=>{
+					return v.name
+				});
+				this.setState({
+					staffList:staffList
+				})
+			}
+		});
 	}
 	//判定一个点是否包含在多边形内
 	isPointInPolygon(point,bound,pointArray){
@@ -484,12 +516,14 @@ class HouseReviewArrange extends React.Component{
 	toggleDrawCircleArrange(e){
 		//如果不是处于画圈状态,则跳转到画圈状态，禁用地图缩放移动
 		if(!this.state.isInDrawingMode){
+			message.success('画圈功能已开启');
 			this.state.map.disableDragging();
 			this.state.map.disableScrollWheelZoom();
 			this.state.map.disableDoubleClickZoom();
 			this.state.map.disableKeyboard();
 			this.state.map.setDefaultCursor("url("+require('./../../assets/img/icon/pen.cur')+"),default");
 		}else{
+			message.warn('画圈功能已关闭');
 			this.state.map.enableDragging();
 			this.state.map.enableScrollWheelZoom();
 			this.state.map.enableDoubleClickZoom();
@@ -504,18 +538,70 @@ class HouseReviewArrange extends React.Component{
 	handleRedraw(){
 
 	}
+	//画圈完成是触发的对话框点击确定的回调
+	handleDrawingArrangeOK(){
+		this.setState({
+			isDrawingComplete:false
+		})
+	}
+	//重新画圈处理
+	handleDrawingArrangeCancel(){
+		//清除地图上画的圈和最后一个折线
+		this.state.map.removeOverlay(this.state.ploygonAfterDraw);
+		this.state.map.removeOverlay(this.state.lastPolyLine);
+		//清空数据结构
+		this.setState({
+			isDrawingComplete:false,
+			polyPointArray:[],
+			lastPolyLine:null,
+			ploygonAfterDraw:null,
+			estateListAfterDrawing:[]
+		})
+
+	}
+	//改变画圈派单选中人员的名字
+	handleChangeAllocatedStaff(name){
+		this.setState({
+			allocatedStaffNameAfterDrawing:name
+		})
+	}
 	render(){
+		let modalTitleNode = (
+			<div>
+				<span>人员分配面板</span>
+				<span style={{float:'right',fontSize:'13px'}}>看房人员: <span style={{color:'#39ac6a'}}>{this.state.allocatedStaffNameAfterDrawing?this.state.allocatedStaffNameAfterDrawing:'无'}</span></span>
+			</div>
+		);
 		return (
 			//百度地图容器
 			<div className="house-position-map-wrapper">
 				<div className="house-position-map" id="house-position-baiduMap">
 				</div>
+				{/*画圈完成后弹出的对话框*/}
+				<Modal
+					title={modalTitleNode}
+					okText="确认分配"
+					cancelText="重新画圈"
+					closable={false}
+					maskClosable={false}
+					bodyStyle={{height:'300px',padding:'0'}}
+					wrapClassName="vertical-center-modal"
+					visible={this.state.isDrawingComplete}
+					onOk={()=>{this.handleDrawingArrangeOK()}}
+					onCancel={()=>{this.handleDrawingArrangeCancel()}}
+				>
+					<DrawingResultArrangePanel
+						staffList={this.state.staffList}
+						estateList={this.state.estateListAfterDrawing}
+						changeAllocatedStaff={(name)=>{this.handleChangeAllocatedStaff(name)}}
+					/>
+				</Modal>
 				{/*右侧分配人员的面板*/}
 				<HouseArrangePanel togglePanel={()=>{this.toggleAllocationPanelOpen()}}
 								   isEstateListUpdated={this.state.isEstateListUpdated}
 								   isOpen={this.state.isAllocationPanelOpen}/>
 				{/*右侧栏操作区域*/}
-				<div className="right-side-map-operation-wrapper">
+				<div className={`right-side-map-operation-wrapper ${this.state.isInDrawingMode?'drawing-mode-hidden':''}`}>
 					{/*文件上传区域，上传excel,注意这里不上传到服务器，只是前端读取excel内容*/}
 					<div className="right-size-map-operation-block right-size-map-operation-block-file">
 						<div className="right-size-map-operation-block-title">
@@ -544,24 +630,14 @@ class HouseReviewArrange extends React.Component{
 				<div className="map-left-bottom-button-area">
 					{
 						this.state.isInDrawingMode?(
-							<div>
-								<Tooltip title="退出画圈派单">
-									<Button icon="close"
-											style={{marginRight:'10px'}}
-											type="primary"
-											shape="circle"
-											onClick={(e)=>{this.toggleDrawCircleArrange(e)}}
-											size="large"/>
-								</Tooltip>
-								<Tooltip title="重新画圈">
-									<Button icon="sync"
-											style={{marginRight:'10px'}}
-											type="primary"
-											shape="circle"
-											onClick={(e)=>{this.handleRedraw(e)}}
-											size="large"/>
-								</Tooltip>
-							</div>
+							<Tooltip title="退出画圈派单">
+								<Button icon="close"
+										style={{marginRight:'10px'}}
+										type="primary"
+										shape="circle"
+										onClick={(e)=>{this.toggleDrawCircleArrange(e)}}
+										size="large"/>
+							</Tooltip>
 						):(
 							<Tooltip title="画圈派单">
 								<Button icon="edit"
@@ -579,7 +655,7 @@ class HouseReviewArrange extends React.Component{
 				<Motion style={{x:spring(this.state.isAllocationPanelOpen?-350:0)}}>
 					{
 						({x}) => (
-							<div className="map-right-bottom-button-area" style={{
+							<div className={`map-right-bottom-button-area ${this.state.isInDrawingMode?'drawing-mode-hidden':''}`} style={{
 								transform: `translateX(${x}px)`
 							}}>
 								{/*注意，over和out事件都得放外层，因为其子元素都可以触发这2个事件*/}

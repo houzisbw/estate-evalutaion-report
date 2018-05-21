@@ -1,0 +1,30 @@
+.drawing-result-wrapper{
+  height:100%;
+  width:100%;
+  .drawing-result-left-wrapper{
+    float:left;
+    height:100%;
+    overflow: auto;
+    width:80%;
+    border-right:1px solid #e8e8e8;
+  }
+  .drawing-result-right-wrapper{
+    float:left;
+    height:100%;
+    overflow: auto;
+    width:20%;
+    .drawing-right-item-active{
+      background-color: #39ac6a;
+      color:#fff;
+    }
+    .drawing-result-right-item{
+      cursor:pointer;
+      transition: all .5s;
+      padding-left:10px;
+      &:hover{
+        background-color: #39ac6a;
+        color:#fff;
+      }
+    }
+  }
+}
