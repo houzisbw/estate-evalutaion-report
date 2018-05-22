@@ -9,6 +9,8 @@ import axios from 'axios'
 import {scroller} from 'react-scroll'
 //动画库
 import {Motion,spring} from 'react-motion'
+//eventEmitter
+import {emitter} from './../../EventEmitter'
 //actions
 import {UpdateEstateAllocationList,
 		SaveBaiduMapInstance,
@@ -140,7 +142,8 @@ class HouseReviewArrange extends React.Component{
 						}
 						let polylineOverlay = new window.BMap.Polyline(self.state.polyPointArray,{
 							strokeColor:'#00ae66',
-							strokeOpacity:1
+							strokeOpacity:1,
+							enableClicking:false
 						});
 						//添加新的画线
 						self.state.map.addOverlay(polylineOverlay);
@@ -482,7 +485,7 @@ class HouseReviewArrange extends React.Component{
 		}else{
 			//显示label
 			this.state.labelList.forEach((value)=>{
-				value.setStyle(this.state.markerLabelStyle)
+				value.setStyle({display:'block'})
 			});
 			this.setState({
 				showMarkerLabel:true
@@ -514,6 +517,11 @@ class HouseReviewArrange extends React.Component{
 	}
 	//画圈派单按钮
 	toggleDrawCircleArrange(e){
+		message.config({
+			getContainer:()=>document.getElementById('house-position-baiduMap'),
+			top:150,
+			maxCount: 2
+		});
 		//如果不是处于画圈状态,则跳转到画圈状态，禁用地图缩放移动
 		if(!this.state.isInDrawingMode){
 			message.success('画圈功能已开启');
@@ -534,15 +542,40 @@ class HouseReviewArrange extends React.Component{
 			isInDrawingMode:!this.state.isInDrawingMode
 		})
 	}
-	//重新画圈
-	handleRedraw(){
-
-	}
 	//画圈完成是触发的对话框点击确定的回调
 	handleDrawingArrangeOK(){
+		message.config({
+			getContainer:()=>document.getElementsByClassName('ant-modal-mask')[0],
+			top:100,
+			maxCount: 2
+		});
+		//判断如果没有数据则return
+		if(this.state.estateListAfterDrawing.length===0){
+			message.warn('房屋数据为空，无法分配!')
+			return
+		}
+		//如果未选择看房人员弹框提示
+		if(!this.state.allocatedStaffNameAfterDrawing){
+			message.warn('请选择看房人员!')
+			return
+		}
+		//处理人员分配结果,触发事件,参数是画圈选中的房屋列表和人员名字
+		let estateNameList = this.state.estateListAfterDrawing;
+		emitter.emit('handleDrawingArrangeClick',this.state.allocatedStaffNameAfterDrawing, estateNameList);
+
+		//调用重新画圈处理的方法
+		this.handleDrawingArrangeCancel();
 		this.setState({
 			isDrawingComplete:false
-		})
+		});
+		//提示用户分配成功
+		message.config({
+			getContainer:()=>document.getElementById('house-position-baiduMap'),
+			top:150,
+			maxCount: 2
+		});
+		message.success('房屋分配成功!')
+
 	}
 	//重新画圈处理
 	handleDrawingArrangeCancel(){

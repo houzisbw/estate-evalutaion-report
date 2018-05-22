@@ -6,6 +6,7 @@ import './index.scss'
 import {connect} from 'react-redux'
 import store from './../../store/store'
 import axios from 'axios'
+import {emitter} from './../../EventEmitter'
 import {UpdateEstateListSelectedIndex,
 		UpdateEstateDataList,
 		UpdateArrangeAction,
@@ -115,6 +116,10 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		});
 	}
 	componentDidMount(){
+		//处理画圈派单的派单操作
+		emitter.on('handleDrawingArrangeClick',(staffName,estateList)=>{
+			this.handleDrawingStaffArrange(staffName,estateList)
+		});
 		//点击地图，取消房屋列表的选中项
 		this.props.baiduMap.addEventListener('click',()=>{
 			this.props.markerList.forEach((item)=>{
@@ -238,20 +243,10 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		});
 		return retList;
 	}
-	//处理人员分配
-	handleMenuClick(staffName,estateName,regionName){
-		var tempResult = this.state.estateAllocationResult;
-		//处理人员和房产的分配结果
-		//如果智能选择开启
-		if(this.state.isSmartChooseOn){
-			for(var key in tempResult){
-				if(tempResult.hasOwnProperty(key) && key.indexOf(regionName)!==-1){
-					tempResult[key].staffName= (staffName==='无')?null:staffName;
-				}
-			}
-		}else{
-			tempResult[estateName].staffName = (staffName==='无')?null:staffName;
-		}
+
+	//分配人员后更新地图标注信息
+	updateMapMarkersAfterArrange(tempResult,staffName){
+		//处理地图上的标记
 		//marker的label类型
 		var labelType = this.props.labelType;
 		//地图上对应的marker的文本变成紫色
@@ -269,6 +264,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				}
 			}else{
 				//如果是显示房地产编号
+				//获取label的内容
 				let labelContent = item.getContent();
 				//获取内容前面的index部分
 				let splitted = labelContent.split(' ');
@@ -304,7 +300,45 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		this.setState({
 			estateAllocationResult:tempResult
 		});
+	}
 
+	//处理画圈派单的人员分配,这里将estateNameList里面的房屋都分配给同一个人
+	handleDrawingStaffArrange(staffName,estateNameList){
+		//已经分配的结果对象
+		var tempResult = this.state.estateAllocationResult;
+		//如果estateNameList是序号需要转成对应的房屋名
+		if(this.props.labelType!=='ESTATE_NAME'){
+			//获取序号estateNameList部分，后面可能有已分配的人名存在
+			estateNameList.forEach((item,index,arr)=>{
+				var indexPart = item.split(' ')[0];
+				arr[index] = this.state.estateIndexToEstateNameObj[indexPart]
+			})
+		}
+		//更新分配结果对象
+		estateNameList.forEach((estateName)=>{
+			tempResult[estateName].staffName = staffName;
+		});
+		//更新地图标记
+		this.updateMapMarkersAfterArrange(tempResult,staffName);
+		//提示用户分配成功
+
+	}
+	//处理人员分配
+	handleMenuClick(staffName,estateName,regionName){
+		var tempResult = this.state.estateAllocationResult;
+		//处理人员和房产的分配结果
+		//如果智能选择开启
+		if(this.state.isSmartChooseOn){
+			for(var key in tempResult){
+				if(tempResult.hasOwnProperty(key) && key.indexOf(regionName)!==-1){
+					tempResult[key].staffName= (staffName==='无')?null:staffName;
+				}
+			}
+		}else{
+			tempResult[estateName].staffName = (staffName==='无')?null:staffName;
+		}
+		//更新地图标记
+		this.updateMapMarkersAfterArrange(tempResult,staffName)
 	}
 	//房屋列表排序
 	handleSort(){

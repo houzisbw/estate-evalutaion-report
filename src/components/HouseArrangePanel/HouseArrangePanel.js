@@ -7,6 +7,7 @@ import HouseArrangeAllocationSubPanel from './../../components/HouseArrangeAlloc
 import HouseArrangeDetailSubPanel from './../../components/HouseArrangeDetailSubPanel/HouseArrangeDetailSubPanel'
 //动画库
 import {Motion,spring} from 'react-motion'
+import {connect} from 'react-redux'
 const TabPane = Tabs.TabPane;
 class HouseArrangePanel extends React.Component{
 	constructor(props){
@@ -32,13 +33,19 @@ class HouseArrangePanel extends React.Component{
 								{/*此处div的id表示这个div用于设置popconfirm的挂载点，注意必须设置该div的position:relative，因为popconfirm的position是absolute*/}
 								<div id="ant-panel-wrapper">
 									<Tabs defaultActiveKey="1" >
-										<TabPane tab="人员设置" key="1">
+										{/*forceRender必须设置，防止隐藏的时候不渲染*/}
+										<TabPane tab="人员设置" key="1" forceRender={true}>
 											<HouseArrangeStaffConfigSubPanel />
 										</TabPane>
-										<TabPane tab="派单操作" key="2">
-											<HouseArrangeAllocationSubPanel isEstateListUpdated={this.props.isEstateListUpdated}/>
-										</TabPane>
-										<TabPane tab="已派详情" key="3">
+										{/*这里需要判断baiduMap是否已经实例化，否则渲染会出错，因为forceRender设置为true，隐藏状态下也会渲染tabPane*/}
+										{
+											this.props.baiduMap?(
+												<TabPane tab="派单操作" key="2" forceRender={true}>
+													<HouseArrangeAllocationSubPanel isEstateListUpdated={this.props.isEstateListUpdated}/>
+												</TabPane>
+											):null
+										}
+										<TabPane tab="已派详情" key="3" forceRender={true}>
 											<HouseArrangeDetailSubPanel isEstateListUpdated={this.props.isEstateListUpdated}/>
 										</TabPane>
 									</Tabs>
@@ -51,4 +58,9 @@ class HouseArrangePanel extends React.Component{
 		)
 	}
 }
-export default  HouseArrangePanel
+const mapStateToProps = (state)=>{
+	return {
+		baiduMap:state.updateEstateAllocationState.map,
+	}
+};
+export default  connect(mapStateToProps)(HouseArrangePanel)
