@@ -7,6 +7,8 @@ import Header from './../Header/header'
 import SubHeader from './../SubHeader/SubHeader'
 import BackToTop from './../BackToTop/BackToTop'
 import {withRouter} from 'react-router-dom'
+//网页加载进度条
+import LoadingBar from './../LoadingBar/LoadingBar'
 class LayoutComponent extends React.Component{
 	render(){
 		//不显示backtop的路由
@@ -16,6 +18,8 @@ class LayoutComponent extends React.Component{
 		let isBackTopVisible = backToTopInvisibleRouters.indexOf(currentPath) === -1;
 		return (
 			<div className="layout-component-div">
+				{/*顶部页面加载进度条*/}
+				{/*<LoadingBar />*/}
 				{/*顶部导航条*/}
 				<Header />
 				{/*功能选择区域SubHeader*/}

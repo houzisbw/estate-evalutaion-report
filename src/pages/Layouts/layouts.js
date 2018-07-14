@@ -20,6 +20,8 @@ import PreAssesmentRouter from './../PreAssesment/PreAssesmentRouter'
 import NormalAssesmentRouter from './../NormalAssesment/NormalAssesmentRouter'
 //处理业务登记路由
 import BusinessRegistering from './../BusinessRegistering/BusinessRegistering'
+//当天看房情况路由
+import HouseArrangementRouter from './../HouseArrangementToday/HouserArrangementTodayRouter'
 class Layout extends React.Component{
 	componentWillMount(){
 		checkAuthentication();
@@ -41,6 +43,8 @@ class Layout extends React.Component{
 					<Route path="/app/business_registering" component={BusinessRegistering}/>
 					{/*看房派单分配*/}
 					<Route path="/app/arrange_house_review" component={HouseReviewArrangeRouter}/>
+					{/*当天看房情况*/}
+					<Route path="/app/house_arrangement_today" component={HouseArrangementRouter}/>
 					{/*正式报告页面总路由*/}
 					<Route path="/app/normal_assesment" component={NormalAssesmentRouter}/>
 					<Redirect from="/app" to="/app/pre_assesment"/>

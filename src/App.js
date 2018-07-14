@@ -6,7 +6,15 @@ import Layout from './pages/Layouts/layouts'
 import AuthorizedRoute from './routes/AuthorizedRoute'
 import store from './store/store'
 import {Provider} from 'react-redux'
+
 class App extends Component {
+    // constructor(){
+    //     super()
+		// document.onreadystatechange = ()=>{
+		// 	console.log(document.readyState)
+		// }
+    // }
+
   render() {
     return (
         <Provider store={store}>

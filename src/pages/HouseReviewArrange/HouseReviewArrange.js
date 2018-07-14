@@ -25,7 +25,6 @@ import HouseArrangePanel from './../../components/HouseArrangePanel/HouseArrange
 import DrawingResultArrangePanel from './../../components/DrawingArrangeResultPanel/DrawingArrangeResultPanel'
 const RadioGroup = Radio.Group;
 message.config({
-	getContainer:()=>document.getElementById('house-position-baiduMap'),
 	top:150,
 	maxCount: 2
 });
@@ -518,7 +517,6 @@ class HouseReviewArrange extends React.Component{
 	//画圈派单按钮
 	toggleDrawCircleArrange(e){
 		message.config({
-			getContainer:()=>document.getElementById('house-position-baiduMap'),
 			top:150,
 			maxCount: 2
 		});
@@ -545,7 +543,6 @@ class HouseReviewArrange extends React.Component{
 	//画圈完成是触发的对话框点击确定的回调
 	handleDrawingArrangeOK(){
 		message.config({
-			getContainer:()=>document.getElementsByClassName('ant-modal-mask')[0],
 			top:100,
 			maxCount: 2
 		});
@@ -570,7 +567,6 @@ class HouseReviewArrange extends React.Component{
 		});
 		//提示用户分配成功
 		message.config({
-			getContainer:()=>document.getElementById('house-position-baiduMap'),
 			top:150,
 			maxCount: 2
 		});

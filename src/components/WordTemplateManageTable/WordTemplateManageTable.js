@@ -14,13 +14,14 @@ class WordTemplateManageTable extends React.Component{
 	render(){
 		return (
 			//注意分页器必须自己写，因为每点击一次页码就要查询数据库而不是使用table默认的，无法自定义事件
-			<div>
+			//React.Fragment作用是不会在dom中增加额外的节点，比div好
+			<React.Fragment>
 				<Table columns={this.props.columns}
 					   pagination={false}
 					   loading={this.props.isLoading}
 					   dataSource={this.props.dataSource}
 				/>
-			</div>
+			</React.Fragment>
 		)
 	}
 }

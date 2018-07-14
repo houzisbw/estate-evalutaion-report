@@ -23,6 +23,10 @@ class NormalLoginForm extends React.Component {
 		}
 	}
 	handleSubmit = (e) => {
+		message.config({
+			top: 20,
+			duration:3
+		});
 		//阻止默认提交
 		e.preventDefault();
 		this.props.form.validateFields((err, values) => {

@@ -44,6 +44,12 @@ class SubHeader extends React.Component{
 				title:'看房派单分配',
 				auth:[0]
 			},
+			{
+				pathTo:currentPath+'/house_arrangement_today/show',
+				iconName:'fa fa-briefcase fa-fw',
+				title:'当天看房情况',
+				auth:[0]
+			},
 		];
 		//获取用户身份
 		let userAuth = this.props.userAuth;
