@@ -1,0 +1,43 @@
+.house-arrange-excel-wrapper{
+  margin: 20px;
+  .ant-card-head{
+    height:40px;
+    min-height: 40px;
+    line-height: 40px;
+    padding-right: 0;
+    .ant-card-head-title{
+      padding:0;
+      color: #787878 !important;
+    }
+  }
+  .isvisit-badge{
+    display: inline-block;
+    float:right;
+    font-size: 13px;
+    background-color: #39ac6a;
+    padding:0 10px;
+    color:#fff;
+  }
+  .novisit{
+    background-color: #ff9e1e;
+  }
+  .house-arrange-excel-content{
+    .house-arrange-excel-content-line-wrapper{
+      margin-bottom: 10px;
+      .house-arrange-excel-content-desc{
+        display: inline-block;
+        margin-left: 10px;
+        width:325px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        //防止文本与tag错位
+        vertical-align: bottom;
+      }
+    }
+    .no-margin-bottom{
+      margin-bottom: 0;
+    }
+
+  }
+}

@@ -89,3 +89,11 @@ export const UpdateArrangeAction = (isArrange)=>{
 		isArrange:isArrange
 	}
 }
+
+//存储派单中excel中所有的信息
+export const SaveExcelContent = (content)=>{
+	return {
+		type:'SAVE_EXCEL_CONTENT',
+		content:content
+	}
+}

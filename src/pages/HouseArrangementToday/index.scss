@@ -11,4 +11,44 @@
   .padding-right{
     padding-right:15px;
   }
+  .latest-visit-wrapper{
+    margin: 30px 0 20px 20px;
+    height:25px;
+    line-height: 25px;
+    .latest-visit-time{
+      color: #ffffff;
+      display: inline-block;
+      margin-left: 15px;
+      background-color: #39ac6a;
+      border-radius: 25px;
+      padding:0 10px;
+      font-size: 15px;
+      position: relative;
+      top:-4px;
+    }
+  }
+  .latest-visit-tab{
+    margin-top: 10px;
+    .ant-tabs-tab-active{
+      color:#39ac6a;
+      border-color: #39ac6a;
+    }
+    .ant-tabs-tab:hover{
+      color:#39ac6a;
+    }
+    .ant-tabs-tab{
+      text-align: center;
+      width:33.33333%;
+      margin-right:0;
+    }
+    .ant-tabs-ink-bar{
+      background-color: #39ac6a!important;
+    }
+    .ant-tabs-nav{
+      width:100%
+    }
+    .ant-tabs-content{
+      height:100%;
+    }
+  }
 }

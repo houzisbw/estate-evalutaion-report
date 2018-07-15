@@ -39,18 +39,25 @@ class NormalAssesment extends React.Component{
 			},
 		};
 		return (
-			<div className="my-page-wrapper">
-				<div className="page-title">
-					<div className="template-desc">
-						<span>选择报告模板</span>
+			<div>
+				<div className="my-page-wrapper">
+					<div className="page-title">
+						<div className="template-desc">
+							<span>选择报告模板</span>
+						</div>
+					</div>
+					<div className="template-content">
+						<div className="template-upload-wrapper">
+							<Upload {...uploadProps}>
+								<Button>
+									<Icon type="upload" /> 上传word文件
+								</Button>
+							</Upload>
+						</div>
 					</div>
 				</div>
-				<div className="template-content">
-					<Upload {...uploadProps}>
-						<Button>
-							<Icon type="upload" /> 上传word文件
-						</Button>
-					</Upload>
+				{/*补丁区域*/}
+				<div className="bottom-padding">
 				</div>
 			</div>
 		)

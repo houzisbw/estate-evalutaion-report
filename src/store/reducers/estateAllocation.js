@@ -15,7 +15,9 @@ const initialState = {
 	//{序号:房屋名}的对应对象
 	estateIndexToNameObj:{},
 	//进行派单操作的标记
-	isArrange:false
+	isArrange:false,
+	//派单中excel中所有的信息
+	excelTotalContent:[]
 };
 //处理房屋派单的reducer
 export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
@@ -73,6 +75,12 @@ export const UpdateEstateAllocationReducer = (state = initialState, action)=>{
 	else if (action.type === 'UPDATE_ARRANGE_ACTION'){
 		return Object.assign({},state,{
 			isArrange:action.isArrange
+		})
+	}
+	//存储派单上传的excel
+	else if (action.type === 'SAVE_EXCEL_CONTENT'){
+		return Object.assign({},state,{
+			excelTotalContent:action.content
 		})
 	}
 	//默认返回值

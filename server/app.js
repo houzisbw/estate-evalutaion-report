@@ -13,6 +13,7 @@ var estate = require('./routes/estate');
 var business_register = require('./routes/business_register');
 var staff_arrange = require('./routes/house_arrange');
 var normal_assesment = require('./routes/normal_assesment');
+var house_arrangement_today = require('./routes/house_arrangement_today');
 
 var app = express();
 
@@ -51,6 +52,7 @@ app.use('/estate',estate);
 app.use('/business_register',business_register);
 app.use('/staff_arrange',staff_arrange);
 app.use('/normal_assesment',normal_assesment);
+app.use('/house_arrangement_today',house_arrangement_today);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -12,12 +12,15 @@ import {Motion,spring} from 'react-motion'
 //eventEmitter
 import {emitter} from './../../EventEmitter'
 //actions
-import {UpdateEstateAllocationList,
+import {
+		UpdateEstateAllocationList,
 		SaveBaiduMapInstance,
 		SaveMapEstateMarker,
 		UpdateMarkerLabelType,
 		UpdateEstateListSelectedIndex,
-		UpdateMapEstateLabel} from './../../store/actions/estateAllocation'
+		UpdateMapEstateLabel,
+		SaveExcelContent
+} from './../../store/actions/estateAllocation'
 import {connect} from 'react-redux'
 import {withRouter} from 'react-router-dom'
 import {Modal,Button,Tooltip,Radio,message} from 'antd'
@@ -96,7 +99,10 @@ class HouseReviewArrange extends React.Component{
 			//画圈完成时的分配人员名字
 			allocatedStaffNameAfterDrawing:'',
 			//画圈完成时圈出的房屋列表
-			estateListAfterDrawing:[]
+			estateListAfterDrawing:[],
+
+			//上传的excel的全部内容,元素是对象
+			excelTotalContentList:[]
 
 		}
 	}
@@ -287,7 +293,8 @@ class HouseReviewArrange extends React.Component{
 		this.setState({
 			markerList:[],
 			locationList:[],
-			labelList:[]
+			labelList:[],
+			excelTotalContentList:[]
 		})
 		this.state.map.clearOverlays();
 	}
@@ -326,7 +333,24 @@ class HouseReviewArrange extends React.Component{
 			})
 		}
 	}
-
+	//保存excel内所有信息
+	saveExcelTotalContent(jsonData){
+		var tempList = [];
+		for(var i=0;i<jsonData.length;i++){
+			var obj = {
+				index:jsonData[i]['A'],
+				roadNumber:jsonData[i]['B']?jsonData[i]['B']:'',
+				detailPosition:jsonData[i]['C']?jsonData[i]['C']:'',
+				company:jsonData[i]['D']?jsonData[i]['D']:'',
+				bank:jsonData[i]['E']?jsonData[i]['E']:'',
+				area:jsonData[i]['F']?jsonData[i]['F']:'',
+				telephone:jsonData[i]['G']?jsonData[i]['G']:''
+			};
+			tempList.push(obj);
+		}
+		//redux保存数据
+		this.props.saveExcelContent(tempList)
+	}
 	//excel上传触发的函数
 	handleExcelChange(obj){
 		//清除地图数据
@@ -381,8 +405,11 @@ class HouseReviewArrange extends React.Component{
 			//地址解析,用geoCoder，这里似乎并没有并发数量限制，注意如果某一行excel为空，则point也为空
 			var cnt=0;
 			var promiseList = [];
+			//保存excel内所有信息
+			self.saveExcelTotalContent(jsonData);
+			//解析房屋地址
 			for(let i=0;i<jsonData.length;i++){
-				//除去字符串中所有空格
+				//第一列和第二列：序号 和 房屋地址
 				jsonData[i]['A'] = jsonData[i]['A'].replace(/\s/g,'');
 				jsonData[i]['B'] = jsonData[i]['B'].replace(/\s/g,'');
 				var promise = new Promise(function(resolve,reject){
@@ -735,7 +762,8 @@ const mapDispatchToProps = {} = (dispatch,ownProps)=>{
 		updateEstateListSelectedIndex:(index)=>UpdateEstateListSelectedIndex(index),
 		updateEstateAllocationList:(list)=>UpdateEstateAllocationList(list),
 		saveMapEstateMarker:(marker)=>SaveMapEstateMarker(marker),
-		updateMapEstateLabel:(labelList)=>UpdateMapEstateLabel(labelList)
+		updateMapEstateLabel:(labelList)=>UpdateMapEstateLabel(labelList),
+		saveExcelContent:(content)=>SaveExcelContent(content)
 	}, dispatch);
 };
 export default  withRouter(connect(mapStateToProps,mapDispatchToProps)(HouseReviewArrange))

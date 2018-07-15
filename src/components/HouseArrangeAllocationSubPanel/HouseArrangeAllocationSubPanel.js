@@ -429,6 +429,36 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		window.XLSX.utils.book_append_sheet(wb, ws, '分配结果');
 		//下载
 		window.XLSX.writeFile(wb,'看房配分结果.xlsx');
+		//保存excel全部的数据到数据库
+		this.saveExcelContentToDB(this.props.totalExcelContent);
+	}
+	//保存excel全部的数据到数据库
+	saveExcelContentToDB(data){
+		if(!data || data.length === 0){
+			notification['error']({
+				message: '注意',
+				description: 'Excel数据为空，保存失败!',
+			});
+			return;
+		}
+		//保存
+		axios.post('/house_arrangement_today/saveExcelToDB',{
+			excelData:data
+		}).then((resp)=>{
+			if(resp.data.status===-1){
+				Modal.error({
+					title: '糟糕！',
+					content: '数据保存出错，请重试~',
+				});
+			}else{
+				//提示用户数据保存成功
+				notification['success']({
+					message: '恭喜',
+					description: 'Excel数据保存成功!请到[当天看房情况]页面查看详情',
+					duration:4
+				});
+			}
+		});
 	}
 	//生成excel
 	handleExcelGenerate(type){
@@ -537,7 +567,8 @@ const mapStateToProps = (state)=>{
 		estateSelectedIndex:state.updateEstateAllocationState.estateSelectedIndex,
 		labelList:state.updateEstateAllocationState.labelList,
 		labelType:state.updateEstateAllocationState.labelType,
-		isArrange:state.updateEstateAllocationState.isArrange
+		isArrange:state.updateEstateAllocationState.isArrange,
+		totalExcelContent:state.updateEstateAllocationState.excelTotalContent
 	}
 };
 export default  connect(mapStateToProps)(HouseArrangeAllocationSubPanel)
