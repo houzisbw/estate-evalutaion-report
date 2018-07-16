@@ -25,24 +25,24 @@ router.post('/login', function(req, res, next) {
           if(doc){
             //密码不正确
             if(doc.password !== password){
-				res.json({
-					status:2
-				})
+							res.json({
+								status:2
+							})
             }else{
-                //设置cookie,token等
-				let payload = {
-					iss:username
-				};
-				let token = jwt.encode(payload,jwtSecret);
-				//选择了记住我,cookie保存一周,不设置maxAge选项则浏览器窗口关闭后cookie消失,刷新页面并不会导致cookie消失
-				//httpOnly如果设置了该选项则客户端js无法操作cookie，甚至无法查看
-				if(remember === '1'){
-					res.cookie('usertoken', token, {
-						path: '/',
-						//最大存活时间,单位:毫秒
-						maxAge: cookieMaxAge
+											//设置cookie,token等
+							let payload = {
+								iss:username
+							};
+							let token = jwt.encode(payload,jwtSecret);
+							//选择了记住我,cookie保存一周,不设置maxAge选项则浏览器窗口关闭后cookie消失,刷新页面并不会导致cookie消失
+							//httpOnly如果设置了该选项则客户端js无法操作cookie，甚至无法查看
+							if(remember === '1'){
+								res.cookie('usertoken', token, {
+									path: '/',
+									//最大存活时间,单位:毫秒
+									maxAge: cookieMaxAge
 
-					});
+								});
 				}else{
 					console.log('not remember')
 					res.cookie('usertoken', token, {

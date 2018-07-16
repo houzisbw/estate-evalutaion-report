@@ -1,5 +1,24 @@
 .house-arrange-excel-wrapper{
   margin: 20px;
+  //modal对话框垂直居中
+  .vertical-center-modal {
+    text-align: center;
+    white-space: nowrap;
+  }
+  .vertical-center-modal:before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    width: 0;
+  }
+  .vertical-center-modal .ant-modal {
+    display: inline-block;
+    vertical-align: middle;
+    top: 0;
+    text-align: left;
+  }
+
   .ant-card-head{
     height:40px;
     min-height: 40px;
@@ -9,6 +28,9 @@
       padding:0;
       color: #787878 !important;
     }
+  }
+  .ant-card-hoverable{
+    cursor: default!important;
   }
   .isvisit-badge{
     display: inline-block;
@@ -24,6 +46,9 @@
   .house-arrange-excel-content{
     .house-arrange-excel-content-line-wrapper{
       margin-bottom: 10px;
+      .ready-to-feed{
+        color: #ff9e1e;
+      }
       .house-arrange-excel-content-desc{
         display: inline-block;
         margin-left: 10px;
@@ -33,6 +58,9 @@
         white-space: nowrap;
         //防止文本与tag错位
         vertical-align: bottom;
+      }
+      .short-desc{
+        width:auto;
       }
     }
     .no-margin-bottom{

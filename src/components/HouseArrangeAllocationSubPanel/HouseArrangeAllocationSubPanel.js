@@ -418,19 +418,54 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				}
 			}
 		}
+
+		//保存excel全部的数据到数据库,这里需要加上每个人的分配情况
+		var totalExcelContent = this.props.totalExcelContent;
+		//遍历分配结果estateJsonData，给totalExcelContent的每一项添加分配人员
+		for(var i=0;i<estateJsonData.length;i++){
+				var estateName = estateJsonData[i].B;
+				//在给totalExcelContent中找到对应的项并加上分配人员属性
+				for(var j=0;j<totalExcelContent.length;j++){
+					if(totalExcelContent[j].roadNumber === estateName){
+						totalExcelContent[j].staffName = estateJsonData[i].C;
+						break;
+					}
+				}
+		}
+		//生成新的保存到excel中的数据
+		var dataInExcel = [];
+		for(var i=0;i<totalExcelContent.length;i++){
+			var d = totalExcelContent[i];
+			//只保存已分配的数据
+			if(d.staffName){
+				dataInExcel.push({
+					A:d.index,
+					B:d.roadNumber,
+					C:d.detailPosition,
+					D:d.company,
+					E:d.bank,
+					F:d.area,
+					G:d.telephone,
+					H:d.staffName
+				})
+			}
+		}
 		//按编号从小到大排序
-		estateJsonData.sort(function(a,b){
+		dataInExcel.sort(function(a,b){
 			return parseInt(a.A,10) - parseInt(b.A,10)
 		});
-		var ws = window.XLSX.utils.json_to_sheet(estateJsonData,{
-			headers:['A','B','C'],skipHeader:true
+		var ws = window.XLSX.utils.json_to_sheet(dataInExcel,{
+			headers:['A','B','C','D','E','F','G','H'],skipHeader:true
 		});
 		//将worksheet添加到工作簿上
 		window.XLSX.utils.book_append_sheet(wb, ws, '分配结果');
 		//下载
 		window.XLSX.writeFile(wb,'看房配分结果.xlsx');
-		//保存excel全部的数据到数据库
-		this.saveExcelContentToDB(this.props.totalExcelContent);
+		//保存数据库,只保存已分配的数据,item.staffName为null则去掉
+		totalExcelContent = totalExcelContent.filter((item)=>{
+			return item.staffName
+		});
+		this.saveExcelContentToDB(totalExcelContent);
 	}
 	//保存excel全部的数据到数据库
 	saveExcelContentToDB(data){

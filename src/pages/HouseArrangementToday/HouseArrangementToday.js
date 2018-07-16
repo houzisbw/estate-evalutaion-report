@@ -17,7 +17,8 @@ class HouseArrangementToday extends React.Component{
 			excelLatestUnvisitedData:[],
 			totalNum:0,
 			isLoading:false,
-			latestDate:''
+			latestDate:'',
+			activeTabKey:'1'
 		};
 	}
 	componentDidMount(){
@@ -51,7 +52,9 @@ class HouseArrangementToday extends React.Component{
 		})
 	}
 	tabOnChange(key){
-
+		this.setState({
+			activeTabKey:key
+		})
 	}
 	//刷新数据
 	refresh(){
@@ -81,15 +84,24 @@ class HouseArrangementToday extends React.Component{
 											</div>
 											{/*tab区域*/}
 											<div className="latest-visit-tab">
-												<Tabs defaultActiveKey="1" size={'large'} onChange={(activeKey)=>this.tabOnChange(activeKey)}>
+												<Tabs defaultActiveKey={this.state.activeTabKey} size={'large'} onChange={(activeKey)=>this.tabOnChange(activeKey)}>
 													<TabPane tab={"全部房屋("+this.state.totalNum+')'} key="1">
-														<HouseArrangeExcelContentList excelLatestData={this.state.excelLatestData}/>
+														<HouseArrangeExcelContentList
+																refreshData={()=>this.refresh()}
+																excelLatestData={this.state.excelLatestData}
+														/>
 													</TabPane>
 													<TabPane tab={"已看房屋("+this.state.excelLatestVisitedData.length+')'} key="2">
-														<HouseArrangeExcelContentList excelLatestData={this.state.excelLatestVisitedData}/>
+														<HouseArrangeExcelContentList
+																refreshData={()=>this.refresh()}
+																excelLatestData={this.state.excelLatestVisitedData}
+														/>
 													</TabPane>
 													<TabPane tab={"未看房屋("+this.state.excelLatestUnvisitedData.length+')'} key="3">
-														<HouseArrangeExcelContentList excelLatestData={this.state.excelLatestUnvisitedData}/>
+														<HouseArrangeExcelContentList
+																refreshData={()=>this.refresh()}
+																excelLatestData={this.state.excelLatestUnvisitedData}
+														/>
 													</TabPane>
 												</Tabs>
 											</div>

@@ -6,7 +6,7 @@ var mongoose = require('mongoose');
 var ejs = require('ejs');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-
+//网页端路由
 var index = require('./routes/index');
 var users = require('./routes/users');
 var estate = require('./routes/estate');
@@ -14,6 +14,8 @@ var business_register = require('./routes/business_register');
 var staff_arrange = require('./routes/house_arrange');
 var normal_assesment = require('./routes/normal_assesment');
 var house_arrangement_today = require('./routes/house_arrangement_today');
+//微信路由
+var wxLogin = require('./routes/wx_routes/wx_login');
 
 var app = express();
 
@@ -53,6 +55,8 @@ app.use('/business_register',business_register);
 app.use('/staff_arrange',staff_arrange);
 app.use('/normal_assesment',normal_assesment);
 app.use('/house_arrangement_today',house_arrangement_today);
+//微信路由
+app.use('/wxApp',wxLogin);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
