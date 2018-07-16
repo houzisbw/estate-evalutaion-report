@@ -54,6 +54,52 @@ router.post('/saveExcelToDB',function(req,res,next){
 		})
 });
 
+//获取最近一次派单的所有数据
+router.post('/getLatestExcelData',function(req,res,next){
+	//按date降序排列，只取最新的数据
+	HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			//如果docs为空直接返回无数据
+			if(!docs||Object.keys(docs).length===0){
+				//数据为空
+				res.json({
+					status:0
+				});
+			}
+
+			//注意docs类型为object
+			var ret = [],
+					visitRet = [],
+					unvisitRet = [],
+					cnt=0,
+					latest = docs[0].date;
+			docs.forEach(function(item){
+					if(item.date === latest){
+						ret.push(item);
+						if(item.isVisit){
+							visitRet.push(item)
+						}else{
+							unvisitRet.push(item)
+						}
+						cnt++;
+					}
+			});
+			res.json({
+				status:1,
+				excelData:ret,
+				visit:visitRet,
+				unvisit:unvisitRet,
+				total:cnt,
+				latestDate:latest?latest:'无'
+			})
+		}
+	})
+});
+
 
 
 
