@@ -6,6 +6,10 @@ var mongoose = require('mongoose');
 var ejs = require('ejs');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+//session
+var session = require('express-session');
+//session存储的位置
+var MongoStore = require('connect-mongo')(session);
 //网页端路由
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -14,8 +18,10 @@ var business_register = require('./routes/business_register');
 var staff_arrange = require('./routes/house_arrange');
 var normal_assesment = require('./routes/normal_assesment');
 var house_arrangement_today = require('./routes/house_arrangement_today');
-//微信路由
+//微信登录路由
 var wxLogin = require('./routes/wx_routes/wx_login');
+//微信首页路由
+var wxIndex = require('./routes/wx_routes/wx_index');
 
 var app = express();
 
@@ -36,6 +42,21 @@ mongoose.connection.on("error",function(){
 	console.log('mongodb connection fail');
 })
 
+//微信小程序服务的session,只挂载到/wxApp下
+app.use('/wxApp',session({
+	//cookie的key值,默认connect.sid
+	name:"kfzs_wxapp",
+	//签名字符串
+	secret:'sbwlqy',
+	//session保存位置
+	store: new MongoStore({
+		//使用mongoose的链接来连接数据库,也可以启用新的链接
+		mongooseConnection: mongoose.connection
+	}),
+	resave:true,
+	//不保存未初始化的session,否则登录失败就会保存session
+	saveUninitialized:false
+}));
 
 // uncomment after placing your favicon in /public
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -55,8 +76,8 @@ app.use('/business_register',business_register);
 app.use('/staff_arrange',staff_arrange);
 app.use('/normal_assesment',normal_assesment);
 app.use('/house_arrangement_today',house_arrangement_today);
-//微信路由
-app.use('/wxApp',wxLogin);
+//微信路由,都挂载在wxApp下
+app.use('/wxApp',wxLogin,wxIndex);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

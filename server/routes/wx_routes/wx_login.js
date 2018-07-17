@@ -11,6 +11,7 @@ router.post('/wxLogin',function(req,res,next){
 	var username = req.body.username,
 			password = req.body.password;
 	var query = User.where({username:username,password:password});
+	console.log('33333333333333')
 	query.findOne(function(err,doc){
 		if(err){
 			res.json({
@@ -23,6 +24,9 @@ router.post('/wxLogin',function(req,res,next){
 					status:0
 				})
 			}else{
+				//设置session,此时会保存username到mongodb对应的session中去
+				req.session.username = username;
+
 				//找到用户
 				res.json({
 					status:1,
