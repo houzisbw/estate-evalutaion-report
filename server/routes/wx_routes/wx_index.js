@@ -3,6 +3,9 @@ var express = require('express');
 var router = express.Router();
 var fs = require('fs');
 var path = require('path');
+//数据模型
+var HouseArrangeExcel = require('./../../models/house_arrange_excel_content');
+var WXUsers = require('./../../models/wx_models/wx_users');
 //首页检查是否登录
 router.get('/checkLogin',function(req,res,next){
 		//根据cookie中的sessionid获取到session中对应的名字，便于后续操作
@@ -17,5 +20,93 @@ router.get('/checkLogin',function(req,res,next){
 			//重新登录，此时可能是session过期或者用户退出小程序再登录
 		}
 });
+
+//首页获取房屋excel列表信息
+router.post('/getEstateList',function(req,res,next){
+	//获取type
+	let type =  parseInt(req.body.type,10);
+	//获取用户登录名字
+	let username = req.body.username;
+	//查询条件:0全部，1已看，2未看
+	let condition = type === 0?{}:(type===1?{isVisit:true}:{isVisit:false});
+	//登录未过期
+	if(req.session.username){
+		//首先得获取用户的真实姓名,根据username获取
+		var promise = new Promise(function(resolve,reject){
+			WXUsers.findOne({username:username},function(err,doc){
+				if(err){
+					reject();
+				}else{
+					resolve(doc)
+				}
+			})
+		});
+		promise.then(function(data){
+			//获取真实姓名
+			let realname = data.realname;
+			//查询该姓名下的房屋记录
+			return new Promise(function(resolve,reject){
+				HouseArrangeExcel.find(Object.assign(condition,{staffName:realname}),function(err,docs){
+					if(err){
+						reject(-1)
+					}else{
+						if(docs.length){
+							//查询成功，找到数据
+							let resData = [];
+							docs.forEach(function(item){
+								let obj = {
+									estateIndex:item.index,
+									estatePosition:item.roadNumber+item.detailPosition,
+									isVisit:item.isVisit
+								};
+								resData.push(obj);
+							});
+							resolve({status:1,estateData:resData});
+						}else{
+							reject(0)
+						}
+					}
+				})
+			})
+		},function(){
+			reject(-1)
+		}).then(function(estateData){
+			//查询成功
+			res.json({
+				status:1,
+				msg:'查询成功',
+				estateData:estateData
+			})
+		},function(err){
+			if(err === -1){
+				res.json({
+					status:-1,
+					msg:'查询失败'
+				})
+			}else{
+				res.json({
+					status:0,
+					msg:'数据为空'
+				})
+			}
+		});
+	}else{
+		//登录过期，跳转登录页面
+		res.json({
+			status:-2,
+			msg:'登录过期'
+		})
+	}
+})
+
+//首页获取其他信息:单信息和日期
+router.post('/getOtherInfo',function(req,res,next){
+	var username = req.body.username;
+
+	//需要查询总单数，已看数，未看数, 需要查询最近一次派单日期,数据库HouseArrangeExcel
+
+	//需要查询实际名字,数据库WXUsers
+
+})
 
 module.exports = router
