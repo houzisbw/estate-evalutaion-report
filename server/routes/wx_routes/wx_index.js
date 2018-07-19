@@ -57,6 +57,7 @@ router.post('/getEstateList',function(req,res,next){
 								let obj = {
 									estateIndex:item.index,
 									estatePosition:item.roadNumber+item.detailPosition,
+									estateRoadNumber:item.roadNumber,
 									isVisit:item.isVisit
 								};
 								resData.push(obj);
@@ -102,10 +103,64 @@ router.post('/getEstateList',function(req,res,next){
 //首页获取其他信息:单信息和日期
 router.post('/getOtherInfo',function(req,res,next){
 	var username = req.body.username;
-
+	//需要查询实际名字,数据库WXUsers
+	var promise = new Promise(function(resolve,reject){
+		WXUsers.findOne({username:username},function(err,doc){
+			if(err){
+				reject();
+			}else{
+				resolve(doc)
+			}
+		})
+	});
+	promise.then(function(data){
+		var realname = data.realname
+		//找到最近一次的派单时间
+		HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs){
+			if(err){
+				res.json({
+					status:-1
+				})
+			}else{
+				//如果docs为空直接返回无数据
+				if(!docs||Object.keys(docs).length===0){
+					//数据为空
+					res.json({
+						status:0
+					});
+				}
+				var latestDate = docs[0].date,
+						staffEstateTotalNum = 0,
+						staffEstateVisitedNum = 0,
+						staffEstateUnvisitedNum = 0;
+				docs.forEach(function(item){
+					if(item.staffName === realname){
+						if(item.isVisit){
+							staffEstateVisitedNum++;
+						}else{
+							staffEstateUnvisitedNum++;
+						}
+						staffEstateTotalNum++;
+					}
+				})
+				res.json({
+					status:1,
+					realname,
+					latestDate,
+					staffEstateTotalNum,
+					staffEstateVisitedNum,
+					staffEstateUnvisitedNum
+				})
+			}
+		})
+	},function(){
+		res.json({
+			status:-1
+		})
+	})
 	//需要查询总单数，已看数，未看数, 需要查询最近一次派单日期,数据库HouseArrangeExcel
 
-	//需要查询实际名字,数据库WXUsers
+
 
 })
 
