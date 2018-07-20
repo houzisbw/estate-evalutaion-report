@@ -22,6 +22,8 @@ var house_arrangement_today = require('./routes/house_arrangement_today');
 var wxLogin = require('./routes/wx_routes/wx_login');
 //微信首页路由
 var wxIndex = require('./routes/wx_routes/wx_index');
+//微信详情页路由
+var wxDetail = require('./routes/wx_routes/wx_detail');
 
 var app = express();
 
@@ -77,7 +79,7 @@ app.use('/staff_arrange',staff_arrange);
 app.use('/normal_assesment',normal_assesment);
 app.use('/house_arrangement_today',house_arrangement_today);
 //微信路由,都挂载在wxApp下
-app.use('/wxApp',wxLogin,wxIndex);
+app.use('/wxApp',wxLogin,wxIndex,wxDetail);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
