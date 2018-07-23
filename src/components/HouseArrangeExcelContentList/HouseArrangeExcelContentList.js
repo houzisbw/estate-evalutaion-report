@@ -149,7 +149,7 @@ class HouseArrangeExcelContentList extends React.Component{
 												</div>
 												<div className="house-arrange-excel-content-line-wrapper">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>反馈情况</Tag>
-													<span className="house-arrange-excel-content-desc">{item.feedback?item.feedback:<span className="ready-to-feed">待反馈</span>}</span>
+													<span className="house-arrange-excel-content-desc">{item.feedback?(item.feedback.split('*##*').join(';')):<span className="ready-to-feed">待反馈</span>}</span>
 												</div>
 												<div className="house-arrange-excel-content-line-wrapper no-margin-bottom">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>反馈时间</Tag>

@@ -47,6 +47,48 @@ router.post('/getDetailInfoOfEstate',function(req,res,next){
 
 });
 
+//保存反馈数据
+router.post('/submitFeedback',function(req,res,next){
+	var feedbackReason = req.body.submitReason,
+			isVisit = req.body.isVisit,
+			estateIndex = req.body.estateIndex,
+			latestDate = req.body.latestDate,
+			submitTime = req.body.submitTime;
+	if(req.session.username){
+		//先找出是否存在对应estateIndex和latestDate的记录，有可能不存在
+		var condition = {
+			index:estateIndex,
+			date:latestDate
+		};
+		var update = {
+			feedback:feedbackReason,
+			feedTime:submitTime,
+			isVisit:isVisit==='1'
+		};
+		//注意此处无doc参数
+		HouseArrangeExcel.findOneAndUpdate(condition,update,function(err){
+			if(err){
+				//出错
+				res.json({
+					status:-1
+				})
+			}else{
+				//修改成功
+				res.json({
+					status:1
+				})
+			}
+
+		})
+	}else{
+		//登录过期
+		res.json({
+			status:-2
+		})
+	}
+
+});
+
 
 
 module.exports = router

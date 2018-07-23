@@ -58,6 +58,7 @@ router.post('/getEstateList',function(req,res,next){
 									estateIndex:item.index,
 									estatePosition:item.roadNumber+item.detailPosition,
 									estateRoadNumber:item.roadNumber,
+									date:item.date,
 									isVisit:item.isVisit
 								};
 								resData.push(obj);

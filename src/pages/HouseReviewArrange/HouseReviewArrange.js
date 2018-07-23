@@ -102,7 +102,9 @@ class HouseReviewArrange extends React.Component{
 			estateListAfterDrawing:[],
 
 			//上传的excel的全部内容,元素是对象
-			excelTotalContentList:[]
+			excelTotalContentList:[],
+			//道路名称错误列表
+			estateBadRoadnumberList:[]
 
 		}
 	}
@@ -112,8 +114,25 @@ class HouseReviewArrange extends React.Component{
 			isAllocationPanelOpen:!this.state.isAllocationPanelOpen
 		})
 	}
-
+	//获取道路名称错误名单
+	getBadListOfRoadnumber(){
+		axios.get('/staff_arrange/getBadRoadnumberList').then((resp)=>{
+				let status = resp.data.status;
+				if(status === -1){
+					Modal.error({
+						title: '糟糕！',
+						content: '错误房屋列表读取失败~',
+					});
+				}else{
+					this.setState({
+						estateBadRoadnumberList:resp.data.data
+					})
+				}
+		})
+	}
 	componentDidMount(){
+		//获取道路名称错误名单
+		this.getBadListOfRoadnumber();
 		//获取看房人员名单
 		this.getStaffList();
 		//加载百度地图
@@ -412,6 +431,13 @@ class HouseReviewArrange extends React.Component{
 				//第一列和第二列：序号 和 房屋地址
 				jsonData[i]['A'] = jsonData[i]['A'].replace(/\s/g,'');
 				jsonData[i]['B'] = jsonData[i]['B'].replace(/\s/g,'');
+				//针对错误数据的处理
+				for(let k=0;k<self.state.estateBadRoadnumberList.length;k++){
+					let validName = self.state.estateBadRoadnumberList[k].validName,
+							originName = self.state.estateBadRoadnumberList[k].originName;
+					jsonData[i]['B'] = jsonData[i]['B'].replace(originName,validName);
+				}
+
 				var promise = new Promise(function(resolve,reject){
 					myGeo.getPoint(jsonData[i]['B'], function(point){
 							if (point) {

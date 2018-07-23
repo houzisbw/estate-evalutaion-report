@@ -6,6 +6,7 @@ var router = express.Router();
 var fs = require('fs');
 var path = require('path');
 var HouseArrangeStaff = require('./../models/house_arrange_staff')
+var BadRoadnumberList = require('./../models/estate_bad_roadnumber_list')
 //添加看房人员
 router.post('/addStaff',function(req,res,next){
 	var staffName = req.body.staffName;
@@ -71,5 +72,20 @@ router.post('/deleteStaff',function(req,res,next){
 	})
 });
 
+//获取道路错误名单
+router.get('/getBadRoadnumberList',function(req,res,next){
+	BadRoadnumberList.find({},function(err,docs){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			res.json({
+				status:1,
+				data:docs
+			})
+		}
+	})
+});
 
 module.exports = router;
