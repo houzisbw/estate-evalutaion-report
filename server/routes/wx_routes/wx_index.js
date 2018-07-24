@@ -58,10 +58,22 @@ router.post('/getEstateList',function(req,res,next){
 									estateIndex:item.index,
 									estatePosition:item.roadNumber+item.detailPosition,
 									estateRoadNumber:item.roadNumber,
+									estateTelephone:item.telephone,
 									date:item.date,
-									isVisit:item.isVisit
+									isVisit:item.isVisit,
+									isUrgent:item.isUrgent
 								};
 								resData.push(obj);
+							});
+							//排序：先按加急，再按未完成，最后是已完成，然后是序号
+							resData.sort(function(a,b){
+								if(a.isUrgent === b.isUrgent){
+									if(a.isVisit===b.isVisit){
+										return a.estateIndex - b.estateIndex
+									}
+									return a.isVisit>b.isVisit
+								}
+								return a.isUrgent<b.isUrgent
 							});
 							resolve({status:1,estateData:resData});
 						}else{

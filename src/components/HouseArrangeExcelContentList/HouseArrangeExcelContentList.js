@@ -2,15 +2,20 @@
  * 房屋excel内容列表组件，用于[当天看房情况]模块
  */
 import React from 'react';
-import {List,Card,Tag,Tooltip,Icon,Select,Modal,notification } from 'antd';
+import {List,Card,Tag,Tooltip,Icon,Select,Modal,notification,Radio  } from 'antd';
 import './index.scss'
 import axios from 'axios'
 const Option = Select.Option;
+const RadioGroup = Radio.Group;
+const confirm = Modal.confirm;
 class HouseArrangeExcelContentList extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			//修改看房人员的modal
 			modifyModalVisible:false,
+			//是否加急
+			isUrgentLoading:false,
 			modifiedIndex:0,
 			currentStaff:'',
 			totalStaffNameList:[],
@@ -78,13 +83,60 @@ class HouseArrangeExcelContentList extends React.Component{
 	}
 	handleModifyModalCancel(){
 		this.setState({
-			modifyModalVisible:false
+			modifyModalVisible:false,
+			isUrgentModalVisible:false
 		})
 	}
 	handleStaffSelect(v){
 		this.setState({
 			currentStaff:v
 		})
+	}
+	//是否加急
+	handleUrgentChange(e,index){
+		if(this.state.isUrgentLoading){
+			return
+		}
+		var v = e.target.value;
+		var self = this;
+		confirm({
+			title: '确定修改序号'+index+'加急为'+(v===1?'是':'否')+'?',
+			content: '',
+			okText: '确定',
+			cancelText: '取消',
+			onOk() {
+				self.setState({
+					isUrgentLoading:true
+				});
+				axios.post('/house_arrangement_today/modifyUrgent',{
+					index:index,
+					urgent:v
+				}).then((resp)=>{
+					self.setState({
+						isUrgentLoading:false
+					});
+					if(resp.data.status===-1){
+						//数据保存失败
+						Modal.error({
+							title:'悲剧',
+							content:'加急修改失败!请重试'
+						})
+					}else{
+						notification['success']({
+							message: '恭喜',
+							description: '加急修改成功',
+						});
+					}
+					//刷新数据
+					self.props.refreshData();
+				})
+			},
+			onCancel() {
+				self.setState({
+					isUrgentLoading:false
+				});
+			},
+		});
 	}
 	render(){
 		//卡片标题ReactNode
@@ -149,13 +201,19 @@ class HouseArrangeExcelContentList extends React.Component{
 												</div>
 												<div className="house-arrange-excel-content-line-wrapper">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>反馈情况</Tag>
-													<span className="house-arrange-excel-content-desc">{item.feedback?(item.feedback.split('*##*').join(';')):<span className="ready-to-feed">待反馈</span>}</span>
+													<span className="house-arrange-excel-content-desc">{item.feedback?(item.feedback.split('*##*').join(';')):<span className="ready-to-feed" style={{color:item.isVisit?'#39ac6a':'#ff9e1e'}}>待反馈</span>}</span>
+												</div>
+												<div className="house-arrange-excel-content-line-wrapper ">
+													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>反馈时间</Tag>
+													<span className="house-arrange-excel-content-desc">{item.feedTime?item.feedTime:<span className="ready-to-feed" style={{color:item.isVisit?'#39ac6a':'#ff9e1e'}}>待反馈</span>}</span>
 												</div>
 												<div className="house-arrange-excel-content-line-wrapper no-margin-bottom">
-													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>反馈时间</Tag>
-													<span className="house-arrange-excel-content-desc">{item.feedTime?item.feedTime:<span className="ready-to-feed">待反馈</span>}</span>
+													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'} style={{marginRight:'20px'}}>是否加急</Tag>
+													<RadioGroup onChange={(e)=>this.handleUrgentChange(e,item.index)} value={item.isUrgent?1:0}>
+														<Radio value={0}>否</Radio>
+														<Radio value={1}>是</Radio>
+													</RadioGroup>
 												</div>
-
 											</div>
 										</Card>
 									</List.Item>

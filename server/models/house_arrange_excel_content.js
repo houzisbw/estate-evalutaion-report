@@ -26,6 +26,8 @@ var HouseArrangementToday = new mongoose.Schema({
 	//反馈时间 格式:(2018年07月14日 15:37)
 	feedTime:String,
 	//看房人员
-	staffName:String
+	staffName:String,
+	//是否紧急
+	isUrgent:Boolean
 });
 module.exports = mongoose.model('house_arrange_excel_content',HouseArrangementToday);

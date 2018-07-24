@@ -45,7 +45,9 @@ router.post('/saveExcelToDB',function(req,res,next){
 							//反馈时间 格式:(2018年07月14日 15:37)
 							feedTime:'',
 							//看房人员
-							staffName:excelData[i].staffName
+							staffName:excelData[i].staffName,
+							//是否紧急
+							isUrgent:false
 						});
 						obj.save();
 					}
@@ -90,6 +92,10 @@ router.post('/getLatestExcelData',function(req,res,next){
 						cnt++;
 					}
 			});
+			//按序号从小到大排列
+			ret.sort(function(a,b){
+				return parseInt(a.index,10) - parseInt(b.index,10)
+			});
 			res.json({
 				status:1,
 				excelData:ret,
@@ -120,6 +126,24 @@ router.post('/modifyStaff',function(req,res,next){
 	})
 
 })
+
+//修改加急项
+router.post('/modifyUrgent',function(req,res,next){
+	var index = req.body.index,
+			urgent = parseInt(req.body.urgent,10)===1;
+	//更新操作:参数是condition,需要更新的数据，回调
+	HouseArrangeExcel.update({index:index},{isUrgent:urgent},function(err,doc){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			res.json({
+				status:1
+			})
+		}
+	})
+});
 
 
 
