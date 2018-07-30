@@ -7,6 +7,8 @@ var userSchema = new mongoose.Schema({
 	//实际姓名
 	realname:String,
 	//权限
-	auth:String
+	auth:String,
+	//头像
+	avatar:String
 });
 module.exports = mongoose.model('wx_user',userSchema);

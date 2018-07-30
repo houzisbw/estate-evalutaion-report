@@ -47,7 +47,9 @@ router.post('/saveExcelToDB',function(req,res,next){
 							//看房人员
 							staffName:excelData[i].staffName,
 							//是否紧急
-							isUrgent:false
+							isUrgent:false,
+							//紧急信息
+							urgentInfo:''
 						});
 						obj.save();
 					}
@@ -102,7 +104,7 @@ router.post('/getLatestExcelData',function(req,res,next){
 				visit:visitRet,
 				unvisit:unvisitRet,
 				total:cnt,
-				latestDate:latest?latest:'无'
+				latestDate:latest?latest:'无',
 			})
 		}
 	})
@@ -130,9 +132,14 @@ router.post('/modifyStaff',function(req,res,next){
 //修改加急项
 router.post('/modifyUrgent',function(req,res,next){
 	var index = req.body.index,
-			urgent = parseInt(req.body.urgent,10)===1;
+			urgentInfo = req.body.urgentInfo,
+			staff = req.body.staff;
+	var isUrgent = urgentInfo !== '';
 	//更新操作:参数是condition,需要更新的数据，回调
-	HouseArrangeExcel.update({index:index},{isUrgent:urgent},function(err,doc){
+	HouseArrangeExcel.update({index:index,staffName:staff},{
+		urgentInfo:urgentInfo,
+		isUrgent:isUrgent
+	},function(err,doc){
 		if(err){
 			res.json({
 				status:-1

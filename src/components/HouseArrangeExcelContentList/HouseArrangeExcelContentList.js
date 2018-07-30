@@ -2,11 +2,10 @@
  * 房屋excel内容列表组件，用于[当天看房情况]模块
  */
 import React from 'react';
-import {List,Card,Tag,Tooltip,Icon,Select,Modal,notification,Radio  } from 'antd';
+import {List,Card,Tag,Tooltip,Icon,Select,Modal,notification,Input} from 'antd';
 import './index.scss'
 import axios from 'axios'
 const Option = Select.Option;
-const RadioGroup = Radio.Group;
 const confirm = Modal.confirm;
 class HouseArrangeExcelContentList extends React.Component{
 	constructor(props){
@@ -14,6 +13,10 @@ class HouseArrangeExcelContentList extends React.Component{
 		this.state = {
 			//修改看房人员的modal
 			modifyModalVisible:false,
+			//加急的modal
+			modifyUrgentModalVisible:false,
+			//初始加急信息
+			defaultUrgentInfo:"",
 			//是否加急
 			isUrgentLoading:false,
 			modifiedIndex:0,
@@ -26,6 +29,58 @@ class HouseArrangeExcelContentList extends React.Component{
 	}
 	componentDidMount(){
 
+	}
+	//修改加急信息
+	handleModifyUrgent(index,urgentInfo,staff){
+		this.setState({
+			modifyUrgentModalVisible:true,
+			modifiedIndex:index,
+			okText:'确定修改',
+			currentStaff:staff,
+			defaultUrgentInfo:urgentInfo
+		})
+	}
+	//加急信息输入框内容变化
+	handleUrgentInfoChange(e){
+		if(e.target.value.length>5){
+			return
+		}
+		this.setState({
+			defaultUrgentInfo:e.target.value
+		})
+
+	}
+	//加急信息点ok确定
+	handleUrgentModalOK(){
+		this.setState({
+			confirmLoading:true,
+			okText:'保存中...'
+		});
+		axios.post('/house_arrangement_today/modifyUrgent',{
+			index:this.state.modifiedIndex,
+			urgentInfo:this.state.defaultUrgentInfo,
+			staff:this.state.currentStaff
+		}).then((resp)=>{
+			if(resp.data.status===-1){
+				//数据保存失败
+				Modal.error({
+					title:'悲剧',
+					content:'加急信息保存失败!请重试'
+				})
+			}else{
+				notification['success']({
+					message: '恭喜',
+					description: '加急信息修改成功',
+				});
+			}
+			this.setState({
+				confirmLoading:false,
+				okText:'确定修改',
+				modifyUrgentModalVisible:false
+			});
+			//刷新数据
+			this.props.refreshData();
+		})
 	}
 	//修改看房人员
 	handleModifyStaff(index,staff){
@@ -84,7 +139,7 @@ class HouseArrangeExcelContentList extends React.Component{
 	handleModifyModalCancel(){
 		this.setState({
 			modifyModalVisible:false,
-			isUrgentModalVisible:false
+			modifyUrgentModalVisible:false,
 		})
 	}
 	handleStaffSelect(v){
@@ -92,52 +147,7 @@ class HouseArrangeExcelContentList extends React.Component{
 			currentStaff:v
 		})
 	}
-	//是否加急
-	handleUrgentChange(e,index){
-		if(this.state.isUrgentLoading){
-			return
-		}
-		var v = e.target.value;
-		var self = this;
-		confirm({
-			title: '确定修改序号'+index+'加急为'+(v===1?'是':'否')+'?',
-			content: '',
-			okText: '确定',
-			cancelText: '取消',
-			onOk() {
-				self.setState({
-					isUrgentLoading:true
-				});
-				axios.post('/house_arrangement_today/modifyUrgent',{
-					index:index,
-					urgent:v
-				}).then((resp)=>{
-					self.setState({
-						isUrgentLoading:false
-					});
-					if(resp.data.status===-1){
-						//数据保存失败
-						Modal.error({
-							title:'悲剧',
-							content:'加急修改失败!请重试'
-						})
-					}else{
-						notification['success']({
-							message: '恭喜',
-							description: '加急修改成功',
-						});
-					}
-					//刷新数据
-					self.props.refreshData();
-				})
-			},
-			onCancel() {
-				self.setState({
-					isUrgentLoading:false
-				});
-			},
-		});
-	}
+
 	render(){
 		//卡片标题ReactNode
 		const TitleNode = (index,isVisit)=>{
@@ -172,6 +182,19 @@ class HouseArrangeExcelContentList extends React.Component{
 								}
 							</Select>
 						</div>
+					</Modal>
+					{/*修改加急信息的modal*/}
+					<Modal
+							title={"加急信息修改"}
+							wrapClassName="vertical-center-modal"
+							visible={this.state.modifyUrgentModalVisible}
+							onOk={() => this.handleUrgentModalOK()}
+							confirmLoading={this.state.confirmLoading}
+							okText={this.state.okText}
+							cancelText={'取消修改'}
+							onCancel={() => this.handleModifyModalCancel()}
+					>
+						<Input addonBefore="加急详情"  value={this.state.defaultUrgentInfo} onChange={(e)=>this.handleUrgentInfoChange(e)}/>
 					</Modal>
 					<List
 							grid={{ gutter: 16, column: 2}}
@@ -208,11 +231,14 @@ class HouseArrangeExcelContentList extends React.Component{
 													<span className="house-arrange-excel-content-desc">{item.feedTime?item.feedTime:<span className="ready-to-feed" style={{color:item.isVisit?'#39ac6a':'#ff9e1e'}}>待反馈</span>}</span>
 												</div>
 												<div className="house-arrange-excel-content-line-wrapper no-margin-bottom">
-													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'} style={{marginRight:'20px'}}>是否加急</Tag>
-													<RadioGroup onChange={(e)=>this.handleUrgentChange(e,item.index)} value={item.isUrgent?1:0}>
-														<Radio value={0}>否</Radio>
-														<Radio value={1}>是</Radio>
-													</RadioGroup>
+													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'} >加急情况</Tag>
+													<span className="house-arrange-excel-content-desc short-desc">{item.isUrgent?item.urgentInfo:<span className="not-urgent">不加急</span>}</span>
+													<Tooltip title="修改加急信息">
+														<Icon type="edit"
+																	onClick={()=>this.handleModifyUrgent(item.index,item.urgentInfo,item.staffName)}
+																	style={{marginLeft:'10px',position:'relative',top:'1px',cursor:'pointer'}}>
+														</Icon>
+													</Tooltip>
 												</div>
 											</div>
 										</Card>

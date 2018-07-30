@@ -28,6 +28,8 @@ var HouseArrangementToday = new mongoose.Schema({
 	//看房人员
 	staffName:String,
 	//是否紧急
-	isUrgent:Boolean
+	isUrgent:Boolean,
+	//紧急的具体信息
+	urgentInfo:String
 });
 module.exports = mongoose.model('house_arrange_excel_content',HouseArrangementToday);

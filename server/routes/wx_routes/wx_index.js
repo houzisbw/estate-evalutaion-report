@@ -21,7 +21,7 @@ router.get('/checkLogin',function(req,res,next){
 		}
 });
 
-//首页获取房屋excel列表信息
+//首页获取房屋excel列表信息,注意只获取最近一次派单的日期
 router.post('/getEstateList',function(req,res,next){
 	//获取type
 	let type =  parseInt(req.body.type,10);
@@ -61,10 +61,21 @@ router.post('/getEstateList',function(req,res,next){
 									estateTelephone:item.telephone,
 									date:item.date,
 									isVisit:item.isVisit,
-									isUrgent:item.isUrgent
+									isUrgent:item.isUrgent,
+									urgentInfo:item.urgentInfo
 								};
 								resData.push(obj);
 							});
+							//只取最近日期的数据,注意日期是字符串，需要转成整形比较
+							resData.sort(function(a,b){
+								var aArray = a.date.split('-'),
+										bArray = b.date.split('-');
+								var aInt = parseInt(aArray.join(''),10),
+										bInt = parseInt(bArray.join(''),10);
+								return aInt - bInt;
+							});
+							let latestDate = resData[resData.length-1].date;
+							resData = resData.filter(function(item){return item.date == latestDate})
 							//排序：先按加急，再按未完成，最后是已完成，然后是序号
 							resData.sort(function(a,b){
 								if(a.isUrgent === b.isUrgent){
@@ -127,7 +138,8 @@ router.post('/getOtherInfo',function(req,res,next){
 		})
 	});
 	promise.then(function(data){
-		var realname = data.realname
+		var realname = data.realname;
+		var avatarUrl = data.avatar;
 		//找到最近一次的派单时间
 		HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs){
 			if(err){
@@ -160,6 +172,7 @@ router.post('/getOtherInfo',function(req,res,next){
 					status:1,
 					realname,
 					latestDate,
+					avatarUrl,
 					staffEstateTotalNum,
 					staffEstateVisitedNum,
 					staffEstateUnvisitedNum

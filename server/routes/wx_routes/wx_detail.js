@@ -9,7 +9,7 @@ var HouseArrangeExcel = require('./../../models/house_arrange_excel_content');
 
 //获取房屋详细信息
 router.post('/getDetailInfoOfEstate',function(req,res,next){
-	var index = req.body.estateIndex,
+	var index = parseInt(req.body.estateIndex,10),
 			date = req.body.latestDate;
 	var query = HouseArrangeExcel.where({
 		index:index,
@@ -24,6 +24,7 @@ router.post('/getDetailInfoOfEstate',function(req,res,next){
 					status:-1
 				})
 			}else{
+				console.log(doc)
 				if(doc){
 					//查找成功
 					res.json({
