@@ -29,7 +29,8 @@ router.post('/wxLogin',function(req,res,next){
 				res.json({
 					status:1,
 					username:username,
-					expires:expires
+					expires:expires,
+					auth:doc.auth
 				})
 			}
 		}

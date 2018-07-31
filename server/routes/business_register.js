@@ -4,6 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var multipart = require('connect-multiparty');
 var BusinessRegister = require('./../models/business_registery')
+var httpType = require('./../config/config').httpType;
 
 //存储业务登记表项
 router.post('/saveBusinessRegisterItem',function(req,res,next){
@@ -174,7 +175,7 @@ router.post('/imageUpload',multipart(),function(req,res,next){
 		//用第二个参数重命名第一个参数的文件
 		fs.rename(targetPath,newPictureName);
 		//构造图片url
-		var imageUrl = 'http://'+req.headers.host+'/businessRegisteryImage/'+uniquePictureName+'.'+filename.split('.')[1];
+		var imageUrl = httpType+req.headers.host+'/businessRegisteryImage/'+uniquePictureName+'.'+filename.split('.')[1];
 		//存入数据库：将图片url和对应的项目序号存入数据库
 		BusinessRegister.findOne({'项目序号':itemIndex},function(err,doc){
 			if(err){
