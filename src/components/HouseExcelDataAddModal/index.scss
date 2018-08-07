@@ -1,0 +1,27 @@
+.excel-add-input-type-choose-area{
+  width:80%;
+  margin: 0 auto;
+  .ant-row{
+    margin-bottom: 0;
+  }
+  .ant-form-explain{
+    width:60%;
+    float:right;
+  }
+  .excel-add-label{
+    float:left;
+    width:35%;
+    text-align: right;
+    margin-right: 5%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    .mutable-input-span{
+      color: #4b99ff;
+    }
+  }
+  .excel-add-input{
+    float:left;
+    width:60%;
+  }
+}

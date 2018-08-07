@@ -3,10 +3,11 @@
  */
 import React from 'react'
 import './index.scss'
-import {Icon,Tabs,Modal,Tooltip} from 'antd'
+import {Icon,Tabs,Modal,Tooltip,notification} from 'antd'
 import axios from 'axios'
 import Loading from './../../components/Loading/Loading'
 import HouseArrangeExcelContentList from './../../components/HouseArrangeExcelContentList/HouseArrangeExcelContentList'
+import HouseExcelDataAddModal from './../../components/HouseExcelDataAddModal/HouseExcelDataAddModal'
 const {TabPane} = Tabs;
 class HouseArrangementToday extends React.Component{
 	constructor(props){
@@ -18,7 +19,9 @@ class HouseArrangementToday extends React.Component{
 			totalNum:0,
 			isLoading:false,
 			latestDate:'',
-			activeTabKey:'1'
+			activeTabKey:'1',
+			addDataModalVisible:false,
+			addModalConfirmLoading:false
 		};
 	}
 	componentDidMount(){
@@ -60,10 +63,76 @@ class HouseArrangementToday extends React.Component{
 	refresh(){
 		this.fetchData();
 	}
+	//添加数据
+	addData(){
+		this.setState({
+			addDataModalVisible:true
+		})
+	}
+	//提交表单，调用子组件的方法
+	onAddDataModalOK(){
+		//调用<HouseExcelDataAddModal>组件的submit方法
+		let formValues = this['HouseExcelDataAddModal'].validateInputsAndSendToParent();
+		//如果校验通过
+		if(formValues.status === 1){
+			let values = formValues.values;
+			this.setState({
+				addModalConfirmLoading:true
+			});
+			//传递给后台
+			axios.post('/house_arrangement_today/saveAddedHouseData',{
+				values:values
+			}).then((resp)=>{
+				if(resp.data.status===1){
+					//保存成功
+					notification['success']({
+						message: '恭喜',
+						description: '数据添加成功!',
+					});
+				}else{
+					//保存失败
+					notification['error']({
+						message: 'Oops',
+						description: '数据添加失败!请重试',
+					});
+				}
+				//关闭对话框
+				this.setState({
+					addDataModalVisible:false,
+					addModalConfirmLoading:false
+				});
+				this.refresh();
+			})
+		}else{
+			//校验不通过
+		}
+	}
+	onAddDataModalCancel(){
+		this.setState({
+			addDataModalVisible:false
+		})
+	}
 	render(){
 		return (
 				<div>
 					<div className="my-page-wrapper">
+						{/*添加数据的对话框*/}
+						<Modal
+								title="添加看房数据"
+								centered={true}
+								wrapClassName="vertical-center-modal"
+								maskClosable={false}
+								destroyOnClose={true}
+								confirmLoading={this.state.addModalConfirmLoading}
+								visible={this.state.addDataModalVisible}
+								onOk={() => this.onAddDataModalOK()}
+								onCancel={() => this.onAddDataModalCancel()}
+								okText="添加"
+								cancelText="取消"
+						>
+								<HouseExcelDataAddModal wrappedComponentRef={(inst) => this['HouseExcelDataAddModal'] = inst}/>
+						</Modal>
+						{/*页面title*/}
 						<div className="page-title">
 							<div className="template-desc">
 								<i className="fa fa-briefcase padding-right"></i>
@@ -80,6 +149,9 @@ class HouseArrangementToday extends React.Component{
 												<span className="latest-visit-time">{this.state.latestDate}</span>
 												<Tooltip title="点此刷新数据">
 													<Icon type="sync" onClick={()=>{this.refresh()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>
+												</Tooltip>
+												<Tooltip title="点此添加数据">
+													<Icon type="plus-square-o" onClick={()=>{this.addData()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>
 												</Tooltip>
 											</div>
 											{/*tab区域*/}

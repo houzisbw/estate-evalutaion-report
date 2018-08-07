@@ -54,12 +54,22 @@ router.post('/getEstateList',function(req,res,next){
 							//查询成功，找到数据
 							let resData = [];
 							docs.forEach(function(item){
+								//反馈信息格式化
+								let feedbackInfo = item.feedback.replace('*##*',',');
+								if(feedbackInfo===','){
+									feedbackInfo='暂无'
+								}
+								else if(feedbackInfo[feedbackInfo.length-1]===','){
+									feedbackInfo = feedbackInfo.substr(0,feedbackInfo.length-1)
+								}
 								let obj = {
 									estateIndex:item.index,
 									estatePosition:item.roadNumber+item.detailPosition,
 									estateRoadNumber:item.roadNumber,
 									estateTelephone:item.telephone,
 									date:item.date,
+									isFeedback:!!item.feedTime,
+									feedback:feedbackInfo,
 									isVisit:item.isVisit,
 									isUrgent:item.isUrgent,
 									urgentInfo:item.urgentInfo
@@ -180,6 +190,7 @@ router.post('/getOtherInfo',function(req,res,next){
 			}
 		})
 	},function(){
+
 		res.json({
 			status:-1
 		})

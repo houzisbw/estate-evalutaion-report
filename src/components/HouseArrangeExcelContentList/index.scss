@@ -44,6 +44,14 @@
     background-color: #ff9e1e;
   }
   .house-arrange-excel-content{
+    position: relative;
+    .delete-house-data-btn{
+      position: absolute;
+      right:-24px;
+      bottom:-24px;
+      width:30px;
+      height:30px;
+    }
     .house-arrange-excel-content-line-wrapper{
       margin-bottom: 10px;
       .ready-to-feed{

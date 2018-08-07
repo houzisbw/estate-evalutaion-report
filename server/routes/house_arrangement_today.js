@@ -7,9 +7,10 @@ var HouseArrangeExcel = require('./../models/house_arrange_excel_content');
 //保存派单excel到数据库
 router.post('/saveExcelToDB',function(req,res,next){
 		var excelData = req.body.excelData;
-		//在这里加入服务器时间
+		//在这里加入服务器时间,注意格式是yyyy-mm-dd
 		var d = new Date();
-		var currentDate = d.getFullYear()+'-'+((d.getMonth()+1<10)?('0'+(d.getMonth()+1)):(d.getMonth()+1))+'-'+d.getDate();
+		var currentDate = d.getFullYear()+'-'+((d.getMonth()+1<10)?('0'+(d.getMonth()+1)):(d.getMonth()+1))+'-'+
+				(d.getDate()<10?('0'+d.getDate()):d.getDate());
 		for(var i=0;i<excelData.length;i++){
 			excelData[i].date = currentDate;
 		}
@@ -150,6 +151,65 @@ router.post('/modifyUrgent',function(req,res,next){
 			})
 		}
 	})
+});
+
+//删除选定数据
+router.post('/removeHouseData',function(req,res,next){
+	let index = parseInt(req.body.index,10),
+			staff = req.body.staff;
+	HouseArrangeExcel.remove({
+		index:index,
+		staffName:staff
+	},function(err){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			res.json({
+				status:1
+			})
+		}
+	})
+});
+
+//保存添加的数据
+router.post('/saveAddedHouseData',function(req,res,next){
+	let values = req.body.values;
+	//查询最近的派单时间
+	HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs) {
+		if (err) {
+			res.json({
+				status: -1
+			})
+		} else {
+			//最近的日期
+			let lastestDate = '';
+			if (!docs || Object.keys(docs).length === 0) {
+				//数据为空,最近的时间取当前时间
+				var date = new Date();
+				lastestDate = date.getFullYear()+'-'+((date.getMonth()+1)<10?('0'+(date.getMonth()+1)):(date.getMonth()+1))+'-'
+										+(date.getDate()<10?('0'+date.getDate()):date.getDate());
+			}else{
+				lastestDate = docs[0].date
+			}
+			//构造要保存的数据
+			let obj = {
+				date:lastestDate,
+				isVisit:false,
+				feedback:'',
+				feedTime:'',
+				isUrgent:false,
+				urgentInfo:''
+			};
+			let excelData = new HouseArrangeExcel({...obj,...values});
+			excelData.save();
+			res.json({
+				status:1
+			})
+		}
+	})
+
 });
 
 

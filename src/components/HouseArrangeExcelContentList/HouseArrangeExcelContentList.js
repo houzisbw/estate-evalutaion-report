@@ -24,7 +24,12 @@ class HouseArrangeExcelContentList extends React.Component{
 			totalStaffNameList:[],
 			//确定修改的按钮的loading
 			confirmLoading:false,
-			okText:'确定修改'
+			okText:'确定修改',
+			//删除数据的modal
+			removeModalVisible:false,
+			indexToRemove:'',
+			staffNameToRemove:'',
+			removeConfirmLoading:false
 		}
 	}
 	componentDidMount(){
@@ -147,6 +152,46 @@ class HouseArrangeExcelContentList extends React.Component{
 			currentStaff:v
 		})
 	}
+	//删除数据
+	removeData(itemIndex,itemStaffName){
+		this.setState({
+			removeModalVisible:true,
+			indexToRemove:itemIndex,
+			staffNameToRemove:itemStaffName
+		})
+	}
+	//确认删除
+	handleRemoveModalOK(){
+		this.setState({
+			removeModalVisible:false,
+			removeConfirmLoading:true
+		});
+		axios.post('/house_arrangement_today/removeHouseData',{
+			staff:this.state.staffNameToRemove,
+			index:this.state.indexToRemove
+		}).then((resp)=>{
+			if(resp.data.status===-1){
+				notification['error']({
+					message: '注意',
+					description: '删除信息失败!',
+				});
+			}else{
+				notification['success']({
+					message: '恭喜',
+					description: '删除信息失败成功!',
+				});
+			}
+			this.setState({
+				removeConfirmLoading:false
+			});
+			this.props.refreshData();
+		})
+	}
+	handleRemoveModalCancel(){
+		this.setState({
+			removeModalVisible:false
+		})
+	}
 
 	render(){
 		//卡片标题ReactNode
@@ -160,6 +205,19 @@ class HouseArrangeExcelContentList extends React.Component{
 		};
 		return (
 				<div className="house-arrange-excel-wrapper">
+					{/*删除数据的modal*/}
+					<Modal title="删除数据"
+								 visible={this.state.removeModalVisible}
+								 onOk={()=>this.handleRemoveModalOK()}
+								 wrapClassName="vertical-center-modal"
+								 cancelText={'取消'}
+								 okText={'确认'}
+								 confirmLoading={this.state.removeConfirmLoading}
+								 onCancel={()=>this.handleRemoveModalCancel()}
+					>
+						<p>确认删除序号{this.state.indexToRemove}的数据?</p>
+					</Modal>
+					{/*修改看房人员的modal*/}
 					<Modal
 							title={"序号"+this.state.modifiedIndex+": 修改看房人员"}
 							wrapClassName="vertical-center-modal"
@@ -206,6 +264,12 @@ class HouseArrangeExcelContentList extends React.Component{
 													hoverable={true}
 										>
 											<div className="house-arrange-excel-content">
+												{/*删除按钮*/}
+												<div className="delete-house-data-btn">
+													<Tooltip title="删除该数据">
+														<Icon type="close" onClick={()=>{this.removeData(item.index,item.staffName)}} style={{cursor:'pointer',fontSize:'25px',color:'#a2a2a2'}}/>
+													</Tooltip>
+												</div>
 												<div className="house-arrange-excel-content-line-wrapper">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>房屋地址</Tag>
 													<Tooltip title={item.roadNumber+item.detailPosition}>
@@ -224,7 +288,7 @@ class HouseArrangeExcelContentList extends React.Component{
 												</div>
 												<div className="house-arrange-excel-content-line-wrapper">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>反馈情况</Tag>
-													<span className="house-arrange-excel-content-desc">{item.feedback?(item.feedback.split('*##*').join(';')):<span className="ready-to-feed" style={{color:item.isVisit?'#39ac6a':'#ff9e1e'}}>待反馈</span>}</span>
+													<span className="house-arrange-excel-content-desc">{item.feedback?(item.feedback.split('*##*').join(';')===';'?'空':item.feedback.split('*##*').join(';')):<span className="ready-to-feed" style={{color:item.isVisit?'#39ac6a':'#ff9e1e'}}>待反馈</span>}</span>
 												</div>
 												<div className="house-arrange-excel-content-line-wrapper ">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>反馈时间</Tag>
