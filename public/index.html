@@ -39,9 +39,9 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-    <!--百度地图文件-->
-    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=oiu5kqXt7U3ljISAeX8UZZXlgOHIaZac"></script>
-    <script type="text/javascript" src="http://api.map.baidu.com/library/InfoBox/1.2/src/InfoBox_min.js"></script>
+    <!--百度地图文件,注意是https请求-->
+    <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=oiu5kqXt7U3ljISAeX8UZZXlgOHIaZac"></script>
+    <script type="text/javascript" src="https://api.map.baidu.com/library/InfoBox/1.2/src/InfoBox_min.js"></script>
     <script>
         //保存变量，供其他模块使用，否则找不到BMap
 		window.BMap = BMap;
@@ -50,11 +50,11 @@
 		window.BMAP_ANIMATION_BOUNCE = BMAP_ANIMATION_BOUNCE;
     </script>
     <!--生成word的js-->
-    <script type="text/javascript" src="http://www.xdocin.com/xdoc.js"></script>
+    <script type="text/javascript" src="https://www.xdocin.com/xdoc.js"></script>
     <script>
       window.XDoc = XDoc;
     </script>
-    <script type="text/javascript" src="http://www.xdocin.com/baiduTemplate.js"></script>
+    <script type="text/javascript" src="https://www.xdocin.com/baiduTemplate.js"></script>
     <!--excel读取,cdn加载-->
     <script type="text/javascript" src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script>
@@ -62,5 +62,11 @@
 		window.XLSX = XLSX;
 		window.BMAP_STATUS_SUCCESS = BMAP_STATUS_SUCCESS;
     </script>
+    <!--cdn引入第三方库-->
+    <script src="https://cdn.bootcss.com/react/16.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.bootcss.com/react-dom/16.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.bootcss.com/redux/3.7.2/redux.min.js"></script>
+    <script src="https://cdn.bootcss.com/react-redux/5.0.7/react-redux.min.js"></script>
+    <script src="https://cdn.bootcss.com/react-router-dom/4.2.2/react-router-dom.min.js"></script>
   </body>
 </html>

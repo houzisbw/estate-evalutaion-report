@@ -10,6 +10,7 @@ const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin');
 const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const paths = require('./paths');
 const getClientEnvironment = require('./env');
 
@@ -54,9 +55,19 @@ module.exports = {
   bail: true,
   // We generate sourcemaps in production. This is slow but gives good results.
   // You can exclude the *.map files from the build during deployment.
-  devtool: shouldUseSourceMap ? 'source-map' : false,
-  // In production, we only want to load the polyfills and the app code.
+  //devtool: shouldUseSourceMap ? 'source-map' : false,
+  //生产环境去除source-map
+	devtool: false,
+	// In production, we only want to load the polyfills and the app code.
   entry: [require.resolve('./polyfills'), paths.appIndexJs],
+  //不打包的库,注意value是在window下的值，一般官网有说明
+	externals: {
+		'react': 'React',
+		'redux': 'Redux',
+		'react-dom': 'ReactDOM',
+    'react-redux':'ReactRedux',
+    'react-router-dom':'ReactRouterDOM'
+	},
   output: {
     // The build folder.
     path: paths.appBuild,
@@ -336,7 +347,16 @@ module.exports = {
     // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
     // You can remove this if you don't use Moment.js:
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
-  ],
+    //打包可视化工具
+		new BundleAnalyzerPlugin(),
+    //抽取公共模块,注意async必须(处理异步加载)，deepChildren必须
+		new webpack.optimize.CommonsChunkPlugin({
+			async: true,
+			deepChildren: true,
+			minChunks: 2
+		}),
+
+	],
   // Some libraries import Node modules but don't use them in the browser.
   // Tell Webpack to provide empty mocks for them so importing them works.
   node: {

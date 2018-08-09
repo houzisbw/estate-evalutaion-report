@@ -6,6 +6,7 @@ var mongoose = require('mongoose');
 var ejs = require('ejs');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var compression = require('compression');
 //session
 var session = require('express-session');
 //session存储的位置
@@ -46,6 +47,9 @@ mongoose.connection.on("connected",function(){
 mongoose.connection.on("error",function(){
 	console.log('mongodb connection fail');
 })
+
+//启用gzip
+app.use(compression());
 
 //微信小程序服务的session,只挂载到/wxApp下
 app.use('/wxApp',session({
