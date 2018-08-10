@@ -424,8 +424,7 @@ class HouseReviewArrange extends React.Component{
 			//地址解析,用geoCoder，这里似乎并没有并发数量限制，注意如果某一行excel为空，则point也为空
 			var cnt=0;
 			var promiseList = [];
-			//保存excel内所有信息
-			self.saveExcelTotalContent(jsonData);
+
 			//解析房屋地址
 			for(let i=0;i<jsonData.length;i++){
 				//第一列和第二列：序号 和 房屋地址
@@ -450,6 +449,9 @@ class HouseReviewArrange extends React.Component{
 				});
 				promiseList.push(promise);
 			}
+			//保存excel内所有信息
+			self.saveExcelTotalContent(jsonData);
+
 			//等待所有异步请求都完成
 			var tempMarkerList = [];
 			var tempLabelList = [];

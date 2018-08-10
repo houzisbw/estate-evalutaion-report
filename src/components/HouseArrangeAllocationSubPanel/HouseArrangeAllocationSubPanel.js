@@ -397,7 +397,16 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			});
 		}else{
 			//分配完成，直接开始下载
-			this.downloadExcelResult()
+			if(allocatedCnt===0){
+				//如果一个都不分配禁止下载
+				notification['error']({
+					message: '注意',
+					description: '没有分配看房人员，无法下载~',
+				});
+			}else{
+				this.downloadExcelResult()
+			}
+
 		}
 
 	}
@@ -427,8 +436,8 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				//在给totalExcelContent中找到对应的项并加上分配人员属性
 				for(var j=0;j<totalExcelContent.length;j++){
 					if(totalExcelContent[j].roadNumber === estateName){
+						//注意此处不能break，因为会有重复的roadNumber
 						totalExcelContent[j].staffName = estateJsonData[i].C;
-						break;
 					}
 				}
 		}
@@ -498,7 +507,21 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 	//生成excel
 	handleExcelGenerate(type){
 		if(type==='CONFIRM'){
-			this.downloadExcelResult();
+			//如果一个都不分配禁止下载
+			let allocatedCnt = 0;
+			for(var key in this.state.estateAllocationResult){
+				if(this.state.estateAllocationResult.hasOwnProperty(key) && this.state.estateAllocationResult[key].staffName){
+					allocatedCnt+=this.state.estateAllocationResult[key].cnt;
+				}
+			}
+			if(allocatedCnt===0){
+				notification['error']({
+					message: '注意',
+					description: '没有分配看房人员，无法下载~',
+				});
+			}else{
+				this.downloadExcelResult();
+			}
 		}
 		this.setState({
 			popConfirmVisible:false

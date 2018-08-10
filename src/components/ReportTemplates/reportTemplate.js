@@ -7,6 +7,8 @@ import ReportTemplateInputArea from './../ReportTemplateInputArea/reportTemplate
 import Loading from './../../components/Loading/Loading'
 import axios from 'axios'
 import {moneyToChinese,dateToChinese} from './../../util/utils'
+//XDoc
+import XDoc from './../../util/xdoc'
 //import {findDOMNode} from 'react-dom'
 import './index.scss'
 const TabPane = Tabs.TabPane;
@@ -775,7 +777,7 @@ class ReportTemplate extends React.Component{
 
 			let t = this.state.reportInputDataList;
 			//获取XDoc对象
-			let XDoc = window.XDoc;
+			//let XDoc = window.XDoc;
 			XDoc.key = "";
 			//构建参数对象
 			let dataObj = {};

@@ -38,6 +38,7 @@ app.set('view engine', 'html');
 
 //连接mongodb,线上部署时记得取消该注释
 //mongoose.connect('mongodb://root:Sbw66620116@127.0.0.1:27017/estate_report?authSource=admin')
+//连接本地mongodb
 mongoose.connect('mongodb://127.0.0.1:27017/estate_report')
 //监听:成功
 mongoose.connection.on("connected",function(){

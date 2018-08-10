@@ -44,16 +44,39 @@ router.post('/getEstateList',function(req,res,next){
 		promise.then(function(data){
 			//获取真实姓名
 			let realname = data.realname;
-			//查询该姓名下的房屋记录
+			//应该先获取最近一次派单日期,而不是先找该员工下所有的记录
 			return new Promise(function(resolve,reject){
-				HouseArrangeExcel.find(Object.assign(condition,{staffName:realname}),function(err,docs){
+				HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs){
 					if(err){
 						reject(-1)
 					}else{
-						if(docs.length){
+						//如果docs为空直接返回无数据
+						if(!docs||Object.keys(docs).length===0){
+							//数据为空
+							reject(0)
+						}
+						//最近一次的日期
+						var latestDate = docs[0].date;
+						resolve({
+							latestDate:latestDate,
+							realname:realname
+						})
+					}
+				})
+			});
+		},function(){
+			reject(-1)
+		}).then(function(obj){
+			//查询该姓名下的房屋记录
+			return new Promise(function(resolve,reject){
+				HouseArrangeExcel.find(Object.assign(condition,{staffName:obj.realname,date:obj.latestDate}),function(err,docs2){
+					if(err){
+						reject(-1)
+					}else{
+						if(docs2.length){
 							//查询成功，找到数据
 							let resData = [];
-							docs.forEach(function(item){
+							docs2.forEach(function(item){
 								//反馈信息格式化
 								let feedbackInfo = item.feedback.replace('*##*',',');
 								if(feedbackInfo===','){
@@ -76,16 +99,6 @@ router.post('/getEstateList',function(req,res,next){
 								};
 								resData.push(obj);
 							});
-							//只取最近日期的数据,注意日期是字符串，需要转成整形比较
-							resData.sort(function(a,b){
-								var aArray = a.date.split('-'),
-										bArray = b.date.split('-');
-								var aInt = parseInt(aArray.join(''),10),
-										bInt = parseInt(bArray.join(''),10);
-								return aInt - bInt;
-							});
-							let latestDate = resData[resData.length-1].date;
-							resData = resData.filter(function(item){return item.date == latestDate})
 							//排序：先按加急，再按未完成，最后是已完成，然后是序号
 							resData.sort(function(a,b){
 								if(a.isUrgent === b.isUrgent){
@@ -103,8 +116,6 @@ router.post('/getEstateList',function(req,res,next){
 					}
 				})
 			})
-		},function(){
-			reject(-1)
 		}).then(function(estateData){
 			//查询成功
 			res.json({
@@ -125,8 +136,9 @@ router.post('/getEstateList',function(req,res,next){
 				})
 			}
 		});
+
+	//登录过期
 	}else{
-		//登录过期，跳转登录页面
 		res.json({
 			status:-2,
 			msg:'登录过期'
@@ -169,7 +181,8 @@ router.post('/getOtherInfo',function(req,res,next){
 						staffEstateVisitedNum = 0,
 						staffEstateUnvisitedNum = 0;
 				docs.forEach(function(item){
-					if(item.staffName === realname){
+					//找到最近的日期
+					if(item.staffName === realname && item.date === latestDate){
 						if(item.isVisit){
 							staffEstateVisitedNum++;
 						}else{
@@ -190,15 +203,10 @@ router.post('/getOtherInfo',function(req,res,next){
 			}
 		})
 	},function(){
-
 		res.json({
 			status:-1
 		})
 	})
-	//需要查询总单数，已看数，未看数, 需要查询最近一次派单日期,数据库HouseArrangeExcel
-
-
-
 })
 
 module.exports = router

@@ -49,12 +49,14 @@
 		window.BMAP_NAVIGATION_CONTROL_LARGE = BMAP_NAVIGATION_CONTROL_LARGE;
 		window.BMAP_ANIMATION_BOUNCE = BMAP_ANIMATION_BOUNCE;
     </script>
-    <!--生成word的js-->
-    <script type="text/javascript" src="https://www.xdocin.com/xdoc.js"></script>
-    <script>
-      window.XDoc = XDoc;
-    </script>
-    <script type="text/javascript" src="https://www.xdocin.com/baiduTemplate.js"></script>
+    <!--生成word的js,注意没有加协议号，是自适应-->
+    <!--<script type="text/javascript" src="//www.xdocin.com/xdoc.js"></script>-->
+    <!--<script>-->
+      <!--window.XDoc = XDoc;-->
+    <!--</script>-->
+    <!--baiduTemplate.js无法通过https引入，故采用本地加载-->
+    <script type="text/javascript" src="%PUBLIC_URL%/baiduTemplate.js"></script>
+    <!--<script type="text/javascript" src="//www.xdocin.com/baiduTemplate.js"></script>-->
     <!--excel读取,cdn加载-->
     <script type="text/javascript" src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script>
