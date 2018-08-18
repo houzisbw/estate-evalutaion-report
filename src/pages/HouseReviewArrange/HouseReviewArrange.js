@@ -363,7 +363,8 @@ class HouseReviewArrange extends React.Component{
 				company:jsonData[i]['D']?jsonData[i]['D']:'',
 				bank:jsonData[i]['E']?jsonData[i]['E']:'',
 				area:jsonData[i]['F']?jsonData[i]['F']:'',
-				telephone:jsonData[i]['G']?jsonData[i]['G']:''
+				telephone:jsonData[i]['G']?jsonData[i]['G']:'',
+				gurantor:jsonData[i]['H']?jsonData[i]['H']:'',
 			};
 			tempList.push(obj);
 		}

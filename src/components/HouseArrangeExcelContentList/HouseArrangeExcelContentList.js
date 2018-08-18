@@ -118,7 +118,8 @@ class HouseArrangeExcelContentList extends React.Component{
 		});
 		axios.post('/house_arrangement_today/modifyStaff',{
 			index:this.state.modifiedIndex,
-			staffName:this.state.currentStaff
+			staffName:this.state.currentStaff,
+			latestDate:this.props.latestDate
 		}).then((resp)=>{
 			if(resp.data.status===-1){
 				//数据保存失败
@@ -202,6 +203,24 @@ class HouseArrangeExcelContentList extends React.Component{
 						<span className={`isvisit-badge ${isVisit?'':'novisit'}`}>{isVisit?'已看':'未看'}</span>
 					</div>
 			)
+		};
+		//格式化反馈情况
+		const formatFeedbackContent = (item)=>{
+			let result = '',
+					isEmpty = item.feedback.split('*##*').join(';')===';';
+			if(isEmpty){
+				result = '空'
+			}else{
+				let list  = [];
+				list.push(item.gurantor);
+				list.push(item.company);
+				list.push(item.bank);
+				list.push(item.roadNumber+item.detailPosition);
+				list.push(item.date);
+				list.push(item.feedback.split('*##*').join(';'))
+				result = list.join(' ');
+			}
+			return result
 		};
 		return (
 				<div className="house-arrange-excel-wrapper">
@@ -288,7 +307,17 @@ class HouseArrangeExcelContentList extends React.Component{
 												</div>
 												<div className="house-arrange-excel-content-line-wrapper">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>反馈情况</Tag>
-													<span className="house-arrange-excel-content-desc">{item.feedback?(item.feedback.split('*##*').join(';')===';'?'空':item.feedback.split('*##*').join(';')):<span className="ready-to-feed" style={{color:item.isVisit?'#39ac6a':'#ff9e1e'}}>待反馈</span>}</span>
+													{
+														item.feedback?(
+																<Tooltip title={formatFeedbackContent(item)}>
+																	<span className="house-arrange-excel-content-desc">{formatFeedbackContent(item)}</span>
+																</Tooltip>
+														):(
+																<span className="house-arrange-excel-content-desc">
+																	<span className="ready-to-feed" style={{color:item.isVisit?'#39ac6a':'#ff9e1e'}}>待反馈</span>
+																</span>
+														)
+													}
 												</div>
 												<div className="house-arrange-excel-content-line-wrapper ">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>反馈时间</Tag>

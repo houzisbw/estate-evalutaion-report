@@ -455,7 +455,8 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 					E:d.bank,
 					F:d.area,
 					G:d.telephone,
-					H:d.staffName
+					H:d.gurantor,
+					I:d.staffName
 				})
 			}
 		}
@@ -464,7 +465,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 			return parseInt(a.A,10) - parseInt(b.A,10)
 		});
 		var ws = window.XLSX.utils.json_to_sheet(dataInExcel,{
-			headers:['A','B','C','D','E','F','G','H'],skipHeader:true
+			headers:['A','B','C','D','E','F','G','H','I'],skipHeader:true
 		});
 		//将worksheet添加到工作簿上
 		window.XLSX.utils.book_append_sheet(wb, ws, '分配结果');
@@ -474,6 +475,7 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		totalExcelContent = totalExcelContent.filter((item)=>{
 			return item.staffName
 		});
+		//保存数据库
 		this.saveExcelContentToDB(totalExcelContent);
 	}
 	//保存excel全部的数据到数据库

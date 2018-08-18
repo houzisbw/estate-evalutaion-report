@@ -3,12 +3,13 @@
  */
 import React from 'react'
 import './index.scss'
-import {Icon,Tabs,Modal,Tooltip,notification} from 'antd'
+import {Icon,Tabs,Modal,Tooltip,notification,Input} from 'antd'
 import axios from 'axios'
 import Loading from './../../components/Loading/Loading'
 import HouseArrangeExcelContentList from './../../components/HouseArrangeExcelContentList/HouseArrangeExcelContentList'
 import HouseExcelDataAddModal from './../../components/HouseExcelDataAddModal/HouseExcelDataAddModal'
 const {TabPane} = Tabs;
+const Search = Input.Search;
 class HouseArrangementToday extends React.Component{
 	constructor(props){
 		super(props);
@@ -112,6 +113,41 @@ class HouseArrangementToday extends React.Component{
 			addDataModalVisible:false
 		})
 	}
+	//搜索派单
+	searchHouseData(v){
+		if(!v){
+			notification['error']({
+				message: '注意',
+				description: '关键词不能为空!',
+			});
+			return
+		}
+		//进入loading状态
+		this.setState({
+			isLoading:true
+		});
+		axios.post('/house_arrangement_today/searchHouseData',{
+			keyword:v,
+			latestDate:this.state.latestDate
+		}).then((resp)=>{
+			this.setState({
+				isLoading:false
+			});
+			if(resp.data.status === -1){
+				notification['error']({
+					message: '注意',
+					description: '搜索出错请稍后重试!',
+				});
+			}else{
+				this.setState({
+					excelLatestData:resp.data.excelData,
+					excelLatestVisitedData:resp.data.visit,
+					excelLatestUnvisitedData:resp.data.unvisit,
+					totalNum:resp.data.total
+				})
+			}
+		})
+	}
 	render(){
 		return (
 				<div>
@@ -153,6 +189,13 @@ class HouseArrangementToday extends React.Component{
 												<Tooltip title="点此添加数据">
 													<Icon type="plus-square-o" onClick={()=>{this.addData()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>
 												</Tooltip>
+												<div className="house-data-search-wrapper">
+													<Search
+															placeholder="派单关键字"
+															onSearch={(v)=>{this.searchHouseData(v)}}
+															enterButton
+													/>
+												</div>
 											</div>
 											{/*tab区域*/}
 											<div className="latest-visit-tab">
@@ -160,18 +203,21 @@ class HouseArrangementToday extends React.Component{
 													<TabPane tab={"全部房屋("+this.state.totalNum+')'} key="1">
 														<HouseArrangeExcelContentList
 																refreshData={()=>this.refresh()}
+																latestDate={this.state.latestDate}
 																excelLatestData={this.state.excelLatestData}
 														/>
 													</TabPane>
 													<TabPane tab={"已看房屋("+this.state.excelLatestVisitedData.length+')'} key="2">
 														<HouseArrangeExcelContentList
 																refreshData={()=>this.refresh()}
+																latestDate={this.state.latestDate}
 																excelLatestData={this.state.excelLatestVisitedData}
 														/>
 													</TabPane>
 													<TabPane tab={"未看房屋("+this.state.excelLatestUnvisitedData.length+')'} key="3">
 														<HouseArrangeExcelContentList
 																refreshData={()=>this.refresh()}
+																latestDate={this.state.latestDate}
 																excelLatestData={this.state.excelLatestUnvisitedData}
 														/>
 													</TabPane>

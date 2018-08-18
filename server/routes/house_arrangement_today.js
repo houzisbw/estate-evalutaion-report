@@ -50,7 +50,9 @@ router.post('/saveExcelToDB',function(req,res,next){
 							//是否紧急
 							isUrgent:false,
 							//紧急信息
-							urgentInfo:''
+							urgentInfo:'',
+							//担保人
+							gurantor:excelData[i].gurantor
 						});
 						obj.save();
 					}
@@ -77,7 +79,6 @@ router.post('/getLatestExcelData',function(req,res,next){
 					status:0
 				});
 			}
-
 			//注意docs类型为object
 			var ret = [],
 					visitRet = [],
@@ -95,9 +96,9 @@ router.post('/getLatestExcelData',function(req,res,next){
 						cnt++;
 					}
 			});
-			//按序号从小到大排列
+			//按序号从大到小排列
 			ret.sort(function(a,b){
-				return parseInt(a.index,10) - parseInt(b.index,10)
+				return parseInt(b.index,10) - parseInt(a.index,10)
 			});
 			res.json({
 				status:1,
@@ -114,9 +115,14 @@ router.post('/getLatestExcelData',function(req,res,next){
 //修改某一单的看房人员
 router.post('/modifyStaff',function(req,res,next){
 	var index = req.body.index,
-			staff = req.body.staffName;
+			staff = req.body.staffName,
+			latestDate = req.body.latestDate;
+	console.log(latestDate)
 	//更新操作:参数是condition,需要更新的数据，回调
-	HouseArrangeExcel.update({index:index},{staffName:staff},function(err,doc){
+	HouseArrangeExcel.update({
+		index:index,
+		date:latestDate
+	},{staffName:staff},function(err,doc){
 		if(err){
 			res.json({
 				status:-1
@@ -210,6 +216,52 @@ router.post('/saveAddedHouseData',function(req,res,next){
 		}
 	})
 
+});
+
+//搜索看房数据
+router.post('/searchHouseData',function(req,res,next){
+	let keyword = req.body.keyword,
+			latestDate = req.body.latestDate;
+	HouseArrangeExcel.find({date:latestDate},function(err,docs){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			let ret = [],visitRet=[],unvisitRet=[],cnt=0;
+			docs.forEach(function(item){
+				//注意index为整数，得转化为字符串，否则会卡住且不报错
+				if(	item.index.toString().indexOf(keyword)!==-1||
+						item.date.indexOf(keyword)!==-1||
+						item.roadNumber.indexOf(keyword)!==-1||
+						item.detailPosition.indexOf(keyword)!==-1||
+						item.company.indexOf(keyword)!==-1||
+						item.bank.indexOf(keyword)!==-1||
+						item.area.indexOf(keyword)!==-1||
+						item.feedback.indexOf(keyword)!==-1||
+						item.feedTime.indexOf(keyword)!==-1||
+						item.staffName.indexOf(keyword)!==-1||
+						item.urgentInfo.indexOf(keyword)!==-1
+					)
+				{
+					ret.push(item);
+					cnt++;
+					if(item.isVisit){
+						visitRet.push(item)
+					}else{
+						unvisitRet.push(item)
+					}
+				}
+			});
+			res.json({
+				status:1,
+				excelData:ret,
+				visit:visitRet,
+				unvisit:unvisitRet,
+				total:cnt
+			})
+		}
+	})
 });
 
 

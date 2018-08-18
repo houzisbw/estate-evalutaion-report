@@ -30,6 +30,8 @@ var HouseArrangementToday = new mongoose.Schema({
 	//是否紧急
 	isUrgent:Boolean,
 	//紧急的具体信息
-	urgentInfo:String
+	urgentInfo:String,
+	//担保人
+	gurantor:String
 });
 module.exports = mongoose.model('house_arrange_excel_content',HouseArrangementToday);
