@@ -442,21 +442,21 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				}
 		}
 		//生成新的保存到excel中的数据
-		var dataInExcel = [];
-		for(var i=0;i<totalExcelContent.length;i++){
-			var d = totalExcelContent[i];
-			//只保存已分配的数据
+		let dataInExcel = [];
+		for(let i=0;i<totalExcelContent.length;i++){
+			let d = totalExcelContent[i];
+			//只保存已分配的数据,且只保存序号和分配员工名字
 			if(d.staffName){
 				dataInExcel.push({
 					A:d.index,
-					B:d.roadNumber,
-					C:d.detailPosition,
-					D:d.company,
-					E:d.bank,
-					F:d.area,
-					G:d.telephone,
-					H:d.gurantor,
-					I:d.staffName
+					// B:d.roadNumber,
+					// C:d.detailPosition,
+					// D:d.company,
+					// E:d.bank,
+					// F:d.area,
+					// G:d.telephone,
+					// H:d.gurantor,
+					B:d.staffName
 				})
 			}
 		}
@@ -464,13 +464,20 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		dataInExcel.sort(function(a,b){
 			return parseInt(a.A,10) - parseInt(b.A,10)
 		});
-		var ws = window.XLSX.utils.json_to_sheet(dataInExcel,{
-			headers:['A','B','C','D','E','F','G','H','I'],skipHeader:true
-		});
-		//将worksheet添加到工作簿上
-		window.XLSX.utils.book_append_sheet(wb, ws, '分配结果');
-		//下载
-		window.XLSX.writeFile(wb,'看房配分结果.xlsx');
+
+		//原本只在前端下载的逻辑
+		// let ws = window.XLSX.utils.json_to_sheet(dataInExcel,{
+		// 	headers:['A','B','C','D','E','F','G','H','I'],skipHeader:true
+		// });
+		// //将worksheet添加到工作簿上
+		// window.XLSX.utils.book_append_sheet(wb, ws, '分配结果');
+		// //下载
+		// window.XLSX.writeFile(wb,'看房配分结果.xlsx');
+
+
+		//目标：将dataInExcel发送到服务端写入特定的excel文件并下载该文件
+		this.transmitExcelDataToServerAndDownload(dataInExcel);
+
 		//保存数据库,只保存已分配的数据,item.staffName为null则去掉
 		totalExcelContent = totalExcelContent.filter((item)=>{
 			return item.staffName
@@ -478,6 +485,21 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 		//保存数据库
 		this.saveExcelContentToDB(totalExcelContent);
 	}
+
+	//将分配结果数据传递给服务端接口进行excel下载
+	transmitExcelDataToServerAndDownload(excelData){
+			//这里不能用ajax的post，因为无法触发文件下载，只能这么写
+			//这里get无法传递数组类型的数据,需要拼接字符串
+			//构造查询参数字符串
+			let searchList = [];
+			excelData.forEach((item)=>{
+				searchList.push(item.A+"="+item.B)
+			});
+			let searchStr = searchList.join('&');
+			//开发环境必须写http://localhost:5000/前缀
+			window.location.href=`/house_arrangement_today/getExcelDataAndDownload?${searchStr}`;
+	}
+
 	//保存excel全部的数据到数据库
 	saveExcelContentToDB(data){
 		if(!data || data.length === 0){

@@ -216,8 +216,8 @@ class HouseArrangeExcelContentList extends React.Component{
 				list.push(item.company);
 				list.push(item.bank);
 				list.push(item.roadNumber+item.detailPosition);
-				list.push(item.date);
-				list.push(item.feedback.split('*##*').join(';'))
+				list.push(item.feedTime?item.feedTime.split(' ')[0]:'');
+				list.push(item.feedback.split('*##*').join(';'));
 				result = list.join(' ');
 			}
 			return result
@@ -295,6 +295,12 @@ class HouseArrangeExcelContentList extends React.Component{
 														<span className="house-arrange-excel-content-desc">{item.roadNumber+item.detailPosition}</span>
 													</Tooltip>
 												</div>
+
+												<div className="house-arrange-excel-content-line-wrapper">
+													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>其他信息</Tag>
+													<span className="house-arrange-excel-content-desc">{item.gurantor+' '+item.telephone+' '+item.company}</span>
+												</div>
+
 												<div className="house-arrange-excel-content-line-wrapper">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>看房人员</Tag>
 													<span className="house-arrange-excel-content-desc short-desc">{item.staffName}</span>

@@ -3,6 +3,7 @@ var express = require('express');
 var router = express.Router();
 var fs = require('fs');
 var path = require('path');
+var xlsx = require('xlsx');
 var HouseArrangeExcel = require('./../models/house_arrange_excel_content');
 //保存派单excel到数据库
 router.post('/saveExcelToDB',function(req,res,next){
@@ -117,7 +118,6 @@ router.post('/modifyStaff',function(req,res,next){
 	var index = req.body.index,
 			staff = req.body.staffName,
 			latestDate = req.body.latestDate;
-	console.log(latestDate)
 	//更新操作:参数是condition,需要更新的数据，回调
 	HouseArrangeExcel.update({
 		index:index,
@@ -235,12 +235,14 @@ router.post('/searchHouseData',function(req,res,next){
 						item.date.indexOf(keyword)!==-1||
 						item.roadNumber.indexOf(keyword)!==-1||
 						item.detailPosition.indexOf(keyword)!==-1||
+						item.telephone.indexOf(keyword)!==-1||
 						item.company.indexOf(keyword)!==-1||
 						item.bank.indexOf(keyword)!==-1||
 						item.area.indexOf(keyword)!==-1||
 						item.feedback.indexOf(keyword)!==-1||
 						item.feedTime.indexOf(keyword)!==-1||
 						item.staffName.indexOf(keyword)!==-1||
+						item.gurantor.indexOf(keyword)!==-1||
 						item.urgentInfo.indexOf(keyword)!==-1
 					)
 				{
@@ -262,6 +264,59 @@ router.post('/searchHouseData',function(req,res,next){
 			})
 		}
 	})
+});
+
+//处理看房人员分配结果的excel的下载
+router.get('/getExcelDataAndDownload',function(req,res){
+	let excelData = [];
+	//通过url的查询参数构造excel数组
+	let query = req.query;
+	Object.keys(query).forEach((item)=>{
+		let obj = {A:item,B:query[item]}
+		excelData.push(obj)
+	});
+	//读取服务器上的特定excel
+	let excelPath = path.join(__dirname,'./../public/arrangeResultExcelTemplate/arrangeResultExcel.xlsx');
+	//输出excel文件所在的路径(包含文件名)
+	let outputPath = path.join(__dirname,'./../public/arrangeResultExcelTemplate/result.xlsx');
+	//判断文件是否存在
+	var isFileExist = fs.existsSync(excelPath);
+	if(isFileExist){
+		let workbook = xlsx.readFile(excelPath);
+		//获取第一个sheet
+		let sheetOne = workbook.Sheets[workbook.SheetNames[0]];
+		//在第一个sheet中写入excelData，只写A,B这2列，A为房屋序号，B为分配的人员名字
+		if(sheetOne){
+			//更新原有的excel中的sheet1,从第一行第一列开始写入，覆盖之前的旧值
+			//这里逻辑有问题
+			xlsx.utils.sheet_add_json(sheetOne,excelData,{
+				header:['A','B'],
+				skipHeader: true,
+				origin:'A1'
+			});
+			//输出文件,该文件不用删除，因为名字固定，下次生成就覆盖了旧文件
+			//该方法是同步方法
+			xlsx.writeFile(workbook, outputPath);
+			//下载该excel到浏览器端
+			res.download(outputPath,function(err){
+				if(err){
+					console.log(err)
+				}else{
+					console.log('success download')
+				}
+			});
+		}else{
+			res.json({
+				status:-1
+			})
+		}
+
+	}else{
+		res.json({
+			status:-1
+		})
+	}
+
 });
 
 
