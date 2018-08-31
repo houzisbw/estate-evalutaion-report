@@ -29,6 +29,12 @@ router.post('/getEstateList',function(req,res,next){
 	let username = req.body.username;
 	//查询条件:0全部，1已看，2未看
 	let condition = type === 0?{}:(type===1?{isVisit:true}:{isVisit:false});
+
+	//获取服务器当前日期yyyy-mm-dd
+	let d = new Date();
+	let currentDate = d.getFullYear()+'-'+(d.getMonth()+1<10?('0'+(d.getMonth()+1)):(d.getMonth()+1))+'-'
+			+(d.getDate()<10?('0'+d.getDate()):d.getDate());
+
 	//登录未过期
 	if(req.session.username){
 		//首先得获取用户的真实姓名,根据username获取
@@ -55,10 +61,23 @@ router.post('/getEstateList',function(req,res,next){
 							//数据为空
 							reject(0)
 						}
-						//最近一次的日期
-						var latestDate = docs[0].date;
+						//最近一次的派单日期
+						let latestDate = docs[0].date;
+						//次近一次的派单日期
+						let secondLatestDate = '';
+						//如果当期日期等于最近的一次派单日期则还要拿到上一次派单日期
+						let filteredDocs = [];
+						if(currentDate === latestDate){
+							filteredDocs = docs.filter((item)=>{
+								return item.date !== latestDate
+							})
+							secondLatestDate = filteredDocs[0]&&filteredDocs[0].date
+						}
 						resolve({
 							latestDate:latestDate,
+							secondLatestDate:secondLatestDate,
+							//是否显示上次派单数据
+							hasOldData:currentDate === latestDate,
 							realname:realname
 						})
 					}
@@ -69,7 +88,10 @@ router.post('/getEstateList',function(req,res,next){
 		}).then(function(obj){
 			//查询该姓名下的房屋记录
 			return new Promise(function(resolve,reject){
-				HouseArrangeExcel.find(Object.assign(condition,{staffName:obj.realname,date:obj.latestDate}),function(err,docs2){
+				let latestDate = obj.latestDate;
+				//查询条件
+				let dateArray = !obj.hasOldData?[obj.latestDate]:[obj.latestDate,obj.secondLatestDate];
+				HouseArrangeExcel.find(Object.assign(condition,{staffName:obj.realname,date:{$in:dateArray}}),function(err,docs2){
 					if(err){
 						reject(-1)
 					}else{
@@ -91,6 +113,7 @@ router.post('/getEstateList',function(req,res,next){
 									estateRoadNumber:item.roadNumber,
 									estateTelephone:item.telephone,
 									date:item.date,
+									isOldData:item.date !== latestDate,
 									isFeedback:!!item.feedTime,
 									feedback:feedbackInfo,
 									isVisit:item.isVisit,
@@ -99,15 +122,19 @@ router.post('/getEstateList',function(req,res,next){
 								};
 								resData.push(obj);
 							});
-							//排序：先按加急，再按未完成，最后是已完成，然后是序号
+							//排序：最先按日期，次先按加急，再按未完成，最后是已完成，然后是序号
 							resData.sort(function(a,b){
-								if(a.isUrgent === b.isUrgent){
-									if(a.isVisit===b.isVisit){
-										return a.estateIndex - b.estateIndex
+								if(a.isOldData === b.isOldData){
+									if(a.isUrgent === b.isUrgent){
+										if(a.isVisit===b.isVisit){
+											return a.estateIndex - b.estateIndex
+										}
+										return a.isVisit>b.isVisit
 									}
-									return a.isVisit>b.isVisit
+									return a.isUrgent<b.isUrgent
 								}
-								return a.isUrgent<b.isUrgent
+								return a.isOldData>b.isOldData
+
 							});
 							resolve({status:1,estateData:resData});
 						}else{
@@ -149,6 +176,10 @@ router.post('/getEstateList',function(req,res,next){
 //首页获取其他信息:单信息和日期
 router.post('/getOtherInfo',function(req,res,next){
 	var username = req.body.username;
+	//获取服务器当前日期yyyy-mm-dd
+	let d = new Date();
+	let currentDate = d.getFullYear()+'-'+(d.getMonth()+1<10?('0'+(d.getMonth()+1)):(d.getMonth()+1))+'-'
+			+(d.getDate()<10?('0'+d.getDate()):d.getDate());
 	//需要查询实际名字,数据库WXUsers
 	var promise = new Promise(function(resolve,reject){
 		WXUsers.findOne({username:username},function(err,doc){
@@ -180,9 +211,18 @@ router.post('/getOtherInfo',function(req,res,next){
 						staffEstateTotalNum = 0,
 						staffEstateVisitedNum = 0,
 						staffEstateUnvisitedNum = 0;
+				//如果当前日期等于最近一次派单，则还要获取到上次派单的数据
+				let filteredDocs = [];
+				if(currentDate === latestDate){
+					filteredDocs = docs.filter((item)=>{
+						return item.date !== latestDate
+					})
+				}
+				let secondLatestDate = filteredDocs.length>0?filteredDocs[0].date:'';
+
 				docs.forEach(function(item){
-					//找到最近的日期
-					if(item.staffName === realname && item.date === latestDate){
+					//找到最近的日期以及次近的日期
+					if(item.staffName === realname && (item.date === latestDate || item.date === secondLatestDate)){
 						if(item.isVisit){
 							staffEstateVisitedNum++;
 						}else{

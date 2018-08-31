@@ -3,7 +3,7 @@
  */
 import React from 'react'
 import './index.scss'
-import {Icon,Tabs,Modal,Tooltip,notification,Input} from 'antd'
+import {Icon,Tabs,Modal,Tooltip,notification,Input,Checkbox} from 'antd'
 import axios from 'axios'
 import Loading from './../../components/Loading/Loading'
 import HouseArrangeExcelContentList from './../../components/HouseArrangeExcelContentList/HouseArrangeExcelContentList'
@@ -22,7 +22,11 @@ class HouseArrangementToday extends React.Component{
 			latestDate:'',
 			activeTabKey:'1',
 			addDataModalVisible:false,
-			addModalConfirmLoading:false
+			addModalConfirmLoading:false,
+			isHistoryCheckboxShow:false,
+			isSearchHistory:false,
+			//下载excel的timerId
+			downloadExcelTimerId:null
 		};
 	}
 	componentDidMount(){
@@ -113,6 +117,24 @@ class HouseArrangementToday extends React.Component{
 			addDataModalVisible:false
 		})
 	}
+	//处理是否搜索历史项
+	handleHistorySearchChange(e){
+		this.setState({
+			isSearchHistory:e.target.checked
+		})
+	}
+	//处理输入框鼠标移入移出
+	handleSearchEnterAndLeave(isEnter){
+		if(isEnter){
+			this.setState({
+				isHistoryCheckboxShow:true
+			})
+		}else{
+			this.setState({
+				isHistoryCheckboxShow:false
+			})
+		}
+	}
 	//搜索派单
 	searchHouseData(v){
 		if(!v){
@@ -128,6 +150,7 @@ class HouseArrangementToday extends React.Component{
 		});
 		axios.post('/house_arrangement_today/searchHouseData',{
 			keyword:v,
+			isHistory:this.state.isSearchHistory?'1':'0',
 			latestDate:this.state.latestDate
 		}).then((resp)=>{
 			this.setState({
@@ -148,6 +171,43 @@ class HouseArrangementToday extends React.Component{
 			}
 		})
 	}
+	//下载当天派单excel
+	downloadExcel(){
+		if(this.state.downloadExcelTimerId){
+			clearTimeout(this.state.downloadExcelTimerId);
+			this.setState({
+				downloadExcelTimerId:null
+			});
+		}
+		notification['warning']({
+			message: '注意',
+			description: '1秒后开始下载!',
+		});
+		//延迟1秒下载
+		let timerId = setTimeout(()=>{
+			//生成一张空白的excel工作簿
+			let wb = window.XLSX.utils.book_new();
+			let dataInExcel = [];
+			this.state.excelLatestData.forEach((item)=>{
+				dataInExcel.push({
+					A:item.index,
+					B:item.isVisit?'已看':'未看',
+					C:item.feedback.replace('*##*','')
+				})
+			});
+			let ws = window.XLSX.utils.json_to_sheet(dataInExcel,{
+				headers:['A','B','C'],skipHeader:true
+			});
+			//将worksheet添加到工作簿上
+			window.XLSX.utils.book_append_sheet(wb, ws, '派单情况');
+			//下载
+			window.XLSX.writeFile(wb,'派单情况.xlsx');
+		},1000);
+		this.setState({
+			downloadExcelTimerId:timerId
+		})
+	}
+
 	render(){
 		return (
 				<div>
@@ -189,12 +249,24 @@ class HouseArrangementToday extends React.Component{
 												<Tooltip title="点此添加数据">
 													<Icon type="plus-square-o" onClick={()=>{this.addData()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>
 												</Tooltip>
-												<div className="house-data-search-wrapper">
+												<Tooltip title="点此下载Excel">
+													<Icon type="download" onClick={()=>{this.downloadExcel()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>
+												</Tooltip>
+												<div className="house-data-search-wrapper"
+														 onMouseLeave={()=>{this.handleSearchEnterAndLeave(false)}}
+														 onMouseEnter={()=>{this.handleSearchEnterAndLeave(true)}}>
 													<Search
 															placeholder="派单关键字"
 															onSearch={(v)=>{this.searchHouseData(v)}}
 															enterButton
 													/>
+													<div className={`house-data-history-wrapper ${this.state.isHistoryCheckboxShow?'':'history-hide'}`}>
+														<Checkbox onChange={(e)=>{this.handleHistorySearchChange(e)}}
+																			defaultChecked={this.state.isSearchHistory}
+														>
+															查询历史
+														</Checkbox>
+													</div>
 												</div>
 											</div>
 											{/*tab区域*/}

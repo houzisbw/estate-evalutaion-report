@@ -24,7 +24,6 @@ router.post('/getDetailInfoOfEstate',function(req,res,next){
 					status:-1
 				})
 			}else{
-				console.log(doc)
 				if(doc){
 					//查找成功
 					res.json({

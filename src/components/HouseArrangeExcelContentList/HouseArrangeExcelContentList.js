@@ -29,7 +29,11 @@ class HouseArrangeExcelContentList extends React.Component{
 			removeModalVisible:false,
 			indexToRemove:'',
 			staffNameToRemove:'',
-			removeConfirmLoading:false
+			removeConfirmLoading:false,
+			//当前页数
+			currentPage:1,
+			//每页条数
+			pageSize:10
 		}
 	}
 	componentDidMount(){
@@ -193,6 +197,13 @@ class HouseArrangeExcelContentList extends React.Component{
 			removeModalVisible:false
 		})
 	}
+	//处理页数变化
+	handlePageChange(page){
+		console.log(page)
+		this.setState({
+			currentPage:page
+		})
+	}
 
 	render(){
 		//卡片标题ReactNode
@@ -222,6 +233,15 @@ class HouseArrangeExcelContentList extends React.Component{
 			}
 			return result
 		};
+
+		//根据当前页数过滤出list中数据
+		const getCurrentPageListData = ()=>{
+			let startPos = this.state.pageSize * (this.state.currentPage-1)
+			let endPos = startPos+this.state.pageSize;
+			let listData = this.props.excelLatestData.slice(startPos,endPos);
+			return listData
+		};
+
 		return (
 				<div className="house-arrange-excel-wrapper">
 					{/*删除数据的modal*/}
@@ -276,7 +296,15 @@ class HouseArrangeExcelContentList extends React.Component{
 					<List
 							grid={{ gutter: 16, column: 2}}
 							locale={{emptyText:'数据空空如也~'}}
-							dataSource={this.props.excelLatestData}
+							dataSource={getCurrentPageListData()}
+							pagination={{
+								onChange: (page) => {
+									this.handlePageChange(page)
+								},
+								current: this.state.currentPage,
+								pageSize: this.state.pageSize,
+								total:this.props.excelLatestData.length
+							}}
 							renderItem={item => (
 									<List.Item>
 										<Card title={TitleNode(item.index,item.isVisit)}
@@ -298,7 +326,7 @@ class HouseArrangeExcelContentList extends React.Component{
 
 												<div className="house-arrange-excel-content-line-wrapper">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>其他信息</Tag>
-													<span className="house-arrange-excel-content-desc">{item.gurantor+' '+item.telephone+' '+item.company}</span>
+													<span className="house-arrange-excel-content-desc">{(item.gurantor?item.gurantor:'')+' '+item.telephone+' '+item.company}</span>
 												</div>
 
 												<div className="house-arrange-excel-content-line-wrapper">

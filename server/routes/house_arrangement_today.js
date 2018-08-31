@@ -221,8 +221,10 @@ router.post('/saveAddedHouseData',function(req,res,next){
 //搜索看房数据
 router.post('/searchHouseData',function(req,res,next){
 	let keyword = req.body.keyword,
+			isHistory = req.body.isHistory,
 			latestDate = req.body.latestDate;
-	HouseArrangeExcel.find({date:latestDate},function(err,docs){
+	let condition = isHistory==='0'?{date:latestDate}:{};
+	HouseArrangeExcel.find(condition,function(err,docs){
 		if(err){
 			res.json({
 				status:-1
@@ -242,7 +244,8 @@ router.post('/searchHouseData',function(req,res,next){
 						item.feedback.indexOf(keyword)!==-1||
 						item.feedTime.indexOf(keyword)!==-1||
 						item.staffName.indexOf(keyword)!==-1||
-						item.gurantor.indexOf(keyword)!==-1||
+						//新增单子没有委托人一项，这里必须保证gurantor存在,注意这里外层的括号
+						(item.gurantor&&item.gurantor.indexOf(keyword)!==-1)||
 						item.urgentInfo.indexOf(keyword)!==-1
 					)
 				{
