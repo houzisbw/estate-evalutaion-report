@@ -3,6 +3,8 @@
 * */
 var mongoose = require('mongoose');
 var HouseArrangementToday = new mongoose.Schema({
+	//该单所填写的看房表单(数组)
+	formData:Array,
 	//派单日期: yyyy-mm-dd
 	date:String,
 	//单号

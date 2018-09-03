@@ -496,8 +496,11 @@ class HouseArrangeAllocationSubPanel extends React.Component{
 				searchList.push(item.A+"="+item.B)
 			});
 			let searchStr = searchList.join('&');
-			//开发环境必须写http://localhost:5000/前缀
+
+			//生产环境
 			window.location.href=`/house_arrangement_today/getExcelDataAndDownload?${searchStr}`;
+			//开发环境
+			//window.location.href=`http://localhost:5000/house_arrangement_today/getExcelDataAndDownload?${searchStr}`;
 	}
 
 	//保存excel全部的数据到数据库

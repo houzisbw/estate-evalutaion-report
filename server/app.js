@@ -29,6 +29,8 @@ var wxDetail = require('./routes/wx_routes/wx_detail');
 var wxMine = require('./routes/wx_routes/wx_mine');
 //微信管理员首页路由
 var wxAdminIndex = require('./routes/wx_routes/admin/wx_index');
+//微信表单页路由
+var wxForm = require('./routes/wx_routes/wx_form');
 var app = express();
 
 // view engine setup
@@ -100,7 +102,7 @@ var loginCheck = function(req,res,next){
 		})
 	}
 };
-app.use('/wxApp',wxLogin,loginCheck,wxIndex,wxDetail,wxMine,wxAdminIndex);
+app.use('/wxApp',wxLogin,loginCheck,wxIndex,wxDetail,wxMine,wxAdminIndex,wxForm);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

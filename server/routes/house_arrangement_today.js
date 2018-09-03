@@ -5,6 +5,8 @@ var fs = require('fs');
 var path = require('path');
 var xlsx = require('xlsx');
 var HouseArrangeExcel = require('./../models/house_arrange_excel_content');
+//小程序表单Schema
+var wxFormData = require('./../models/wx_models/wx_form')
 //保存派单excel到数据库
 router.post('/saveExcelToDB',function(req,res,next){
 		var excelData = req.body.excelData;
@@ -22,43 +24,64 @@ router.post('/saveExcelToDB',function(req,res,next){
 						status:-1
 					})
 				}else{
-					//保存当天新的数据
-					for(var i=0;i<excelData.length;i++){
-						var obj = new HouseArrangeExcel({
-							date:excelData[i].date,
-							//单号
-							index:parseInt(excelData[i].index,10),
-							//街道号
-							roadNumber:excelData[i].roadNumber,
-							//具体住址
-							detailPosition:excelData[i].detailPosition,
-							//担保公司
-							company:excelData[i].company,
-							//银行
-							bank:excelData[i].bank,
-							//面积
-							area:excelData[i].area,
-							//电话
-							telephone:excelData[i].telephone,
-							//是否已看
-							isVisit:false,
-							//反馈情况
-							feedback:'',
-							//反馈时间 格式:(2018年07月14日 15:37)
-							feedTime:'',
-							//看房人员
-							staffName:excelData[i].staffName,
-							//是否紧急
-							isUrgent:false,
-							//紧急信息
-							urgentInfo:'',
-							//担保人
-							gurantor:excelData[i].gurantor
-						});
-						obj.save();
-					}
-					res.json({
-						status:1
+					//读取小程序表单项数据
+					wxFormData.find({},function(err2,doc2){
+						if(err2){
+							res.json({
+								status:-1
+							})
+						}else{
+							//保存当天新的数据
+							for(let i=0;i<excelData.length;i++){
+								//构造表单项数组(mongodb不能存object类型的)
+								var formObjArray = [];
+								doc2.forEach((item)=>{
+									//初始值为空
+									let obj = {};
+									obj[item.key]='';
+									formObjArray.push(obj)
+								});
+								//看房表单数据
+								var obj = new HouseArrangeExcel({
+									//表单数组
+									formData:formObjArray,
+									//日期
+									date:excelData[i].date,
+									//单号
+									index:parseInt(excelData[i].index,10),
+									//街道号
+									roadNumber:excelData[i].roadNumber,
+									//具体住址
+									detailPosition:excelData[i].detailPosition,
+									//担保公司
+									company:excelData[i].company,
+									//银行
+									bank:excelData[i].bank,
+									//面积
+									area:excelData[i].area,
+									//电话
+									telephone:excelData[i].telephone,
+									//是否已看
+									isVisit:false,
+									//反馈情况
+									feedback:'',
+									//反馈时间 格式:(2018年07月14日 15:37)
+									feedTime:'',
+									//看房人员
+									staffName:excelData[i].staffName,
+									//是否紧急
+									isUrgent:false,
+									//紧急信息
+									urgentInfo:'',
+									//担保人
+									gurantor:excelData[i].gurantor
+								});
+								obj.save();
+							}
+							res.json({
+								status:1
+							})
+						}
 					})
 				}
 		})
