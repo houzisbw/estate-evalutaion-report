@@ -345,6 +345,45 @@ router.get('/getExcelDataAndDownload',function(req,res){
 
 });
 
+//下载小程序填写的表单数据
+router.post('/downloadFormDataInExcel',function(req,res){
+	let date = req.body.date,
+			index = parseInt(req.body.index,10);
+	HouseArrangeExcel.findOne({date:date,index:index},function(err,doc){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			//读取表单结构进行中文转换
+			wxFormData.find({},function(err1,doc1){
+				if(err1){
+					res.json({
+						status:-1
+					})
+				}else{
+					let formDataArray = doc.formData.slice();
+					let map = {};
+					doc1.forEach((item)=>{
+						map[item.key] = item.name
+					});
+					let retArray = [];
+					formDataArray.forEach((item)=>{
+						let key = Object.keys(item)[0];
+						let obj = {};
+						obj[map[key]] = item[key]
+						retArray.push(obj)
+					});
+					res.json({
+						status:1,
+						formData:retArray
+					})
+				}
+			})
+		}
+	})
+})
+
 
 
 module.exports = router;

@@ -183,7 +183,7 @@ class HouseArrangeExcelContentList extends React.Component{
 			}else{
 				notification['success']({
 					message: '恭喜',
-					description: '删除信息失败成功!',
+					description: '删除信息成功!',
 				});
 			}
 			this.setState({
@@ -199,10 +199,51 @@ class HouseArrangeExcelContentList extends React.Component{
 	}
 	//处理页数变化
 	handlePageChange(page){
-		console.log(page)
 		this.setState({
 			currentPage:page
 		})
+	}
+	//下载表单数据
+	downloadFormDataInExcel(index,date){
+		axios.post('/house_arrangement_today/downloadFormDataInExcel',{
+			date:date,
+			index:index
+		}).then((resp)=>{
+				if(resp.data.status === 1){
+					let formData = resp.data.formData;
+					this.downloadExcel(formData,index)
+				}else{
+					notification['error']({
+						message: '注意',
+						description: '数据读取失败!',
+					});
+				}
+		})
+	}
+	//下载表单excel
+	downloadExcel(formData,index){
+		let wb = window.XLSX.utils.book_new();
+		let dataInExcel = [];
+		formData.forEach((item)=>{
+			let key = Object.keys(item)[0];
+			let value = item[key];
+			dataInExcel.push({
+				A:key,
+				B:value
+			})
+		})
+		let ws = window.XLSX.utils.json_to_sheet(dataInExcel,{
+			headers:['A','B'],skipHeader:true
+		});
+		//将worksheet添加到工作簿上
+		window.XLSX.utils.book_append_sheet(wb, ws, '表单数据');
+		//下载
+		window.XLSX.writeFile(wb,'表单数据-'+index+'.xlsx');
+		//提示下载成功
+		notification['success']({
+			message: '恭喜',
+			description: 'Excel已下载!',
+		});
 	}
 
 	render(){
@@ -317,6 +358,13 @@ class HouseArrangeExcelContentList extends React.Component{
 														<Icon type="close" onClick={()=>{this.removeData(item.index,item.staffName)}} style={{cursor:'pointer',fontSize:'25px',color:'#a2a2a2'}}/>
 													</Tooltip>
 												</div>
+												{/*下载该单表单的excel按钮*/}
+												<div className="download-excel-data-btn">
+													<Tooltip title="下载表单数据">
+														<Icon type="download" onClick={()=>{this.downloadFormDataInExcel(item.index,item.date)}} style={{cursor:'pointer',fontSize:'21px',color:'#a2a2a2'}}/>
+													</Tooltip>
+												</div>
+
 												<div className="house-arrange-excel-content-line-wrapper">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>房屋地址</Tag>
 													<Tooltip title={item.roadNumber+item.detailPosition}>
