@@ -428,8 +428,8 @@ class HouseReviewArrange extends React.Component{
 
 			//解析房屋地址
 			for(let i=0;i<jsonData.length;i++){
-				//第一列和第二列：序号 和 房屋地址
-				jsonData[i]['A'] = jsonData[i]['A'].replace(/\s/g,'');
+				//第一列和第二列：序号 和 房屋地址,注意第一列是整数
+				//jsonData[i]['A'] = jsonData[i]['A'].replace(/\s/g,'');
 				jsonData[i]['B'] = jsonData[i]['B'].replace(/\s/g,'');
 				//针对错误数据的处理
 				for(let k=0;k<self.state.estateBadRoadnumberList.length;k++){

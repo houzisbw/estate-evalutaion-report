@@ -29,7 +29,7 @@ router.post('/login', function(req, res, next) {
 								status:2
 							})
             }else{
-											//设置cookie,token等
+							//设置cookie,token等
 							let payload = {
 								iss:username
 							};

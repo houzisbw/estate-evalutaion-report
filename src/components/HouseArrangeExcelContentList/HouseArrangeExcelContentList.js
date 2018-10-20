@@ -211,17 +211,19 @@ class HouseArrangeExcelContentList extends React.Component{
 		}).then((resp)=>{
 				if(resp.data.status === 1){
 					let formData = resp.data.formData;
-					this.downloadExcel(formData,index)
+					let staffName = resp.data.staffName,
+							feedTime = resp.data.feedTime;
+					this.downloadExcel(formData,index,staffName,feedTime)
 				}else{
 					notification['error']({
 						message: '注意',
-						description: '数据读取失败!',
+						description: '表单不存在,无法下载',
 					});
 				}
 		})
 	}
 	//下载表单excel
-	downloadExcel(formData,index){
+	downloadExcel(formData,index,staffName,feedTime){
 		let wb = window.XLSX.utils.book_new();
 		let dataInExcel = [];
 		formData.forEach((item)=>{
@@ -232,9 +234,14 @@ class HouseArrangeExcelContentList extends React.Component{
 				B:value
 			})
 		})
+		//加上看房人员和反馈时间
+		let otherInfoList = [{A:'看房人员',B:staffName},{A:'看房时间',B:feedTime}]
+		dataInExcel = dataInExcel.concat(otherInfoList);
+		//生成sheet
 		let ws = window.XLSX.utils.json_to_sheet(dataInExcel,{
 			headers:['A','B'],skipHeader:true
 		});
+
 		//将worksheet添加到工作簿上
 		window.XLSX.utils.book_append_sheet(wb, ws, '表单数据');
 		//下载

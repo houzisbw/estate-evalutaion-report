@@ -222,19 +222,38 @@ router.post('/saveAddedHouseData',function(req,res,next){
 			}else{
 				lastestDate = docs[0].date
 			}
-			//构造要保存的数据
-			let obj = {
-				date:lastestDate,
-				isVisit:false,
-				feedback:'',
-				feedTime:'',
-				isUrgent:false,
-				urgentInfo:''
-			};
-			let excelData = new HouseArrangeExcel({...obj,...values});
-			excelData.save();
-			res.json({
-				status:1
+			//添加微信小程序的formData字段
+			//读取小程序表单项数据
+			wxFormData.find({},function(err2,doc2){
+				if(err2){
+					res.json({
+						status:-1
+					})
+				}else{
+					//构造表单项数组(mongodb不能存object类型的)
+					var formObjArray = [];
+					doc2.forEach((item)=>{
+						//初始值为空
+						let obj = {};
+						obj[item.key]='';
+						formObjArray.push(obj)
+					});
+					//构造要保存的数据
+					let obj = {
+						formData:formObjArray,
+						date:lastestDate,
+						isVisit:false,
+						feedback:'',
+						feedTime:'',
+						isUrgent:false,
+						urgentInfo:''
+					};
+					let excelData = new HouseArrangeExcel({...obj,...values});
+					excelData.save();
+					res.json({
+						status:1
+					})
+				}
 			})
 		}
 	})
@@ -362,6 +381,14 @@ router.post('/downloadFormDataInExcel',function(req,res){
 						status:-1
 					})
 				}else{
+					//判断表单是否存在
+					if(doc.formData.length === 0){
+						//不存在
+						res.json({
+							status:-1
+						})
+						return
+					}
 					let formDataArray = doc.formData.slice();
 					let map = {};
 					doc1.forEach((item)=>{
@@ -376,13 +403,18 @@ router.post('/downloadFormDataInExcel',function(req,res){
 					});
 					res.json({
 						status:1,
-						formData:retArray
+						formData:retArray,
+						//反馈时间
+						feedTime:doc.feedTime,
+						//看房人员
+						staffName:doc.staffName
 					})
 				}
 			})
 		}
 	})
 })
+
 
 
 

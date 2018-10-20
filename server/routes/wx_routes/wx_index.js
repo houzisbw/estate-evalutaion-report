@@ -100,7 +100,7 @@ router.post('/getEstateList',function(req,res,next){
 							let resData = [];
 							docs2.forEach(function(item){
 								//反馈信息格式化
-								let feedbackInfo = item.feedback.replace('*##*',',');
+								let feedbackInfo = item.feedback.replace(/\*##\*/g,',');
 								if(feedbackInfo===','){
 									feedbackInfo='暂无'
 								}
@@ -129,11 +129,11 @@ router.post('/getEstateList',function(req,res,next){
 										if(a.isVisit===b.isVisit){
 											return a.estateIndex - b.estateIndex
 										}
-										return a.isVisit>b.isVisit
+										return a.isVisit>b.isVisit?1:-1
 									}
-									return a.isUrgent<b.isUrgent
+									return a.isUrgent<b.isUrgent?1:-1
 								}
-								return a.isOldData>b.isOldData
+								return a.isOldData>b.isOldData?1:-1
 
 							});
 							resolve({status:1,estateData:resData});

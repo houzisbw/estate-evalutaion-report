@@ -24,7 +24,8 @@ class HouseArrangementToday extends React.Component{
 			addDataModalVisible:false,
 			addModalConfirmLoading:false,
 			isHistoryCheckboxShow:false,
-			isSearchHistory:false,
+			//默认搜索历史
+			isSearchHistory:true,
 			//下载excel的timerId
 			downloadExcelTimerId:null
 		};
@@ -192,7 +193,7 @@ class HouseArrangementToday extends React.Component{
 				dataInExcel.push({
 					A:item.index,
 					B:item.isVisit?'已看':'未看',
-					C:item.feedback.replace('*##*','')
+					C:item.feedback.replace(/\*##\*/g,'')
 				})
 			});
 			let ws = window.XLSX.utils.json_to_sheet(dataInExcel,{

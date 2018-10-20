@@ -10,7 +10,7 @@
 * */
 var mongoose = require('mongoose');
 var csvtojson = require('csvtojson');
-var Estate = require('./../models/estate_bad_roadnumber_list')
+var Estate = require('./../models/wx_models/wx_estate_pos_to_name')
 //连接mongodb
 mongoose.connect('mongodb://127.0.0.1:27017/estate_report')
 //监听:成功
@@ -22,7 +22,7 @@ mongoose.connection.on("error",function(){
 	console.log('csv mongodb connection fail');
 });
 
-var csvFilePath = './csv/road.csv';
+var csvFilePath = './csv/pos_to_name.csv';
 //trim去掉内容的左右空格，ignoreEmpty忽略空的单元格(important)
 //默认csv第一行是表头，不算做数据
 var options = {
@@ -38,8 +38,8 @@ csvtojson(options).fromFile(csvFilePath).on('json',(jsonObj)=>{
 	resultArray.forEach(function(value,index){
 		console.log(value)
 		let estateDataObj = new Estate({
-			originName:value.before,
-			validName:value.after
+			estateName:value.name,
+			estatePos:value.pos
 		});
 		estateDataObj.save();
 	})

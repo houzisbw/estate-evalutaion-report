@@ -27,6 +27,7 @@ router.post('/adminGetEstateData',function(req,res,next){
 						estatePosition:item.roadNumber+item.detailPosition,
 						estateTelephone:item.telephone,
 						isVisit:item.isVisit,
+						feedback:item.feedback.replace(/\*##\*/g,';'),
 						staffName:item.staffName,
 						date:item.date
 					}
@@ -83,10 +84,14 @@ router.post('/adminGetEstateData',function(req,res,next){
 });
 
 //搜索,规则是关键词匹配序号，地址，人员任意一个即可
+//搜索改为搜索历史数据，而不是当天的
 router.post('/search',function(req,res,next){
 	let latestDate = req.body.latestDate,
-			keyword = req.body.keyword;
-	let condition = {date:latestDate};
+			keyword = req.body.keyword,
+			currentPage = req.body.currentPage,
+			pageSize = req.body.pageSize;
+	//let condition = {date:latestDate};
+	let condition = {};
 	HouseArrangeExcel.find(condition,function(err,docs){
 		if(err){
 			res.json({
@@ -99,7 +104,7 @@ router.post('/search',function(req,res,next){
 				if( item.staffName.indexOf(keyword)!==-1 ||
 						(item.roadNumber+item.detailPosition).indexOf(keyword)!==-1 ||
 						item.index.toString().indexOf(keyword)!==-1
-				  )
+				)
 				{
 					result.push(item)
 				}
@@ -113,10 +118,14 @@ router.post('/search',function(req,res,next){
 					estateTelephone:item.telephone,
 					isVisit:item.isVisit,
 					staffName:item.staffName,
+					//用正则匹配所有
+					feedback:item.feedback.replace(/\*##\*/g,';'),
 					date:item.date
 				};
 				resData.push(obj);
 			});
+			//找到所有符合条件的数据，再做分页处理
+			resData = resData.slice((currentPage-1)*pageSize,currentPage*pageSize);
 			if(resData.length>0){
 				res.json({
 					status:1,
@@ -128,7 +137,7 @@ router.post('/search',function(req,res,next){
 				})
 			}
 		}
-	})
+	});
 });
 
 //获取看房人员列表
