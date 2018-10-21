@@ -34,6 +34,12 @@ var HouseArrangementToday = new mongoose.Schema({
 	//紧急的具体信息
 	urgentInfo:String,
 	//担保人
-	gurantor:String
+	gurantor:String,
+
+	/*2018.10.20新增*/
+	//报价(默认为0，表示未报价)
+	price:Number,
+	//是否出预评估(默认为false)
+	hasPreAssessment:Boolean
 });
 module.exports = mongoose.model('house_arrange_excel_content',HouseArrangementToday);

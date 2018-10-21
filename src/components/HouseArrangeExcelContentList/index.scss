@@ -36,12 +36,22 @@
     display: inline-block;
     float:right;
     font-size: 13px;
-    background-color: #39ac6a;
+    color: #39ac6a;
     padding:0 10px;
-    color:#fff;
+    .cash-unit{
+      font-size: 10px;
+    }
+  }
+  .clickable{
+    cursor: pointer;
+    transition: all 0.3s;
+    transform-origin: 50% 50%;
+    &:hover{
+      color: #39ac6a;
+    }
   }
   .novisit{
-    background-color: #ff9e1e;
+    color: #7f7f7f;
   }
   .house-arrange-excel-content{
     position: relative;
@@ -86,4 +96,9 @@
     }
 
   }
+}
+
+.price-input-wrapper{
+  width:60%;
+  margin: 0 auto;
 }

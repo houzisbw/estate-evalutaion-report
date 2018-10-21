@@ -30,10 +30,17 @@ class HouseArrangeExcelContentList extends React.Component{
 			indexToRemove:'',
 			staffNameToRemove:'',
 			removeConfirmLoading:false,
+			//报价相关的数据
+			priceModalVisible:false,
 			//当前页数
 			currentPage:1,
 			//每页条数
-			pageSize:10
+			pageSize:10,
+			//报价的价格(数字,大于0，最多7位数)
+			estatePrice:1,
+			//报价那条数据的id
+			estatePriceId:''
+
 		}
 	}
 	componentDidMount(){
@@ -253,13 +260,99 @@ class HouseArrangeExcelContentList extends React.Component{
 		});
 	}
 
+	//处理报价按钮点击
+	handlePrice(index,price,id){
+		//显示报价对话框
+		this.setState({
+			priceModalVisible:true,
+			modifiedIndex:index,
+			estatePrice:price===0?'':price,
+			estatePriceId:id
+		})
+	}
+	//报价对话框点击确定
+	handlePriceModalOK(){
+		if(this.state.estatePrice === ''){
+			notification['error']({
+				message: '注意',
+				description: '价格不能为空!',
+			});
+			return
+		}
+		this.setState({
+			confirmLoading:true,
+			okText:'修改中...'
+		});
+		axios.post('/house_arrangement_today/modifyPrice',{
+			index:this.state.modifiedIndex,
+			date:this.props.latestDate,
+			price:this.state.estatePrice,
+			id:this.state.estatePriceId
+		}).then((resp)=>{
+			if(resp.data.status === -1){
+				notification['error']({
+					message: '注意',
+					description: '价格修改失败!',
+				});
+			}
+			this.setState({
+				confirmLoading:false,
+				okText:'确定',
+				priceModalVisible:false,
+			});
+			this.props.refreshData();
+		})
+	}
+	//报价对话框点击取消
+	handlePriceModalCancel(){
+		this.setState({
+			priceModalVisible:false
+		})
+	}
+	//报价对话框内容改变
+	handlePriceChange(e){
+		let formattedPrice = e.target.value.replace(/[^\d]/g,'');
+		//输入必须合法
+		if(formattedPrice.length>7 || formattedPrice==='0'){
+			return
+		}
+		this.setState({
+			estatePrice:formattedPrice
+		})
+	}
+	//处理是否出预评估切换
+	handlePreAssessment(has,index,_id){
+		axios.post('/house_arrangement_today/modifyHasPreAssessment',{
+			index:index,
+			has:!has,
+			latestDate:this.props.latestDate,
+			_id
+		}).then((resp)=>{
+			if(resp.data.status === -1){
+				notification['error']({
+					message: '注意',
+					description: '预评状态修改失败!',
+				});
+			}
+			this.props.refreshData();
+		})
+	}
+
 	render(){
 		//卡片标题ReactNode
-		const TitleNode = (index,isVisit)=>{
+		const TitleNode = (index,isVisit,hasPreAssessment,price,_id)=>{
 			return (
 					<div>
 						<span>{'序号: '+index}</span>
 						<span className={`isvisit-badge ${isVisit?'':'novisit'}`}>{isVisit?'已看':'未看'}</span>
+						<span className={`clickable isvisit-badge ${price===0?'novisit':''}`} onClick={()=>this.handlePrice(index,price,_id)}>
+							{price===0?'未报价':(price+'元/m')}
+							{price!==0?<sup className="cash-unit">2</sup>:''}
+						</span>
+						<span className={`clickable isvisit-badge ${hasPreAssessment?'':'novisit'}`}
+									onClick={()=>{this.handlePreAssessment(hasPreAssessment,index,_id)}}>
+							{hasPreAssessment?'已出':'未出'}
+						</span>
 					</div>
 			)
 		};
@@ -341,6 +434,25 @@ class HouseArrangeExcelContentList extends React.Component{
 					>
 						<Input addonBefore="加急详情"  value={this.state.defaultUrgentInfo} onChange={(e)=>this.handleUrgentInfoChange(e)}/>
 					</Modal>
+					{/*修改报价的对话框*/}
+					<Modal title="修改报价(元/m2)"
+								 visible={this.state.priceModalVisible}
+								 onOk={()=>this.handlePriceModalOK()}
+								 wrapClassName="vertical-center-modal"
+								 cancelText={'取消'}
+								 okText={'确认'}
+								 confirmLoading={this.state.confirmLoading}
+								 onCancel={()=>this.handlePriceModalCancel()}
+					>
+						<div className="price-input-wrapper">
+							<Input
+									placeholder="请输入报价"
+									prefix={<Icon type="pay-circle" style={{ color: 'rgba(0,0,0,.25)' }} />}
+									value={this.state.estatePrice}
+									onChange={(e)=>this.handlePriceChange(e)}
+							/>
+						</div>
+					</Modal>
 					<List
 							grid={{ gutter: 16, column: 2}}
 							locale={{emptyText:'数据空空如也~'}}
@@ -355,7 +467,7 @@ class HouseArrangeExcelContentList extends React.Component{
 							}}
 							renderItem={item => (
 									<List.Item>
-										<Card title={TitleNode(item.index,item.isVisit)}
+										<Card title={TitleNode(item.index,item.isVisit,item.hasPreAssessment,item.price,item._id)}
 													hoverable={true}
 										>
 											<div className="house-arrange-excel-content">

@@ -4,6 +4,7 @@ var router = express.Router();
 var fs = require('fs');
 var path = require('path');
 var xlsx = require('xlsx');
+var mongoose = require('mongoose')
 var HouseArrangeExcel = require('./../models/house_arrange_excel_content');
 //小程序表单Schema
 var wxFormData = require('./../models/wx_models/wx_form')
@@ -74,7 +75,11 @@ router.post('/saveExcelToDB',function(req,res,next){
 									//紧急信息
 									urgentInfo:'',
 									//担保人
-									gurantor:excelData[i].gurantor
+									gurantor:excelData[i].gurantor,
+									//报价
+									price:0,
+									//预评估
+									hasPreAssessment:false
 								});
 								obj.save();
 							}
@@ -246,7 +251,9 @@ router.post('/saveAddedHouseData',function(req,res,next){
 						feedback:'',
 						feedTime:'',
 						isUrgent:false,
-						urgentInfo:''
+						urgentInfo:'',
+						price:0,
+						hasPreAssessment:false
 					};
 					let excelData = new HouseArrangeExcel({...obj,...values});
 					excelData.save();
@@ -286,6 +293,7 @@ router.post('/searchHouseData',function(req,res,next){
 						item.feedback.indexOf(keyword)!==-1||
 						item.feedTime.indexOf(keyword)!==-1||
 						item.staffName.indexOf(keyword)!==-1||
+						item.price.toString().indexOf(keyword)!==-1||
 						//新增单子没有委托人一项，这里必须保证gurantor存在,注意这里外层的括号
 						(item.gurantor&&item.gurantor.indexOf(keyword)!==-1)||
 						item.urgentInfo.indexOf(keyword)!==-1
@@ -414,6 +422,46 @@ router.post('/downloadFormDataInExcel',function(req,res){
 		}
 	})
 })
+
+//处理是否已出预评估的状态切换
+router.post('/modifyHasPreAssessment',function(req,res){
+	let date = req.body.latestDate,
+			index = parseInt(req.body.index,10),
+			has = req.body.has,
+			id = req.body._id;
+	//根据id查询，不能根据其他数据
+	console.log(id)
+	HouseArrangeExcel.findOneAndUpdate({_id:mongoose.Types.ObjectId(id)},{hasPreAssessment:has},function(err){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			res.json({
+				status:1
+			})
+		}
+	})
+});
+
+//处理价格修改
+router.post('/modifyPrice',function(req,res){
+	let date = req.body.date,
+			index = parseInt(req.body.index,10),
+			price = parseInt(req.body.price,10),
+			id = req.body.id;
+	HouseArrangeExcel.findOneAndUpdate({_id:mongoose.Types.ObjectId(id)},{price:price},function(err){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			res.json({
+				status:1
+			})
+		}
+	})
+});
 
 
 

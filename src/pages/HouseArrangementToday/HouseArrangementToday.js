@@ -27,7 +27,9 @@ class HouseArrangementToday extends React.Component{
 			//默认搜索历史
 			isSearchHistory:true,
 			//下载excel的timerId
-			downloadExcelTimerId:null
+			downloadExcelTimerId:null,
+			//搜索的关键词
+			searchKeywords:''
 		};
 	}
 	componentDidMount(){
@@ -67,8 +69,13 @@ class HouseArrangementToday extends React.Component{
 	}
 	//刷新数据
 	refresh(){
-		this.fetchData();
+		if(this.state.searchKeywords){
+			this.searchHouseData(this.state.searchKeywords);
+		}else{
+			this.fetchData();
+		}
 	}
+
 	//添加数据
 	addData(){
 		this.setState({
@@ -147,7 +154,8 @@ class HouseArrangementToday extends React.Component{
 		}
 		//进入loading状态
 		this.setState({
-			isLoading:true
+			isLoading:true,
+			searchKeywords:v
 		});
 		axios.post('/house_arrangement_today/searchHouseData',{
 			keyword:v,
@@ -245,7 +253,7 @@ class HouseArrangementToday extends React.Component{
 												<Icon type="clock-circle-o" style={{fontSize:'25px',color:'#39ac6a'}}/>
 												<span className="latest-visit-time">{this.state.latestDate}</span>
 												<Tooltip title="点此刷新数据">
-													<Icon type="sync" onClick={()=>{this.refresh()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>
+													<Icon type="sync" onClick={()=>{this.fetchData()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>
 												</Tooltip>
 												<Tooltip title="点此添加数据">
 													<Icon type="plus-square-o" onClick={()=>{this.addData()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>

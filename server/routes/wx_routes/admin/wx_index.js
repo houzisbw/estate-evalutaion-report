@@ -29,8 +29,10 @@ router.post('/adminGetEstateData',function(req,res,next){
 						isVisit:item.isVisit,
 						feedback:item.feedback.replace(/\*##\*/g,';'),
 						staffName:item.staffName,
-						date:item.date
-					}
+						date:item.date,
+						price:item.price,
+						hasPreAssessment:item.hasPreAssessment
+					};
 					resData.push(obj);
 				})
 				//只取最近日期的数据,注意日期是字符串，需要转成整形比较
@@ -120,7 +122,9 @@ router.post('/search',function(req,res,next){
 					staffName:item.staffName,
 					//用正则匹配所有
 					feedback:item.feedback.replace(/\*##\*/g,';'),
-					date:item.date
+					date:item.date,
+					price:item.price,
+					hasPreAssessment:item.hasPreAssessment
 				};
 				resData.push(obj);
 			});
