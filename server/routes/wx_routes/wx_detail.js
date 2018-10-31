@@ -73,9 +73,10 @@ router.post('/submitFeedback',function(req,res,next){
 					status:-1
 				})
 			}else{
-				//修改成功
+				//修改成功,返回提交时间
 				res.json({
-					status:1
+					status:1,
+					submitTime:+new Date()
 				})
 			}
 

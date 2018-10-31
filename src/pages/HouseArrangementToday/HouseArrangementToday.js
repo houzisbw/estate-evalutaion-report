@@ -209,8 +209,11 @@ class HouseArrangementToday extends React.Component{
 			});
 			//将worksheet添加到工作簿上
 			window.XLSX.utils.book_append_sheet(wb, ws, '派单情况');
+			//获取当日日期
+			let date = new Date();
+			let dateStr = date.getFullYear()+'-'+(date.getMonth()+1)+'-'+date.getDate();
 			//下载
-			window.XLSX.writeFile(wb,'派单情况.xlsx');
+			window.XLSX.writeFile(wb,'派单情况'+dateStr+'.xlsx');
 		},1000);
 		this.setState({
 			downloadExcelTimerId:timerId
