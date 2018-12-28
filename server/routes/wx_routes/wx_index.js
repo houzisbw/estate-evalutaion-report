@@ -6,6 +6,8 @@ var path = require('path');
 //数据模型
 var HouseArrangeExcel = require('./../../models/house_arrange_excel_content');
 var WXUsers = require('./../../models/wx_models/wx_users');
+//公用账号,其所看单子为不包含在下面的列表中的剩余单
+let notIncludedList = ['王攀','刘界松','阙耀宗','何传杰','尹阳','魏广兴','杨虎','胡人杰','丁名佳','范成祥'];
 //首页检查是否登录
 router.get('/checkLogin',function(req,res,next){
 		//根据cookie中的sessionid获取到session中对应的名字，便于后续操作
@@ -89,9 +91,13 @@ router.post('/getEstateList',function(req,res,next){
 			//查询该姓名下的房屋记录
 			return new Promise(function(resolve,reject){
 				let latestDate = obj.latestDate;
+				let staffNameCondition = {staffName:obj.realname}
+				if(obj.realname === '公用账号'){
+                    staffNameCondition = {staffName:{$nin:notIncludedList}}
+				}
 				//查询条件
 				let dateArray = !obj.hasOldData?[obj.latestDate]:[obj.latestDate,obj.secondLatestDate];
-				HouseArrangeExcel.find(Object.assign(condition,{staffName:obj.realname,date:{$in:dateArray}}),function(err,docs2){
+				HouseArrangeExcel.find(Object.assign(condition,staffNameCondition,{date:{$in:dateArray}}),function(err,docs2){
 					if(err){
 						reject(-1)
 					}else{
@@ -219,18 +225,32 @@ router.post('/getOtherInfo',function(req,res,next){
 					})
 				}
 				let secondLatestDate = filteredDocs.length>0?filteredDocs[0].date:'';
-
-				docs.forEach(function(item){
-					//找到最近的日期以及次近的日期
-					if(item.staffName === realname && (item.date === latestDate || item.date === secondLatestDate)){
-						if(item.isVisit){
-							staffEstateVisitedNum++;
-						}else{
-							staffEstateUnvisitedNum++;
+				if(realname === '公用账号'){
+                    docs.forEach(function(item){
+                    	//如果该单名字不在list中则放入公用账号
+                    	if(notIncludedList.indexOf(item.staffName) === -1 && (item.date === latestDate || item.date === secondLatestDate)){
+                            if(item.isVisit){
+                                staffEstateVisitedNum++;
+                            }else{
+                                staffEstateUnvisitedNum++;
+                            }
+                            staffEstateTotalNum++;
 						}
-						staffEstateTotalNum++;
-					}
-				})
+					})
+				}else{
+                    docs.forEach(function(item){
+                        //找到最近的日期以及次近的日期
+                        if(item.staffName === realname && (item.date === latestDate || item.date === secondLatestDate)){
+                            if(item.isVisit){
+                                staffEstateVisitedNum++;
+                            }else{
+                                staffEstateUnvisitedNum++;
+                            }
+                            staffEstateTotalNum++;
+                        }
+                    })
+				}
+
 				res.json({
 					status:1,
 					realname,

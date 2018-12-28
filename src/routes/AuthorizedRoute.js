@@ -11,7 +11,6 @@ class AuthorizedRoute extends React.Component {
 		//进行身份验证检查
 		checkAuthentication();
 	}
-
 	render() {
 		const { component: Component, logged,pending,...rest } = this.props;
 		//pending是加载中状态,此时logged还是false
