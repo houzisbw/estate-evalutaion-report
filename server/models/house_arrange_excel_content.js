@@ -40,6 +40,9 @@ var HouseArrangementToday = new mongoose.Schema({
 	//报价(默认为0，表示未报价)
 	price:Number,
 	//是否出预评估(默认为false)
-	hasPreAssessment:Boolean
+	hasPreAssessment:Boolean,
+
+	//上传照片类型
+	pictureType:String
 });
 module.exports = mongoose.model('house_arrange_excel_content',HouseArrangementToday);

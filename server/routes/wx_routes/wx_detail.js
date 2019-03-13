@@ -91,5 +91,33 @@ router.post('/submitFeedback',function(req,res,next){
 });
 
 
+// 更新照片类型
+router.post('/updatePictureType',function(req,res,next){
+	var estateIndex = req.body.index,
+      latestDate = req.body.date,
+			type = req.body.pictureType
+  var condition = {
+    index:estateIndex,
+    date:latestDate
+  };
+	var update = {
+    pictureType:type
+	};
+  //注意此处无doc参数
+  HouseArrangeExcel.findOneAndUpdate(condition,update,function(err){
+    if(err){
+      //出错
+      res.json({
+        status:-1
+      })
+    }else{
+      //修改成功
+      res.json({
+        status:1,
+      })
+    }
+  })
+
+});
 
 module.exports = router

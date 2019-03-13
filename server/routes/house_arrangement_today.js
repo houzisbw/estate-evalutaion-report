@@ -79,7 +79,9 @@ router.post('/saveExcelToDB',function(req,res,next){
 									//报价
 									price:0,
 									//预评估
-									hasPreAssessment:false
+									hasPreAssessment:false,
+									//照片类型,默认空
+									pictureType:''
 								});
 								obj.save();
 							}
@@ -253,7 +255,8 @@ router.post('/saveAddedHouseData',function(req,res,next){
 						isUrgent:false,
 						urgentInfo:'',
 						price:0,
-						hasPreAssessment:false
+						hasPreAssessment:false,
+						pictureType:''
 					};
 					let excelData = new HouseArrangeExcel({...obj,...values});
 					excelData.save();
