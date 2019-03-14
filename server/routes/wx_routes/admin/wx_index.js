@@ -30,6 +30,8 @@ router.post('/adminGetEstateData',function(req,res,next){
 						feedback:item.feedback.replace(/\*##\*/g,';'),
 						staffName:item.staffName,
 						date:item.date,
+						company:item.company,
+						bank:item.bank,
 						price:item.price,
 						hasPreAssessment:item.hasPreAssessment
 					};

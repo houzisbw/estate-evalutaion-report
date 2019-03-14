@@ -5,6 +5,36 @@ import React from 'react';
 import {List,Card,Tag,Tooltip,Icon,Select,Modal,notification,Input} from 'antd';
 import './index.scss'
 import axios from 'axios'
+import COS from 'cos-js-sdk-v5'
+import PictureDownload from '../PictureDownload/PictureDownload'
+
+const tencentyunSecretId = 'AKID8AEFQ4Jzz8whgtj2fEbmlbGn8JHkNxZi';
+const tencentyunSecretKey = '3sRviSR8hOB3jjejopwY2QkgR0PabO3V';
+const tencentyunOssBucketName = 'estate-picture-1258800495';
+const tencentyunOssRegion = 'ap-chengdu';
+var getAuthorization = function(options, callback) {
+  // 格式四、（不推荐，适用于前端调试，避免泄露密钥）前端使用固定密钥计算签名
+  var authorization = COS.getAuthorization({
+    SecretId: tencentyunSecretId,
+    SecretKey: tencentyunSecretKey,
+    Method: options.Method,
+    Pathname: options.Pathname,
+    Query: options.Query,
+    Headers: options.Headers,
+    Expires: 60,
+  });
+  callback({
+    Authorization: authorization,
+    // XCosSecurityToken: credentials.sessionToken, // 如果使用临时密钥，需要传 XCosSecurityToken
+  });
+};
+
+var cos = new COS({
+  // path style 指正式请求时，Bucket 是在 path 里，这样用途相同园区多个 bucket 只需要配置一个园区域名
+  // ForcePathStyle: true,
+  getAuthorization: getAuthorization,
+});
+
 const Option = Select.Option;
 const confirm = Modal.confirm;
 class HouseArrangeExcelContentList extends React.Component{
@@ -39,7 +69,11 @@ class HouseArrangeExcelContentList extends React.Component{
 			//报价的价格(数字,大于0，最多7位数)
 			estatePrice:1,
 			//报价那条数据的id
-			estatePriceId:''
+			estatePriceId:'',
+			//是否在下载图片
+			isDownloadingPicture:false,
+			//图片数量对象，key为index，value为张数
+			pictureNumObj:{}
 
 		}
 	}
@@ -338,6 +372,66 @@ class HouseArrangeExcelContentList extends React.Component{
 		})
 	}
 
+	// 下载照片
+  downloadPictures(index){
+		//如果处于下载过程中
+		if(this.state.isDownloadingPicture){
+			return
+		}
+		let self = this;
+		this.setState({
+      isDownloadingPicture:true
+		});
+		// 根据房屋index获取图片url
+    cos.getBucket({
+      Bucket: tencentyunOssBucketName,
+      Region: tencentyunOssRegion,
+      Prefix: index+'-',
+    }, function(err, data) {
+      let keyArray = [];
+      data.Contents.forEach((item)=>{
+        keyArray.push(item.Key)
+      });
+      if(keyArray.length === 0){
+        notification['error']({
+          message: '注意',
+          description: '没有图片上传!',
+        });
+      	return
+			}
+      //查询url
+      // 根据图片的key通过接口获取图片的url
+      var getUrlPromiseList = [];
+      keyArray.forEach((item)=>{
+        var p = new Promise((res1,rej1)=>{
+          cos.getObjectUrl({
+            Bucket: tencentyunOssBucketName,
+            Region: tencentyunOssRegion,
+            Key: item,
+          }, function (err, data) {
+            if(err){
+              rej1()
+            }else{
+              //返回一个对象，指明图片名称和url的对应关系
+							let url = data.Url;
+              res1(url)
+            }
+          });
+        });
+        getUrlPromiseList.push(p)
+      });
+      Promise.all(getUrlPromiseList).then((result)=>{
+       	result.forEach((item)=>{
+          var downloadUrl = item + (item.indexOf('?') > -1 ? '&' : '?') + 'response-content-disposition=attachment'; // 补充强制下载的参数
+          window.open(downloadUrl); // 这里是新窗口打开 url，如果需要在当前窗口打开，可以使用隐藏的 iframe 下载，或使用 a 标签 download
+        });
+        self.setState({
+          isDownloadingPicture:false
+        });
+      })
+    });
+	}
+
 	render(){
 		//卡片标题ReactNode
 		const TitleNode = (index,isVisit,hasPreAssessment,price,_id)=>{
@@ -465,7 +559,8 @@ class HouseArrangeExcelContentList extends React.Component{
 								pageSize: this.state.pageSize,
 								total:this.props.excelLatestData.length
 							}}
-							renderItem={item => (
+							renderItem={item => {
+								return (
 									<List.Item>
 										<Card title={TitleNode(item.index,item.isVisit,item.hasPreAssessment,item.price,item._id)}
 													hoverable={true}
@@ -483,6 +578,11 @@ class HouseArrangeExcelContentList extends React.Component{
 														<Icon type="download" onClick={()=>{this.downloadFormDataInExcel(item.index,item.date)}} style={{cursor:'pointer',fontSize:'21px',color:'#a2a2a2'}}/>
 													</Tooltip>
 												</div>
+                        {/*下载该单照片的按钮*/}
+                        <PictureDownload
+													index={item.index}
+													downloadPictures={()=>this.downloadPictures(item.index)}
+												/>
 
 												<div className="house-arrange-excel-content-line-wrapper">
 													<Tag color={item.isVisit?'#39ac6a':'#ff9e1e'}>房屋地址</Tag>
@@ -537,7 +637,7 @@ class HouseArrangeExcelContentList extends React.Component{
 											</div>
 										</Card>
 									</List.Item>
-							)}
+							)}}
 					/>
 				</div>
 		)
