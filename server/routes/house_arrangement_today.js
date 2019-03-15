@@ -81,7 +81,9 @@ router.post('/saveExcelToDB',function(req,res,next){
 									//预评估
 									hasPreAssessment:false,
 									//照片类型,默认空
-									pictureType:''
+									pictureType:'',
+									//是否已下载图片
+                  hasDownloadPictures:false
 								});
 								obj.save();
 							}
@@ -256,7 +258,8 @@ router.post('/saveAddedHouseData',function(req,res,next){
 						urgentInfo:'',
 						price:0,
 						hasPreAssessment:false,
-						pictureType:''
+						pictureType:'',
+            hasDownloadPictures:false
 					};
 					let excelData = new HouseArrangeExcel({...obj,...values});
 					excelData.save();
@@ -464,6 +467,42 @@ router.post('/modifyPrice',function(req,res){
 			})
 		}
 	})
+});
+
+//查看是否已经下载照片
+router.post('/fetchHasDownloadPictures',function(req,res){
+	let index = req.body.index,
+			date = req.body.date;
+  HouseArrangeExcel.findOne({index:index,date:date},function(err,doc){
+		if(err){
+			res.json({
+				status:-1
+			})
+		}else{
+			res.json({
+				status:1,
+				hasDownload:doc.hasDownloadPictures
+			})
+		}
+	})
+
+});
+
+//更新照片为已下载
+router.post('/picturesDownloaded',function(req,res){
+  let index = req.body.index,
+    	date = req.body.date;
+  HouseArrangeExcel.findOneAndUpdate({index:index,date:date},{hasDownloadPictures:true},function(err){
+    if(err){
+      res.json({
+        status:-1
+      })
+    }else{
+      res.json({
+        status:1
+      })
+    }
+  })
 });
 
 

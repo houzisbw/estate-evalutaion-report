@@ -373,7 +373,7 @@ class HouseArrangeExcelContentList extends React.Component{
 	}
 
 	// 下载照片
-  downloadPictures(index){
+  downloadPictures(index,date){
 		//如果处于下载过程中
 		if(this.state.isDownloadingPicture){
 			return
@@ -396,6 +396,9 @@ class HouseArrangeExcelContentList extends React.Component{
         notification['error']({
           message: '注意',
           description: '没有图片上传!',
+        });
+        self.setState({
+          isDownloadingPicture:false
         });
       	return
 			}
@@ -428,6 +431,11 @@ class HouseArrangeExcelContentList extends React.Component{
         self.setState({
           isDownloadingPicture:false
         });
+        //发送请求更新已下载
+				axios.post('/house_arrangement_today/picturesDownloaded',{index:index,date:date}).then((resp)=>{
+					//刷新数据
+          self.props.refreshData();
+				})
       })
     });
 	}
@@ -581,7 +589,8 @@ class HouseArrangeExcelContentList extends React.Component{
                         {/*下载该单照片的按钮*/}
                         <PictureDownload
 													index={item.index}
-													downloadPictures={()=>this.downloadPictures(item.index)}
+													date={item.date}
+													downloadPictures={()=>this.downloadPictures(item.index,item.date)}
 												/>
 
 												<div className="house-arrange-excel-content-line-wrapper">

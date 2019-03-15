@@ -2,9 +2,10 @@
  * Created by Administrator on 2019/3/14 0014.
  */
 import React from 'react';
-import {Icon,Tooltip} from 'antd'
+import {Icon,Tooltip,message} from 'antd'
 import './index.scss'
 import COS from 'cos-js-sdk-v5'
+import axios from 'axios'
 const tencentyunSecretId = 'AKID8AEFQ4Jzz8whgtj2fEbmlbGn8JHkNxZi';
 const tencentyunSecretKey = '3sRviSR8hOB3jjejopwY2QkgR0PabO3V';
 const tencentyunOssBucketName = 'estate-picture-1258800495';
@@ -39,16 +40,20 @@ class PictureDownload extends React.Component{
     super(props);
     this.state = {
       isGreen:false,
+      hasDownload:false
     }
   }
   componentDidMount(){
     this._isMounted = true;
     // 发送请求获取图片数量
     let index = this.props.index;
+    let date = this.props.date;
     this.getPictureNumByIndex(index);
+    this.fetchHasDownloadPictures(index,date);
   }
   componentWillReceiveProps(nextProps){
     this.getPictureNumByIndex(nextProps.index);
+    this.fetchHasDownloadPictures(nextProps.index,nextProps.date);
   }
 
   componentWillUnmount() {
@@ -73,6 +78,22 @@ class PictureDownload extends React.Component{
     })
   }
 
+  //是否已经下载了照片
+  fetchHasDownloadPictures(index,date){
+    axios.post('/house_arrangement_today/fetchHasDownloadPictures',{index:index,date:date}).then((resp)=>{
+      if(resp.data.status === -1){
+        message.error('遇到未知错误!');
+      }else{
+        let has = resp.data.hasDownload;
+        if(this._isMounted) {
+          this.setState({
+            hasDownload: has
+          })
+        }
+      }
+    })
+  }
+
   render(){
     return (
       <div className="download-picture-btn">
@@ -80,7 +101,11 @@ class PictureDownload extends React.Component{
           <Icon
             type="folder"
             onClick={this.props.downloadPictures}
-            style={{cursor:'pointer',fontSize:'21px',color:this.state.isGreen?'#40A25D':'#a2a2a2'}}/>
+            style={{cursor:'pointer',fontSize:'21px',color:this.state.isGreen?'#40A25D':'#a2a2a2'}}>
+            {
+              this.state.hasDownload?(<span className="has-download">已下载</span>):null
+            }
+          </Icon>
         </Tooltip>
       </div>
     )

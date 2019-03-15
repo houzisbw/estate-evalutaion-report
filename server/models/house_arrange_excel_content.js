@@ -43,6 +43,8 @@ var HouseArrangementToday = new mongoose.Schema({
 	hasPreAssessment:Boolean,
 
 	//上传照片类型
-	pictureType:String
+	pictureType:String,
+	//是否已下载图片
+	hasDownloadPictures:false
 });
 module.exports = mongoose.model('house_arrange_excel_content',HouseArrangementToday);
