@@ -7,6 +7,7 @@ import './index.scss'
 import axios from 'axios'
 import COS from 'cos-js-sdk-v5'
 import PictureDownload from '../PictureDownload/PictureDownload'
+import SignPositionBtn from '../SignPositionBtn/SignPositionBtn'
 
 const tencentyunSecretId = 'AKID8AEFQ4Jzz8whgtj2fEbmlbGn8JHkNxZi';
 const tencentyunSecretKey = '3sRviSR8hOB3jjejopwY2QkgR0PabO3V';
@@ -574,6 +575,9 @@ class HouseArrangeExcelContentList extends React.Component{
 													hoverable={true}
 										>
 											<div className="house-arrange-excel-content">
+                        {/*查看签到位置按钮*/}
+												<SignPositionBtn index={item.index}/>
+
 												{/*删除按钮*/}
 												<div className="delete-house-data-btn">
 													<Tooltip title="删除该数据">

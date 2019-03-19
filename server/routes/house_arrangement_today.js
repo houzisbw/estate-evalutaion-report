@@ -83,7 +83,11 @@ router.post('/saveExcelToDB',function(req,res,next){
 									//照片类型,默认空
 									pictureType:'',
 									//是否已下载图片
-                  hasDownloadPictures:false
+                  hasDownloadPictures:false,
+                  //签到位置
+                  signPosition:',',
+									//图片是否传完
+                  canDownloadPictures:false,
 								});
 								obj.save();
 							}
@@ -259,7 +263,11 @@ router.post('/saveAddedHouseData',function(req,res,next){
 						price:0,
 						hasPreAssessment:false,
 						pictureType:'',
-            hasDownloadPictures:false
+            hasDownloadPictures:false,
+            //签到位置
+            signPosition:',',
+            //图片是否传完
+            canDownloadPictures:false,
 					};
 					let excelData = new HouseArrangeExcel({...obj,...values});
 					excelData.save();
@@ -436,7 +444,6 @@ router.post('/modifyHasPreAssessment',function(req,res){
 			has = req.body.has,
 			id = req.body._id;
 	//根据id查询，不能根据其他数据
-	console.log(id)
 	HouseArrangeExcel.findOneAndUpdate({_id:mongoose.Types.ObjectId(id)},{hasPreAssessment:has},function(err){
 		if(err){
 			res.json({
@@ -505,6 +512,41 @@ router.post('/picturesDownloaded',function(req,res){
   })
 });
 
+//获取签到位置信息
+router.post('/fetchSignPosition',function(req,res){
+	let index = req.body.index;
+  HouseArrangeExcel.findOne({index:index},function(err,doc){
+    if(err){
+      res.json({
+        status:-1
+      })
+    }else{
+      res.json({
+        status:1,
+				pos:doc.signPosition
+      })
+    }
+	})
+})
+
+// 获取图片是否上传完
+router.post('/fetchCanDownload',function(req,res){
+  console.log('here')
+  let index = parseInt(req.body.index,10);
+  HouseArrangeExcel.findOne({index:index},function(err,doc){
+    if(err){
+      res.json({
+        status:-1
+      })
+    }else{
+      let can = doc.canDownloadPictures;
+      res.json({
+        status:1,
+        can:can
+      })
+    }
+  })
+})
 
 
 

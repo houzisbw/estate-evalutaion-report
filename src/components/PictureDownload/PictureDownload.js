@@ -48,11 +48,11 @@ class PictureDownload extends React.Component{
     // 发送请求获取图片数量
     let index = this.props.index;
     let date = this.props.date;
-    this.getPictureNumByIndex(index);
+    this.fetchCanDownload(index);
     this.fetchHasDownloadPictures(index,date);
   }
   componentWillReceiveProps(nextProps){
-    this.getPictureNumByIndex(nextProps.index);
+    this.fetchCanDownload(nextProps.index);
     this.fetchHasDownloadPictures(nextProps.index,nextProps.date);
   }
 
@@ -61,19 +61,18 @@ class PictureDownload extends React.Component{
     this._isMounted = false;
   }
 
-  //根据index获取图片数量
-  getPictureNumByIndex(index){
-    let self = this;
-    cos.getBucket({
-      Bucket: tencentyunOssBucketName,
-      Region: tencentyunOssRegion,
-      Prefix: index+'-',
-    }, function(err, data) {
-      let len = data.Contents.length;
-      if(self._isMounted){
-        self.setState({
-          isGreen:len>0
-        })
+  //获取是否可以下载图片
+  fetchCanDownload(index){
+    axios.post('/house_arrangement_today/fetchCanDownload',{index:index}).then((resp)=>{
+      if(resp.data.status === -1){
+        message.error('遇到未知错误!');
+      }else{
+        let can = resp.data.can;
+        if(this._isMounted) {
+          this.setState({
+            isGreen: can
+          })
+        }
       }
     })
   }

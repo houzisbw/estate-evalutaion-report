@@ -33,142 +33,259 @@ router.post('/getEstateList',function(req,res,next){
 	let condition = type === 0?{}:(type===1?{isVisit:true}:{isVisit:false});
 
 	//获取服务器当前日期yyyy-mm-dd
-	let d = new Date();
-	let currentDate = d.getFullYear()+'-'+(d.getMonth()+1<10?('0'+(d.getMonth()+1)):(d.getMonth()+1))+'-'
-			+(d.getDate()<10?('0'+d.getDate()):d.getDate());
+	//let d = new Date();
+	// let currentDate = d.getFullYear()+'-'+(d.getMonth()+1<10?('0'+(d.getMonth()+1)):(d.getMonth()+1))+'-'
+	// 		+(d.getDate()<10?('0'+d.getDate()):d.getDate());
 
 	//登录未过期
 	if(req.session.username){
 		//首先得获取用户的真实姓名,根据username获取
-		var promise = new Promise(function(resolve,reject){
-			WXUsers.findOne({username:username},function(err,doc){
-				if(err){
-					reject();
-				}else{
-					resolve(doc)
-				}
-			})
-		});
-		promise.then(function(data){
-			//获取真实姓名
-			let realname = data.realname;
-			//应该先获取最近一次派单日期,而不是先找该员工下所有的记录
-			return new Promise(function(resolve,reject){
-				HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs){
-					if(err){
-						reject(-1)
-					}else{
-						//如果docs为空直接返回无数据
-						if(!docs||Object.keys(docs).length===0){
-							//数据为空
-							reject(0)
-						}
-						//最近一次的派单日期
-						let latestDate = docs[0].date;
-						//次近一次的派单日期
-						let secondLatestDate = '';
-						//如果当期日期等于最近的一次派单日期则还要拿到上一次派单日期
-						let filteredDocs = [];
-						if(currentDate === latestDate){
-							filteredDocs = docs.filter((item)=>{
-								return item.date !== latestDate
-							})
-							secondLatestDate = filteredDocs[0]&&filteredDocs[0].date
-						}
-						resolve({
-							latestDate:latestDate,
-							secondLatestDate:secondLatestDate,
-							//是否显示上次派单数据
-							hasOldData:currentDate === latestDate,
-							realname:realname
-						})
-					}
-				})
-			});
-		},function(){
-			reject(-1)
-		}).then(function(obj){
-			//查询该姓名下的房屋记录
-			return new Promise(function(resolve,reject){
-				let latestDate = obj.latestDate;
-				let staffNameCondition = {staffName:obj.realname}
-				if(obj.realname === '公用账号'){
-                    staffNameCondition = {staffName:{$nin:notIncludedList}}
-				}
-				//查询条件
-				let dateArray = !obj.hasOldData?[obj.latestDate]:[obj.latestDate,obj.secondLatestDate];
-				HouseArrangeExcel.find(Object.assign(condition,staffNameCondition,{date:{$in:dateArray}}),function(err,docs2){
-					if(err){
-						reject(-1)
-					}else{
-						if(docs2.length){
-							//查询成功，找到数据
-							let resData = [];
-							docs2.forEach(function(item){
-								//反馈信息格式化
-								let feedbackInfo = item.feedback.replace(/\*##\*/g,',');
-								if(feedbackInfo===','){
-									feedbackInfo='暂无'
-								}
-								else if(feedbackInfo[feedbackInfo.length-1]===','){
-									feedbackInfo = feedbackInfo.substr(0,feedbackInfo.length-1)
-								}
-								let obj = {
-									estateIndex:item.index,
-									estatePosition:item.roadNumber+item.detailPosition,
-									estateRoadNumber:item.roadNumber,
-									estateTelephone:item.telephone,
-									date:item.date,
-									isOldData:item.date !== latestDate,
-									isFeedback:!!item.feedTime,
-									feedback:feedbackInfo,
-									isVisit:item.isVisit,
-									isUrgent:item.isUrgent,
-									urgentInfo:item.urgentInfo
-								};
-								resData.push(obj);
-							});
-							//排序：最先按日期，次先按加急，再按未完成，最后是已完成，然后是序号
-							resData.sort(function(a,b){
-								if(a.isOldData === b.isOldData){
-									if(a.isUrgent === b.isUrgent){
-										if(a.isVisit===b.isVisit){
-											return a.estateIndex - b.estateIndex
-										}
-										return a.isVisit>b.isVisit?1:-1
-									}
-									return a.isUrgent<b.isUrgent?1:-1
-								}
-								return a.isOldData>b.isOldData?1:-1
+		// var promise = new Promise(function(resolve,reject){
+		// 	WXUsers.findOne({username:username},function(err,doc){
+		// 		if(err){
+		// 			reject();
+		// 		}else{
+		// 			resolve(doc)
+		// 		}
+		// 	})
+		// });
+		// promise.then(function(data){
+		// 	//获取真实姓名
+		// 	let realname = data.realname;
+		// 	//应该先获取最近一次派单日期,而不是先找该员工下所有的记录
+		// 	return new Promise(function(resolve,reject){
+		// 		HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs){
+		// 			if(err){
+		// 				reject(-1)
+		// 			}else{
+		// 				//如果docs为空直接返回无数据
+		// 				if(!docs||Object.keys(docs).length===0){
+		// 					//数据为空
+		// 					reject(0)
+		// 				}
+		// 				//最近一次的派单日期
+		// 				let latestDate = docs[0].date;
+		// 				//次近一次的派单日期
+		// 				let secondLatestDate = '';
+		// 				//如果当期日期等于最近的一次派单日期则还要拿到上一次派单日期
+		// 				let filteredDocs = [];
+		// 				if(currentDate === latestDate){
+		// 					filteredDocs = docs.filter((item)=>{
+		// 						return item.date !== latestDate
+		// 					})
+		// 					secondLatestDate = filteredDocs[0]&&filteredDocs[0].date
+		// 				}
+		// 				resolve({
+		// 					latestDate:latestDate,
+		// 					secondLatestDate:secondLatestDate,
+		// 					//是否显示上次派单数据
+		// 					hasOldData:currentDate === latestDate,
+		// 					realname:realname
+		// 				})
+		// 			}
+		// 		})
+		// 	});
+		// },function(){
+		// 	reject(-1)
+		// }).then(function(obj){
+		// 	//查询该姓名下的房屋记录
+		// 	return new Promise(function(resolve,reject){
+		// 		let latestDate = obj.latestDate;
+		// 		let staffNameCondition = {staffName:obj.realname}
+		// 		if(obj.realname === '公用账号'){
+     //                staffNameCondition = {staffName:{$nin:notIncludedList}}
+		// 		}
+		// 		//查询条件
+		// 		let dateArray = !obj.hasOldData?[obj.latestDate]:[obj.latestDate,obj.secondLatestDate];
+		// 		HouseArrangeExcel.find(Object.assign(condition,staffNameCondition,{date:{$in:dateArray}}),function(err,docs2){
+		// 			if(err){
+		// 				reject(-1)
+		// 			}else{
+		// 				if(docs2.length){
+		// 					//查询成功，找到数据
+		// 					let resData = [];
+		// 					docs2.forEach(function(item){
+		// 						//反馈信息格式化
+		// 						let feedbackInfo = item.feedback.replace(/\*##\*/g,',');
+		// 						if(feedbackInfo===','){
+		// 							feedbackInfo='暂无'
+		// 						}
+		// 						else if(feedbackInfo[feedbackInfo.length-1]===','){
+		// 							feedbackInfo = feedbackInfo.substr(0,feedbackInfo.length-1)
+		// 						}
+		// 						let obj = {
+		// 							estateIndex:item.index,
+		// 							estatePosition:item.roadNumber+item.detailPosition,
+		// 							estateRoadNumber:item.roadNumber,
+		// 							estateTelephone:item.telephone,
+		// 							date:item.date,
+		// 							isOldData:item.date !== latestDate,
+		// 							isFeedback:!!item.feedTime,
+		// 							feedback:feedbackInfo,
+		// 							isVisit:item.isVisit,
+		// 							isUrgent:item.isUrgent,
+		// 							urgentInfo:item.urgentInfo
+		// 						};
+		// 						resData.push(obj);
+		// 					});
+		// 					//排序：最先按日期，次先按加急，再按未完成，最后是已完成，然后是序号
+		// 					resData.sort(function(a,b){
+		// 						if(a.isOldData === b.isOldData){
+		// 							if(a.isUrgent === b.isUrgent){
+		// 								if(a.isVisit===b.isVisit){
+		// 									return a.estateIndex - b.estateIndex
+		// 								}
+		// 								return a.isVisit>b.isVisit?1:-1
+		// 							}
+		// 							return a.isUrgent<b.isUrgent?1:-1
+		// 						}
+		// 						return a.isOldData>b.isOldData?1:-1
+    //
+		// 					});
+		// 					resolve({status:1,estateData:resData});
+		// 				}else{
+		// 					reject(0)
+		// 				}
+		// 			}
+		// 		})
+		// 	})
+		// }).then(function(estateData){
+		// 	//查询成功
+		// 	res.json({
+		// 		status:1,
+		// 		msg:'查询成功',
+		// 		estateData:estateData
+		// 	})
+		// },function(err){
+		// 	if(err === -1){
+		// 		res.json({
+		// 			status:-1,
+		// 			msg:'查询失败'
+		// 		})
+		// 	}else{
+		// 		res.json({
+		// 			status:0,
+		// 			msg:'数据为空'
+		// 		})
+		// 	}
+		// });
 
-							});
-							resolve({status:1,estateData:resData});
-						}else{
-							reject(0)
+
+
+		// 测试
+    var promise = new Promise(function(resolve,reject){
+    	WXUsers.findOne({username:username},function(err,doc){
+    		if(err){
+    			reject();
+    		}else{
+    			resolve(doc)
+    		}
+    	})
+    });
+
+    promise.then(function(data){
+    	//获取真实姓名
+    	let realname = data.realname;
+    	//查询条件
+			HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs){
+				if(err){
+          res.json({
+            status:-1,
+            msg:'查询失败'
+          })
+				}else {
+          //如果docs为空直接返回无数据
+          if (!docs || Object.keys(docs).length === 0) {
+            //数据为空
+            res.json({
+              status: 1,
+              msg: '数据为空',
+              estateData: []
+            })
+          }
+          //最近一次的派单日期
+          let latestDate = docs[0].date;
+          // 最近一次派单的数据
+          let filteredDocs = [];
+          docs.forEach((item) => {
+            if(item.date === latestDate){
+              filteredDocs.push(item)
 						}
-					}
-				})
-			})
-		}).then(function(estateData){
-			//查询成功
-			res.json({
-				status:1,
-				msg:'查询成功',
-				estateData:estateData
-			})
-		},function(err){
-			if(err === -1){
+          });
+
+          //查询过滤
+          let resData = filteredDocs.filter((item) => {
+            if (type === 1) {
+              return item.isVisit === true
+            } else if (type === 2) {
+              return item.isVisit === false
+            } else {
+              return true
+            }
+          });
+          //查询过滤
+          resData = resData.filter((item) => {
+            if (realname === '公用账号') {
+              return !notIncludedList.includes(item.staffName)
+            } else {
+              return item.staffName === realname
+            }
+          });
+
+          //返回结果
+          let returnData = [];
+          resData.forEach(function (item) {
+            //反馈信息格式化
+            let feedbackInfo = item.feedback.replace(/\*##\*/g, ',');
+            if (feedbackInfo === ',') {
+              feedbackInfo = '暂无'
+            }
+            else if (feedbackInfo[feedbackInfo.length - 1] === ',') {
+              feedbackInfo = feedbackInfo.substr(0, feedbackInfo.length - 1)
+            }
+            let obj = {
+              estateIndex: item.index,
+              estatePosition: item.roadNumber + item.detailPosition,
+              estateRoadNumber: item.roadNumber,
+              estateTelephone: item.telephone,
+              date: item.date,
+              isOldData: item.date !== latestDate,
+              isFeedback: !!item.feedTime,
+              feedback: feedbackInfo,
+              isVisit: item.isVisit,
+              isUrgent: item.isUrgent,
+              urgentInfo: item.urgentInfo
+            };
+            returnData.push(obj);
+          });
+
+          //排序：最先按日期，次先按加急，再按未完成，最后是已完成，然后是序号
+          returnData.sort(function (a, b) {
+            if (a.isUrgent === b.isUrgent) {
+              if (a.isVisit === b.isVisit) {
+                return a.estateIndex - b.estateIndex
+              }
+              return a.isVisit > b.isVisit ? 1 : -1
+            }
+            return a.isUrgent < b.isUrgent ? 1 : -1
+          })
+
+          //查询成功
+          res.json({
+            status: 1,
+            msg: '查询成功',
+            estateData: {estateData:returnData}
+          })
+				}
+			 })
+			},
+			function(err){
 				res.json({
-					status:-1,
-					msg:'查询失败'
-				})
-			}else{
-				res.json({
-					status:0,
-					msg:'数据为空'
+					status: -1,
+					msg: '查询失败'
 				})
 			}
-		});
+    )
 
 	//登录过期
 	}else{
@@ -200,67 +317,78 @@ router.post('/getOtherInfo',function(req,res,next){
 		var realname = data.realname;
 		var avatarUrl = data.avatar;
 		//找到最近一次的派单时间
-		HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs){
-			if(err){
-				res.json({
-					status:-1
-				})
-			}else{
-				//如果docs为空直接返回无数据
-				if(!docs||Object.keys(docs).length===0){
-					//数据为空
-					res.json({
-						status:0
-					});
-				}
-				var latestDate = docs[0].date,
-						staffEstateTotalNum = 0,
-						staffEstateVisitedNum = 0,
-						staffEstateUnvisitedNum = 0;
-				//如果当前日期等于最近一次派单，则还要获取到上次派单的数据
-				let filteredDocs = [];
-				if(currentDate === latestDate){
-					filteredDocs = docs.filter((item)=>{
-						return item.date !== latestDate
-					})
-				}
-				let secondLatestDate = filteredDocs.length>0?filteredDocs[0].date:'';
-				if(realname === '公用账号'){
-                    docs.forEach(function(item){
-                    	//如果该单名字不在list中则放入公用账号
-                    	if(notIncludedList.indexOf(item.staffName) === -1 && (item.date === latestDate || item.date === secondLatestDate)){
-                            if(item.isVisit){
-                                staffEstateVisitedNum++;
-                            }else{
-                                staffEstateUnvisitedNum++;
-                            }
-                            staffEstateTotalNum++;
-						}
-					})
-				}else{
-                    docs.forEach(function(item){
-                        //找到最近的日期以及次近的日期
-                        if(item.staffName === realname && (item.date === latestDate || item.date === secondLatestDate)){
-                            if(item.isVisit){
-                                staffEstateVisitedNum++;
-                            }else{
-                                staffEstateUnvisitedNum++;
-                            }
-                            staffEstateTotalNum++;
-                        }
-                    })
-				}
+		// HouseArrangeExcel.find({}).sort({date:-1}).exec(function(err,docs){
+		// 	if(err){
+		// 		res.json({
+		// 			status:-1
+		// 		})
+		// 	}else{
+		// 		//如果docs为空直接返回无数据
+		// 		if(!docs||Object.keys(docs).length===0){
+		// 			//数据为空
+		// 			res.json({
+		// 				status:0
+		// 			});
+		// 		}
+		// 		var latestDate = docs[0].date,
+		// 				staffEstateTotalNum = 0,
+		// 				staffEstateVisitedNum = 0,
+		// 				staffEstateUnvisitedNum = 0;
+		// 		//如果当前日期等于最近一次派单，则还要获取到上次派单的数据
+		// 		let filteredDocs = [];
+		// 		if(currentDate === latestDate){
+		// 			filteredDocs = docs.filter((item)=>{
+		// 				return item.date !== latestDate
+		// 			})
+		// 		}
+		// 		let secondLatestDate = filteredDocs.length>0?filteredDocs[0].date:'';
+		// 		if(realname === '公用账号'){
+     //                docs.forEach(function(item){
+     //                	//如果该单名字不在list中则放入公用账号
+     //                	if(notIncludedList.indexOf(item.staffName) === -1 && (item.date === latestDate || item.date === secondLatestDate)){
+     //                        if(item.isVisit){
+     //                            staffEstateVisitedNum++;
+     //                        }else{
+     //                            staffEstateUnvisitedNum++;
+     //                        }
+     //                        staffEstateTotalNum++;
+		// 				}
+		// 			})
+		// 		}else{
+     //                docs.forEach(function(item){
+     //                    //找到最近的日期以及次近的日期
+     //                    if(item.staffName === realname && (item.date === latestDate || item.date === secondLatestDate)){
+     //                        if(item.isVisit){
+     //                            staffEstateVisitedNum++;
+     //                        }else{
+     //                            staffEstateUnvisitedNum++;
+     //                        }
+     //                        staffEstateTotalNum++;
+     //                    }
+     //                })
+		// 		}
+    //
+		// 		res.json({
+		// 			status:1,
+		// 			realname,
+		// 			latestDate,
+		// 			avatarUrl,
+		// 			staffEstateTotalNum,
+		// 			staffEstateVisitedNum,
+		// 			staffEstateUnvisitedNum
+		// 		})
+		// 	}
+		// })
 
-				res.json({
-					status:1,
-					realname,
-					latestDate,
-					avatarUrl,
-					staffEstateTotalNum,
-					staffEstateVisitedNum,
-					staffEstateUnvisitedNum
-				})
-			}
+
+		res.json({
+			status:1,
+			realname,
+			latestDate:"",
+			avatarUrl,
+			staffEstateTotalNum:"",
+			staffEstateVisitedNum:'',
+			staffEstateUnvisitedNum:''
 		})
 	},function(){
 		res.json({
