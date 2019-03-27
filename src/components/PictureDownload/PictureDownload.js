@@ -93,6 +93,20 @@ class PictureDownload extends React.Component{
     })
   }
 
+  // 取消已下载
+  handleCancelDownload(){
+    let index = this.props.index;
+    axios.post('/house_arrangement_today/cancelHasDownload',{index:index}).then((resp)=>{
+      if(resp.data.status === -1){
+        message.error('遇到未知错误!');
+      }else{
+        this.setState({
+          hasDownload:false
+        })
+      }
+    })
+  }
+
   render(){
     return (
       <div className="download-picture-btn">
@@ -101,11 +115,15 @@ class PictureDownload extends React.Component{
             type="folder"
             onClick={this.props.downloadPictures}
             style={{cursor:'pointer',fontSize:'21px',color:this.state.isGreen?'#40A25D':'#a2a2a2'}}>
-            {
-              this.state.hasDownload?(<span className="has-download">已下载</span>):null
-            }
           </Icon>
         </Tooltip>
+        {
+          this.state.hasDownload?(
+            <Tooltip title="点击取消已下载标志">
+              <span className="has-download" onClick={()=>{this.handleCancelDownload()}}>已下载</span>
+            </Tooltip>
+          ):null
+        }
       </div>
     )
   }

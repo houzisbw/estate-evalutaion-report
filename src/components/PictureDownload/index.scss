@@ -8,11 +8,12 @@
 .has-download{
   font-size: 10px;
   position: absolute;
-  top:0;
+  top:-2px;
   left:-60px;
   width:50px;
   background: rgb(57, 172, 106);
   color:#fff;
   padding:3px 5px;
-  border-radius:8px;
+  border-radius:12px;
+  cursor:pointer;
 }

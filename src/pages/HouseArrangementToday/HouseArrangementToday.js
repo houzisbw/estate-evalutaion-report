@@ -6,10 +6,40 @@ import './index.scss'
 import {Icon,Tabs,Modal,Tooltip,notification,Input,Checkbox} from 'antd'
 import axios from 'axios'
 import Loading from './../../components/Loading/Loading'
+import COS from 'cos-js-sdk-v5'
 import HouseArrangeExcelContentList from './../../components/HouseArrangeExcelContentList/HouseArrangeExcelContentList'
 import HouseExcelDataAddModal from './../../components/HouseExcelDataAddModal/HouseExcelDataAddModal'
 const {TabPane} = Tabs;
 const Search = Input.Search;
+
+//腾讯云相关
+const tencentyunSecretId = 'AKID8AEFQ4Jzz8whgtj2fEbmlbGn8JHkNxZi';
+const tencentyunSecretKey = '3sRviSR8hOB3jjejopwY2QkgR0PabO3V';
+const tencentyunOssBucketName = 'estate-picture-1258800495';
+const tencentyunOssRegion = 'ap-chengdu';
+var getAuthorization = function(options, callback) {
+  // 格式四、（不推荐，适用于前端调试，避免泄露密钥）前端使用固定密钥计算签名
+  var authorization = COS.getAuthorization({
+    SecretId: tencentyunSecretId,
+    SecretKey: tencentyunSecretKey,
+    Method: options.Method,
+    Pathname: options.Pathname,
+    Query: options.Query,
+    Headers: options.Headers,
+    Expires: 60,
+  });
+  callback({
+    Authorization: authorization,
+    // XCosSecurityToken: credentials.sessionToken, // 如果使用临时密钥，需要传 XCosSecurityToken
+  });
+};
+
+var cos = new COS({
+  // path style 指正式请求时，Bucket 是在 path 里，这样用途相同园区多个 bucket 只需要配置一个园区域名
+  // ForcePathStyle: true,
+  getAuthorization: getAuthorization,
+});
+
 class HouseArrangementToday extends React.Component{
 	constructor(props){
 		super(props);
@@ -29,7 +59,9 @@ class HouseArrangementToday extends React.Component{
 			//下载excel的timerId
 			downloadExcelTimerId:null,
 			//搜索的关键词
-			searchKeywords:''
+			searchKeywords:'',
+			//是否正在下载所有图片
+			isDownloadAllPictures:false,
 		};
 	}
 	componentDidMount(){
@@ -220,6 +252,98 @@ class HouseArrangementToday extends React.Component{
 		})
 	}
 
+	// 下载最近一次已看但未下载的照片
+  handleDownloadPictures(){
+		if(this.state.isDownloadAllPictures)return
+		let self = this;
+		this.setState({
+      isDownloadAllPictures:true
+		});
+		//传递参数，最近一次的日期
+		let latestDate = this.state.latestDate;
+		axios.post('/house_arrangement_today/downloadCanDownloadButHasNotDownloadedPictures',{
+			date:latestDate
+		}).then((resp)=>{
+			if(resp.data.status === -1){
+        notification['error']({
+          message: '注意',
+          description: '下载出错请重试!',
+        });
+			}else{
+				// 待下载的照片单号index
+				let indexArray = resp.data.indexArray;
+				let allPicturesUrlArray = [];
+				// 多个promise，每个通过index来获取到其所有的图片的key(名称)
+				let indexPromiseList = [];
+				indexArray.forEach((item)=>{
+					let promise = new Promise((res,rej)=>{
+            cos.getBucket({
+              Bucket: tencentyunOssBucketName,
+              Region: tencentyunOssRegion,
+              Prefix: item+'-',
+            }, function(err, data) {
+             	if(err){
+             		res([])
+							}else{
+                let keyArray = [];
+                data.Contents.forEach((item)=>{
+                  keyArray.push(item.Key)
+                });
+             		res(keyArray)
+							}
+            })
+					});
+          indexPromiseList.push(promise)
+				});
+       	Promise.all(indexPromiseList).then((result)=>{
+
+					result.forEach((item)=>{
+						item.forEach((subItem)=>{
+              allPicturesUrlArray.push(subItem)
+						})
+					});
+
+					// 进行下载操作
+					let downloadPicturesPromiseList = [];
+          allPicturesUrlArray.forEach((item)=>{
+            var p = new Promise((res1,rej1)=>{
+              cos.getObjectUrl({
+                Bucket: tencentyunOssBucketName,
+                Region: tencentyunOssRegion,
+                Key: item,
+              }, function (err, data) {
+                if(err){
+                  rej1()
+                }else{
+                  //返回一个对象，指明图片名称和url的对应关系
+                  let url = data.Url;
+                  res1(url)
+                }
+              });
+            });
+            downloadPicturesPromiseList.push(p)
+					});
+          Promise.all(downloadPicturesPromiseList).then((result)=>{
+            result.forEach((item)=>{
+              let downloadUrl = item + (item.indexOf('?') > -1 ? '&' : '?') + 'response-content-disposition=attachment'; // 补充强制下载的参数
+              window.open(downloadUrl); // 这里是新窗口打开 url，如果需要在当前窗口打开，可以使用隐藏的 iframe 下载，或使用 a 标签 download
+            });
+					});
+          self.setState({
+            isDownloadAllPictures:false
+          });
+          //更新页面
+					self.refresh();
+				})
+				// 下载完成后更新所有单的照片为已下载
+			}
+		},()=>{
+      self.setState({
+        isDownloadAllPictures:false
+      });
+		})
+	}
+
 	render(){
 		return (
 				<div>
@@ -263,6 +387,9 @@ class HouseArrangementToday extends React.Component{
 												</Tooltip>
 												<Tooltip title="点此下载Excel">
 													<Icon type="download" onClick={()=>{this.downloadExcel()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>
+												</Tooltip>
+												<Tooltip title="点此下载最近一天所有已看但未下载的照片">
+													<Icon type="folder" onClick={()=>{this.handleDownloadPictures()}} style={{cursor:'pointer',fontSize:'25px',color:'#39ac6a',float:'right',marginRight:'20px'}}/>
 												</Tooltip>
 												<div className="house-data-search-wrapper"
 														 onMouseLeave={()=>{this.handleSearchEnterAndLeave(false)}}

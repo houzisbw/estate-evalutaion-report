@@ -531,7 +531,6 @@ router.post('/fetchSignPosition',function(req,res){
 
 // 获取图片是否上传完
 router.post('/fetchCanDownload',function(req,res){
-  console.log('here')
   let index = parseInt(req.body.index,10);
   HouseArrangeExcel.findOne({index:index},function(err,doc){
     if(err){
@@ -546,6 +545,50 @@ router.post('/fetchCanDownload',function(req,res){
       })
     }
   })
+})
+
+//下载已传完但未下载的所有照片
+router.post('/downloadCanDownloadButHasNotDownloadedPictures',function(req,res){
+	let date = req.body.date;
+  HouseArrangeExcel.find({
+		date:date,
+		hasDownloadPictures:false,
+    canDownloadPictures:true
+	},function(err,docs){
+  	if(err){
+      res.json({
+        status:-1
+      })
+		}else{
+  		let arr = [];
+  		docs.forEach((item)=>{
+  			arr.push(item.index)
+        //更新查询结果为已下载
+				item.hasDownloadPictures = true;
+				item.save();
+			});
+      res.json({
+        status:1,
+        indexArray:arr
+      })
+		}
+	})
+})
+
+//取消已下载
+router.post('/cancelHasDownload',function(req,res){
+	let index = req.body.index;
+  HouseArrangeExcel.findOneAndUpdate({index:index},{hasDownloadPictures:false},function(err){
+  	if(err){
+      res.json({
+        status:-1
+      })
+		}else{
+      res.json({
+        status:1
+      })
+		}
+	})
 })
 
 
